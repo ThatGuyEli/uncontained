@@ -1,4 +1,5 @@
-import React, { Component, createRef } from "react";
+import React, { Component, createRef } from 'react';
+const path = require('path');
 
 class Game extends Component {
   constructor(props) {
@@ -18,6 +19,16 @@ class Game extends Component {
       // be very slightly different (fractions of pixels).
       blockSize: [40, 40],
     };
+    fetch(`data/levels/level${props.level}.json`)
+    .then(res => res.text())
+    .then(text => this.state.level = JSON.parse(text));
+
+    //require('fs').readFile(`file://${path.join(__dirname, "data","levels","level1.json")}`, (data, err) => {
+    //  if (err) return console.error(err);
+
+    //  this.state.level = data.toJSON();
+
+    //})
   }
 
   // On mount, update the block size.
@@ -55,11 +66,7 @@ class Game extends Component {
     });
 
     // Return the game object in index.html
-    return (
-      <div className="Game" ref={this.ref}>
-        <h1>Test</h1>
-      </div>
-    );
+    return <div className="Game" ref={this.ref}></div>;
   }
 }
 

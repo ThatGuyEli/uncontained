@@ -8,7 +8,7 @@ class App extends Component {
   render() {
     return (
       // This is where the App is stored.
-      <Game />
+      <Game level="1" />
     );
   }
 }

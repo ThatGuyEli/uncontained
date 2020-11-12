@@ -1,0 +1,44 @@
+{
+  "name": "Release",
+  "userdata": {
+    "completed": false,
+    "points": 0,
+    "collected-star": false
+  },
+  "containers": [
+    {
+      "color": "gray",
+      "dimensions": [200, 100],
+      "location": [0, 0],
+      "movement": "horizontal",
+      "platforms": [],
+      "openings": [{ "border": "bottom", "location": 10 }],
+      "items": []
+    },
+    {
+      "color": "blue",
+      "dimensions": [300, 100],
+      "location": [100, 100],
+      "movement": "horizontal",
+      "platforms": [],
+      "openings": [
+        { "border": "top", "location": 10 },
+        { "border": "bottom", "location": 10 }
+      ],
+      "items": [{ "type": "star", "location": [250, 50] }]
+    },
+    {
+      "color": "gray",
+      "dimensions": [400, 100],
+      "location": [0, 200],
+      "movement": "horizontal",
+      "platforms": [],
+      "openings": [
+        { "border": "top", "location": 10 }
+      ],
+      "items": [
+        { "type": "exit", "location": [350, 50] } 
+      ]
+    }
+  ]
+}
