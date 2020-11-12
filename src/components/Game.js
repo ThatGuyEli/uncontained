@@ -18,17 +18,11 @@ class Game extends Component {
       // units should be square. However, they will
       // be very slightly different (fractions of pixels).
       blockSize: [40, 40],
+      level: require(`../data/levels/level${props.level}.json`)
     };
-    fetch(`data/levels/level${props.level}.json`)
-    .then(res => res.text())
-    .then(text => this.state.level = JSON.parse(text));
-
-    //require('fs').readFile(`file://${path.join(__dirname, "data","levels","level1.json")}`, (data, err) => {
-    //  if (err) return console.error(err);
-
-    //  this.state.level = data.toJSON();
-
-    //})
+    //fetch(`data/levels/level${props.level}.json`)
+    //.then(res => res.text())
+    //.then(text => this.state.level = JSON.parse(text));
   }
 
   // On mount, update the block size.
