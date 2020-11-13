@@ -7,6 +7,7 @@
   },
   "containers": [
     {
+      "id": 1,
       "color": "gray",
       "dimensions": [200, 100],
       "location": [0, 0],
@@ -16,6 +17,7 @@
       "items": []
     },
     {
+      "id": 2,
       "color": "blue",
       "dimensions": [300, 100],
       "location": [100, 100],
@@ -28,6 +30,7 @@
       "items": [{ "type": "star", "location": [250, 50] }]
     },
     {
+      "id": 3,
       "color": "gray",
       "dimensions": [400, 100],
       "location": [0, 200],

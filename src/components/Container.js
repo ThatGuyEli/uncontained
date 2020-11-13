@@ -1,19 +1,15 @@
 import React, { Component } from 'react';
 
 class Container extends Component {
-  loadContainer(fileName) {
-
-  }
   constructor(props) {
     super(props);
-    this.state = {};
   }
 
   render() {
-    const cn = `Container ${this.state.color}`;// className
+    const cn = `Container ${this.props.data.color}`;// className
     return (
-      <div className={cn}>
-        Container
+      <div className={cn} style={this.props.updateContainerSize(this.props.data.dimensions)}>
+        { this.props.data.id }
       </div>
     );
   }

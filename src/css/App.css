@@ -36,7 +36,7 @@ large as possible.
   width: 131vh;
   height: 98vh;
   margin: 0% calc((100vw - 133vh)/2);
-  background-color: var(--nord4);
+  background-color: var(--nord7);
 }
 
 @media only screen and (max-width: 133vh) {
@@ -46,4 +46,25 @@ large as possible.
     margin: calc((100vh - 75vw)/2) 0%;
     border-width: 1vw;
   }
+
+  .Container {
+    border-width: 1vw;
+  }
+}
+
+.Container {
+  box-sizing: border-box;
+  border-radius: 2vh;
+  border-width: 1vh;
+  border-style: solid;
+}
+
+.gray {
+  background-color: var(--nord5);
+  border-color: var(--nord3);
+}
+
+.blue {
+  background-color: var(--nord9);
+  border-color: var(--nord10);
 }

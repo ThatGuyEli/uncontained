@@ -1,16 +1,22 @@
 import React, { Component, createRef } from 'react';
-const path = require('path');
+import Container from './Container.js';
 
 class Game extends Component {
   constructor(props) {
     super(props);
+    // The reference allows React to access the properties of
+    // the component after the component has rendered. This is
+    // mainly used to access the height and width of the component
+    // to rescale the blocks.
     this.ref = createRef();
     this.state = {
+
       // The game dimensions refer to how many "blocks"
       // are given to the game. Each block will have
       // an adjustable amount of pixels determined by
       // the height and width of the window.
       blockDimensions: [400, 300],
+
       // blockSize is the specific pixel:block ratio.
       // For example, a block might be 40px by 40px.
       // This array is preset to 40/40 so that this.updateBlockSize
@@ -18,11 +24,12 @@ class Game extends Component {
       // units should be square. However, they will
       // be very slightly different (fractions of pixels).
       blockSize: [40, 40],
+
+      // level is the object imported from the requested level,
+      // which is passed through props. This json file includes
+      // all of the data needed to load the level.
       level: require(`../data/levels/level${props.level}.json`)
     };
-    //fetch(`data/levels/level${props.level}.json`)
-    //.then(res => res.text())
-    //.then(text => this.state.level = JSON.parse(text));
   }
 
   // On mount, update the block size.
@@ -44,9 +51,26 @@ class Game extends Component {
       bs[1] !== this.state.blockSize[1]
     ) {
       this.setState({
-        blockSize: bs,
+        blockSize: bs
       });
     }
+  }
+
+  // Update the container size. This method is passed down to Container.js
+  // through a property.
+  updateContainerSize = (dimensions) => {
+    const pw = dimensions[0] * this.state.blockSize[0];
+    const ph = dimensions[1] * this.state.blockSize[1];
+    return {
+      height: ph,
+      width: pw
+    };
+  }
+
+  generateComponents() {
+    return this.state.level.containers.map(container => (
+      <Container key={container.id} data={container} updateContainerSize={this.updateContainerSize} />
+    ));
   }
 
   // Render the component
@@ -60,7 +84,11 @@ class Game extends Component {
     });
 
     // Return the game object in index.html
-    return <div className="Game" ref={this.ref}></div>;
+    return (
+      <div className="Game" ref={this.ref}>
+        { this.generateComponents() }
+      </div>
+    );
   }
 }
 
