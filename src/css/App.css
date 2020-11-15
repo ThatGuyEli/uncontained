@@ -15,6 +15,7 @@
   --nord13: #ebcb8b;
   --nord14: #a3be8c;
   --nord15: #b48ead;
+  --border: calc((1vh + 1vw)/2)
 }
 
 
@@ -30,33 +31,28 @@ adhere to a 4:3 aspect ratio, and be as
 large as possible.
 */
 .Game {
-  border: var(--nord0) 1vh solid;
+  border: var(--nord0) var(--border) solid;
   border-radius: 2%;
-  float: left;
-  width: 131vh;
-  height: 98vh;
+  width: calc(133vh - 2 * var(--border));
+  height: calc(100vh - 2 * var(--border));
   margin: 0% calc((100vw - 133vh)/2);
   background-color: var(--nord7);
 }
 
 @media only screen and (max-width: 133vh) {
   .Game {
-    width: 98vw;
-    height: 73vw;
+    width: calc(100vw - 2 * var(--border));
+    height: calc(75vw - 2 * var(--border));
     margin: calc((100vh - 75vw)/2) 0%;
-    border-width: 1vw;
-  }
-
-  .Container {
-    border-width: 1vw;
   }
 }
 
 .Container {
   box-sizing: border-box;
-  border-radius: 2vh;
-  border-width: 1vh;
+  border: var(--nord0) var(--border) solid;
+  border-radius: var(--border);
   border-style: solid;
+  position: absolute;
 }
 
 .gray {
