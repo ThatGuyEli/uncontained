@@ -1,5 +1,6 @@
 {
   "name": "Release",
+  "dimensions": [400, 300],
   "userdata": {
     "completed": false,
     "points": 0,

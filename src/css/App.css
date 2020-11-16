@@ -30,7 +30,7 @@ so that the <div> will always be centered,
 adhere to a 4:3 aspect ratio, and be as 
 large as possible.
 */
-.Game {
+.Level {
   border: var(--nord0) var(--border) solid;
   border-radius: 2%;
   width: calc(133vh - 2 * var(--border));
@@ -40,7 +40,7 @@ large as possible.
 }
 
 @media only screen and (max-width: 133vh) {
-  .Game {
+  .Level {
     width: calc(100vw - 2 * var(--border));
     height: calc(75vw - 2 * var(--border));
     margin: calc((100vh - 75vw)/2) 0%;
