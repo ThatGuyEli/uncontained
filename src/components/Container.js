@@ -10,7 +10,7 @@ class Container extends Component {
       attached: false,
       // the distance between the mouse and the top left corner,
       // in either x/y depending on the movement of the component
-      offset: 0,
+      mouseOffset: 0,
       sty: {},
     };
   }
@@ -18,28 +18,37 @@ class Container extends Component {
   componentDidMount() {
     this.update();
     window.addEventListener('resize', this.update);
+    window.addEventListener('mousemove', this.move);
+    window.addEventListener('mouseup', this.detach);
   }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.update);
+    window.removeEventListener('mousemove', this.move);
+    window.removeEventListener('mouseup', this.detach);
   }
 
   update = () => {
     const { dimensions, location } = this.props.data;
-    const newsty = this.props.updateContainer(dimensions, location);
+    const newsty = this.props.update(dimensions, location);
     this.setState({
       sty: newsty,
     });
   };
 
   attach = (e) => {
-    this.setState({
-      attached: true,
-      offset:
-        this.props.data.movement === 'x'
-          ? e.nativeEvent.offsetX
-          : e.nativeEvent.offsetY,
-    });
+    if (!this.state.attached) {
+      this.setState({
+        attached: true,
+        // note that this uses react's synthetic event as opposed
+        // to vanilla JS events, so it needs to reference e.nativeEvent
+        // as opposed to just regular e.
+        mouseOffset:
+          this.props.data.movement === 'x'
+            ? e.nativeEvent.offsetX
+            : e.nativeEvent.offsetY,
+      });
+    }
   };
 
   detach = () => {
@@ -49,28 +58,29 @@ class Container extends Component {
   };
 
   move = (e) => {
-    if (this.isMovable()) {
-      this.setState((state) => {
-        const newsty = Object.assign({}, state.sty);
+    this.props.move(this, e);
+    //if (this.isMovable()) {
+    //  this.setState((state) => {
+    //    const newsty = Object.assign({}, state.sty);
 
-        switch (this.props.data.movement) {
-          case 'x':
-            // add the new position minus the old position of mouse
-            const shiftx = e.nativeEvent.offsetX - this.state.offset;
-            newsty.left += shiftx;
-            break;
-          case 'y':
-            // do same as 'x' but with offsetY and .top
-            const shifty = e.nativeEvent.offsetY - this.state.offset;
-            newsty.top += shifty;
-            break;
-          default:
-            break;
-        }
+    //    switch (this.props.data.movement) {
+    //      case 'x':
+    //        // add the new position minus the old position of mouse
+    //        const shiftx = e.nativeEvent.offsetX - this.state.offset;
+    //        newsty.left += shiftx;
+    //        break;
+    //      case 'y':
+    //        // do same as 'x' but with offsetY and .top
+    //        const shifty = e.nativeEvent.offsetY - this.state.offset;
+    //        newsty.top += shifty;
+    //        break;
+    //      default:
+    //        break;
+    //    }
 
-        return { sty: newsty };
-      });
-    }
+    //    return { sty: newsty };
+    //  });
+    //}
   };
 
   isMovable() {
@@ -85,13 +95,7 @@ class Container extends Component {
 
   render() {
     return (
-      <div
-        className={this.cn}
-        style={this.state.sty}
-        onMouseDown={this.attach}
-        onMouseUp={this.detach}
-        onMouseMove={this.move}
-      >
+      <div className={this.cn} style={this.state.sty} onMouseDown={this.attach}>
         {this.props.data.id}
       </div>
     );

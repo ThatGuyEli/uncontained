@@ -48,10 +48,7 @@ class Game extends Component {
       const cw = this.ref.current.clientWidth;
       const ch = this.ref.current.clientHeight;
       // Create a temporary blockSize array to replace this.state.blockSize.
-      let bs = [
-        cw / this.blockDimensions[0],
-        ch / this.blockDimensions[1],
-      ];
+      let bs = [cw / this.blockDimensions[0], ch / this.blockDimensions[1]];
 
       // If either pixel ratio is not correct, replace the blockSize array.
       if (
@@ -64,7 +61,9 @@ class Game extends Component {
       }
     }
   };
-  // Update the container size.
+
+  // Update the container size. Passed up from Container.js in order
+  // to access this.ref.current
   updateContainer = (dimensions, location) => {
     if (this.ref.current !== null) {
       // get game's x and y, and client's height and width
@@ -98,12 +97,67 @@ class Game extends Component {
     }
   };
 
+  moveContainer = (container, e) => {
+    if (container.isMovable()) {
+      container.setState((state) => {
+        const newsty = Object.assign({}, state.sty);
+
+        // depending on if the movement is x or y, move the container
+        // the difference as the mouse moves
+        switch (container.props.data.movement) {
+          case 'x':
+            // add the new position minus the old position of mouse, or
+            // the "shift" that the mouse had. this will shift the container
+            // the same amount.
+            const mo = container.state.mouseOffset;
+            const shiftx = e.offsetX - mo;
+
+            const newleft = newsty.left + shiftx;
+
+            // determine whether or not this shift would move the container
+            // out of the container. if it does, don't shift it
+            // if the 
+            const { left, right } = this.ref.current.getBoundingClientRect();
+            const maxRight = right - newsty.width;
+            if (e.clientX <= left + mo) {
+              newsty.left = left;
+            }
+            else if (e.clientX >= maxRight + mo) {
+              newsty.left = maxRight;
+            }
+            else if (newleft > left && newleft < maxRight) {
+              newsty.left = newleft;
+            }
+            //if (e.clientX > left && e.clientX < right - container.state.sty.width) {
+            //  newsty.left += shiftx;
+            //}
+            break;
+          case 'y':
+            // do same as 'x' but with offsetY and .top
+            const shifty = e.offsetY - container.state.offset;
+
+            const newtop = newsty.top + shifty;
+            const { top, bottom } = this.ref.current.getBoundingClientRect();
+            if (top + shifty > top && top + shifty < bottom - container.state.sty.height) {
+              newsty.top = newtop;
+            }
+            break;
+          default:
+            break;
+        }
+
+        return { sty: newsty };
+      });
+    }
+  };
+
   generateContainers() {
     return this.level.containers.map((container) => (
       <Container
         key={container.id}
         data={container}
-        updateContainer={this.updateContainer}
+        update={this.updateContainer}
+        move={this.moveContainer}
       />
     ));
   }
