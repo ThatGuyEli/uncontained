@@ -68,15 +68,7 @@ class Game extends Component {
     if (this.ref.current !== null) {
       // get game's x and y, and client's height and width
       const { x, y } = this.ref.current.getBoundingClientRect();
-      const cw = this.ref.current.clientWidth;
-      const ch = this.ref.current.clientHeight;
-
-      // set the border to be as big as it is in App.css
-      // cw/100 and ch/100 are equivalent to 1vw and 1vh
-      // in css, respectively
-      // if clientWidth < 4/3 clientHeight, border is 1vw
-      // else, border is 1vh
-      const border = (cw + ch) / 200;
+      const border = this.getBorder();
 
       // get blocksize for readability
       const bs = this.state.blockSize;
@@ -97,6 +89,18 @@ class Game extends Component {
     }
   };
 
+  getBorder() {
+    const cw = this.ref.current.clientWidth;
+    const ch = this.ref.current.clientHeight;
+
+    // set the border to be as big as it is in App.css
+    // cw/100 and ch/100 are equivalent to 1vw and 1vh
+    // in css, respectively
+    // if clientWidth < 4/3 clientHeight, border is 1vw
+    // else, border is 1vh
+    return (cw + ch) / 200;
+  }
+
   moveContainer = (container, e) => {
     if (container.isMovable()) {
       container.setState((state) => {
@@ -104,41 +108,54 @@ class Game extends Component {
 
         // depending on if the movement is x or y, move the container
         // the difference as the mouse moves
+        const mo = container.state.mouseOffset;
+        const border = this.getBorder();
         switch (container.props.data.movement) {
           case 'x':
             // add the new position minus the old position of mouse, or
             // the "shift" that the mouse had. this will shift the container
             // the same amount.
-            const mo = container.state.mouseOffset;
             const shiftx = e.offsetX - mo;
-
             const newleft = newsty.left + shiftx;
 
-            // determine whether or not this shift would move the container
-            // out of the container. if it does, don't shift it
-            // if the 
+            // get the left and right of the game's div. set maxRight to be
+            // where the left of the container would be if it was up against
+            // the right side of the container.
             const { left, right } = this.ref.current.getBoundingClientRect();
-            const maxRight = right - newsty.width;
-            if (e.clientX <= left + mo) {
-              newsty.left = left;
+            const minLeft = left + border;
+            const maxRight = right - newsty.width - border;
+
+            // if the mouse is anywhere before the left of the container
+            // plus the mouse offset, set the newsty to leftmost possible.
+            if (e.clientX <= minLeft + mo) {
+              newsty.left = minLeft;
             }
+            // if the mouse is anywhere after the right of the container
+            // plus the mouse offset, set the x to the rightmost possible.
             else if (e.clientX >= maxRight + mo) {
               newsty.left = maxRight;
             }
-            else if (newleft > left && newleft < maxRight) {
+            // if the newleft would be in between the bounds, set it. note
+            // that this is not just an else block because the mouse can move
+            // the container past the left for a breif moment
+            else if (newleft > minLeft && newleft < maxRight) {
               newsty.left = newleft;
             }
-            //if (e.clientX > left && e.clientX < right - container.state.sty.width) {
-            //  newsty.left += shiftx;
-            //}
             break;
           case 'y':
-            // do same as 'x' but with offsetY and .top
-            const shifty = e.offsetY - container.state.offset;
-
+            // do same as 'x' but with offsetY, clientY, top, and bottom
+            const shifty = e.offsetY - mo;
             const newtop = newsty.top + shifty;
+
             const { top, bottom } = this.ref.current.getBoundingClientRect();
-            if (top + shifty > top && top + shifty < bottom - container.state.sty.height) {
+            const minTop = top + border;
+            const maxBottom = bottom - newsty.height - border;
+
+            if (e.clientY <= minTop + mo) {
+              newsty.top = minTop;
+            } else if (e.clientY >= maxBottom + mo) {
+              newsty.top = maxBottom;
+            } else if (newtop > minTop && newtop < maxBottom) {
               newsty.top = newtop;
             }
             break;

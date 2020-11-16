@@ -59,28 +59,6 @@ class Container extends Component {
 
   move = (e) => {
     this.props.move(this, e);
-    //if (this.isMovable()) {
-    //  this.setState((state) => {
-    //    const newsty = Object.assign({}, state.sty);
-
-    //    switch (this.props.data.movement) {
-    //      case 'x':
-    //        // add the new position minus the old position of mouse
-    //        const shiftx = e.nativeEvent.offsetX - this.state.offset;
-    //        newsty.left += shiftx;
-    //        break;
-    //      case 'y':
-    //        // do same as 'x' but with offsetY and .top
-    //        const shifty = e.nativeEvent.offsetY - this.state.offset;
-    //        newsty.top += shifty;
-    //        break;
-    //      default:
-    //        break;
-    //    }
-
-    //    return { sty: newsty };
-    //  });
-    //}
   };
 
   isMovable() {
@@ -96,7 +74,6 @@ class Container extends Component {
   render() {
     return (
       <div className={this.cn} style={this.state.sty} onMouseDown={this.attach}>
-        {this.props.data.id}
       </div>
     );
   }
