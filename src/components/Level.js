@@ -1,7 +1,7 @@
 import React, { Component, createRef } from 'react';
 import Container from './Container.js';
 
-class Game extends Component {
+class Level extends Component {
   constructor(props) {
     super(props);
     // The reference allows React to access the properties of
@@ -9,15 +9,18 @@ class Game extends Component {
     // mainly used to access the height and width of the component
     // to rescale the blocks.
     this.ref = createRef();
-    // The game dimensions refer to how many "blocks"
-    // are given to the game. Each block will have
+    // The level dimensions refer to how many "blocks"
+    // are given to the level. Each block will have
     // an adjustable amount of pixels determined by
     // the height and width of the window.
-    this.blockDimensions = [400, 300];
+    // this has been disabled and replaced by levelFile.dimensions
+    // because some levels may have different dimensions
+    // this.blockDimensions = [400, 300];
+
     // level is the object imported from the requested level,
     // which is passed through props. This json file includes
     // all of the data needed to load the level.
-    this.level = require(`../data/levels/level${props.level}.json`);
+    this.levelFile = require(`../data/levels/level${props.id}.json`);
 
     this.state = {
       // blockSize is the specific pixel:block ratio.
@@ -48,7 +51,10 @@ class Game extends Component {
       const cw = this.ref.current.clientWidth;
       const ch = this.ref.current.clientHeight;
       // Create a temporary blockSize array to replace this.state.blockSize.
-      let bs = [cw / this.blockDimensions[0], ch / this.blockDimensions[1]];
+      let bs = [
+        cw / this.levelFile.dimensions[0],
+        ch / this.levelFile.dimensions[1],
+      ];
 
       // If either pixel ratio is not correct, replace the blockSize array.
       if (
@@ -66,7 +72,7 @@ class Game extends Component {
   // to access this.ref.current
   updateContainer = (dimensions, location) => {
     if (this.ref.current !== null) {
-      // get game's x and y, and client's height and width
+      // get level's x and y, and client's height and width
       const { x, y } = this.ref.current.getBoundingClientRect();
       const border = this.getBorder();
 
@@ -74,7 +80,7 @@ class Game extends Component {
       const bs = this.state.blockSize;
 
       // pixel width, height, x, and y, respectively
-      // px and py have added game x/y and border to position correctly
+      // px and py have added level x/y and border to position correctly
       const pw = dimensions[0] * bs[0];
       const ph = dimensions[1] * bs[1];
       const px = location[0] * bs[0] + x + border;
@@ -89,6 +95,7 @@ class Game extends Component {
     }
   };
 
+  // calculate the border of the level window
   getBorder() {
     const cw = this.ref.current.clientWidth;
     const ch = this.ref.current.clientHeight;
@@ -101,6 +108,40 @@ class Game extends Component {
     return (cw + ch) / 200;
   }
 
+  // a helper to move the container, because case 'x' and 'y' do
+  // the exact same function but use different inputs which are 
+  // passed into this function
+  moveContainerHelper = (mo, oldloc, newOffset, mouseClient, min, max) => {
+    // depending on if the movement is x or y, move the container
+    // the difference as the mouse moves
+    const newloc = oldloc + newOffset - mo;
+
+    // if the mouse is under the minimum pixel length,
+    // plus the offset between the mouse and the corner of the container,
+    // just set the location to the minimum
+    if (mouseClient <= min + mo) {
+      return min;
+    } 
+    // similarly, if the mouse is under the max pixel length,
+    // plus the offset between the mouse and the corner of the container,
+    // just set the location to the maximum
+    else if (mouseClient >= max + mo) {
+      return max;
+    } 
+    // finally, if the new location would be in between the min and max,
+    // set it to that.
+    // note that this is still an if statement because the mouse may
+    // update in a place where the new location would be out of the
+    // bounds but the mouse is still within the bounds.
+    else if (newloc > min && newloc < max) {
+      return newloc;
+    } else return oldloc; 
+    // return oldloc if the movement is invalid to prevent
+    // NaN and underfined errors 
+  };
+
+  // move the container based on its current position on the new mouse
+  // location. this is called passed up from Container.js
   moveContainer = (container, e) => {
     if (container.isMovable()) {
       container.setState((state) => {
@@ -108,56 +149,34 @@ class Game extends Component {
 
         // depending on if the movement is x or y, move the container
         // the difference as the mouse moves
-        const mo = container.state.mouseOffset;
         const border = this.getBorder();
+        const mo = container.state.mouseOffset;
         switch (container.props.data.movement) {
           case 'x':
-            // add the new position minus the old position of mouse, or
-            // the "shift" that the mouse had. this will shift the container
-            // the same amount.
-            const shiftx = e.offsetX - mo;
-            const newleft = newsty.left + shiftx;
-
-            // get the left and right of the game's div. set maxRight to be
-            // where the left of the container would be if it was up against
-            // the right side of the container.
             const { left, right } = this.ref.current.getBoundingClientRect();
-            const minLeft = left + border;
-            const maxRight = right - newsty.width - border;
-
-            // if the mouse is anywhere before the left of the container
-            // plus the mouse offset, set the newsty to leftmost possible.
-            if (e.clientX <= minLeft + mo) {
-              newsty.left = minLeft;
-            }
-            // if the mouse is anywhere after the right of the container
-            // plus the mouse offset, set the x to the rightmost possible.
-            else if (e.clientX >= maxRight + mo) {
-              newsty.left = maxRight;
-            }
-            // if the newleft would be in between the bounds, set it. note
-            // that this is not just an else block because the mouse can move
-            // the container past the left for a breif moment
-            else if (newleft > minLeft && newleft < maxRight) {
-              newsty.left = newleft;
-            }
+            const minX = left + border;
+            const maxX = right - newsty.width - border;
+            newsty.left = this.moveContainerHelper(
+              mo,
+              newsty.left,
+              e.offsetX,
+              e.clientX,
+              minX,
+              maxX
+            );
             break;
           case 'y':
-            // do same as 'x' but with offsetY, clientY, top, and bottom
-            const shifty = e.offsetY - mo;
-            const newtop = newsty.top + shifty;
-
             const { top, bottom } = this.ref.current.getBoundingClientRect();
-            const minTop = top + border;
-            const maxBottom = bottom - newsty.height - border;
-
-            if (e.clientY <= minTop + mo) {
-              newsty.top = minTop;
-            } else if (e.clientY >= maxBottom + mo) {
-              newsty.top = maxBottom;
-            } else if (newtop > minTop && newtop < maxBottom) {
-              newsty.top = newtop;
-            }
+            const minY = top + border;
+            const maxY = bottom - newsty.height - border;
+            newsty.top = this.moveContainerHelper(
+              newsty.top,
+              e.offsetY,
+              e.clientY,
+              minY,
+              maxY
+            );
+            // do same as 'x' but with height, offsetY, clientY, top, and bottom
             break;
           default:
             break;
@@ -168,8 +187,9 @@ class Game extends Component {
     }
   };
 
+  // Generate the level containers using array.map
   generateContainers() {
-    return this.level.containers.map((container) => (
+    return this.levelFile.containers.map((container) => (
       <Container
         key={container.id}
         data={container}
@@ -181,16 +201,13 @@ class Game extends Component {
 
   // Render the component
   render() {
-    // On resize, update the block size. Additionally ensure that
-    // ref.current is not null to prevent errors.
-
-    // Return the game object in index.html
+    // Return the level object in index.html
     return (
-      <div className='Game' ref={this.ref}>
+      <div className='Level' ref={this.ref}>
         {this.generateContainers()}
       </div>
     );
   }
 }
 
-export default Game;
+export default Level;
