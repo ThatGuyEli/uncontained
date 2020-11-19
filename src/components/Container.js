@@ -16,7 +16,6 @@ class Container extends Component {
   }
 
   componentDidMount() {
-    this.update();
     window.addEventListener('resize', this.update);
     window.addEventListener('mousemove', this.move);
     window.addEventListener('mouseup', this.detach);
@@ -36,8 +35,12 @@ class Container extends Component {
     });
   };
 
+  // set the state to attached, also send the offset from the click
+  // to the top left of the container
+  // note that this checks if the state is attached first to not make
+  // unnecessary calls to the react api.
   attach = (e) => {
-    if (!this.state.attached) {
+    if (!this.state.attached && this.isMovable()) {
       this.setState({
         attached: true,
         // note that this uses react's synthetic event as opposed
@@ -51,23 +54,55 @@ class Container extends Component {
     }
   };
 
+  // set the state to not be attached
+  // note that this checks if the state is attached first to not make
+  // unnecessary calls to the react api.
   detach = () => {
-    this.setState({
-      attached: false,
-    });
+    if (this.state.attached && this.isMovable()) {
+      this.setState({
+        attached: false,
+      });
+      // todo: comment
+      const isHorizontal = this.props.data.movement === 'x';
+      const sty = this.state.sty
+      const nearestBlock = this.props.nearestBlock(isHorizontal ? sty.left : sty.top, isHorizontal);
+      if (isHorizontal) {
+        this.props.data.location[0] = nearestBlock.newLocation;
+        this.setState((state) => {
+          const newsty = Object.assign({}, state.sty);
+          newsty.left = nearestBlock.newPixelLocation;
+          return {
+            sty: newsty,
+          }
+        });
+      }
+      else {
+        this.props.data.location[1] = nearestBlock.newLocation;
+        this.setState((state) => {
+          const newsty = Object.assign({}, state.sty);
+          newsty.top = nearestBlock.newPixelLocation;
+          return {
+            sty: newsty,
+          }
+        });
+      }
+
+    }
   };
 
   move = (e) => {
-    this.props.move(this, e);
+    if (this.state.attached && this.isMovable()) {
+      this.props.move(this, e);
+    }
   };
 
   isMovable() {
     switch (this.props.data.color) {
       case 'blue':
       case 'red':
-        return this.state.attached && true;
+        return true;
       default:
-        return false; // this.state.attached && false always returns false
+        return false;
     }
   }
 

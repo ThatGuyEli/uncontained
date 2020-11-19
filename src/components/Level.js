@@ -109,41 +109,40 @@ class Level extends Component {
   }
 
   // a helper to move the container, because case 'x' and 'y' do
-  // the exact same function but use different inputs which are 
+  // the exact same function but use different inputs which are
   // passed into this function
-  moveContainerHelper = (mo, oldloc, newOffset, mouseClient, min, max) => {
+  moveContainerHelper = (mo, oldLocation, newOffset, mouseClient, min, max) => {
     // depending on if the movement is x or y, move the container
     // the difference as the mouse moves
-    const newloc = oldloc + newOffset - mo;
+    const newLocation = oldLocation + newOffset - mo;
 
     // if the mouse is under the minimum pixel length,
     // plus the offset between the mouse and the corner of the container,
     // just set the location to the minimum
     if (mouseClient <= min + mo) {
       return min;
-    } 
+    }
     // similarly, if the mouse is under the max pixel length,
     // plus the offset between the mouse and the corner of the container,
     // just set the location to the maximum
-    else if (mouseClient >= max + mo) {
+    else if (mouseClient >= max + mo + this.getBorder()) {
       return max;
-    } 
+    }
     // finally, if the new location would be in between the min and max,
     // set it to that.
     // note that this is still an if statement because the mouse may
     // update in a place where the new location would be out of the
     // bounds but the mouse is still within the bounds.
-    else if (newloc > min && newloc < max) {
-      return newloc;
-    } else return oldloc; 
+    else if (newLocation > min && newLocation < max) {
+      return newLocation;
+    } else return oldLocation;
     // return oldloc if the movement is invalid to prevent
-    // NaN and underfined errors 
+    // NaN and underfined errors
   };
 
   // move the container based on its current position on the new mouse
   // location. this is called passed up from Container.js
   moveContainer = (container, e) => {
-    if (container.isMovable()) {
       container.setState((state) => {
         const newsty = Object.assign({}, state.sty);
 
@@ -170,6 +169,7 @@ class Level extends Component {
             const minY = top + border;
             const maxY = bottom - newsty.height - border;
             newsty.top = this.moveContainerHelper(
+              mo,
               newsty.top,
               e.offsetY,
               e.clientY,
@@ -184,8 +184,22 @@ class Level extends Component {
 
         return { sty: newsty };
       });
-    }
   };
+
+  // this will always return the block above / to the left of the old location
+  // because rounding could put the container 1 pixel out of the level otherwise
+  // todo: comment
+  nearestBlock = (oldLocation, isHorizontal) => {
+    const { x, y } = this.ref.current.getBoundingClientRect();
+    const spacing = (isHorizontal ? x : y) + this.getBorder();
+    const index = isHorizontal ? 0 : 1;
+    const newLocation = Math.round((oldLocation - spacing) / this.state.blockSize[index]);
+    const newPixelLocation = newLocation * this.state.blockSize[index] + spacing;
+    return {
+      newPixelLocation: newPixelLocation,
+      newLocation: newLocation,
+    };
+  }
 
   // Generate the level containers using array.map
   generateContainers() {
@@ -195,6 +209,7 @@ class Level extends Component {
         data={container}
         update={this.updateContainer}
         move={this.moveContainer}
+        nearestBlock={this.nearestBlock}
       />
     ));
   }
