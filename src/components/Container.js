@@ -62,40 +62,51 @@ class Container extends Component {
       this.setState({
         attached: false,
       });
-      // todo: comment
-      const isHorizontal = this.props.data.movement === 'x';
-      const sty = this.state.sty
-      const nearestBlock = this.props.nearestBlock(isHorizontal ? sty.left : sty.top, isHorizontal);
-      if (isHorizontal) {
-        this.props.data.location[0] = nearestBlock.newLocation;
-        this.setState((state) => {
-          const newsty = Object.assign({}, state.sty);
-          newsty.left = nearestBlock.newPixelLocation;
-          return {
-            sty: newsty,
-          }
-        });
-      }
-      else {
-        this.props.data.location[1] = nearestBlock.newLocation;
-        this.setState((state) => {
-          const newsty = Object.assign({}, state.sty);
-          newsty.top = nearestBlock.newPixelLocation;
-          return {
-            sty: newsty,
-          }
-        });
-      }
 
+      this.snap();
     }
   };
 
+  // snap the container to its bounds. called from this.detach()
+  // if the container is red/blue and this.automove() if it is
+  // green/purple
+  snap = () => {
+    // create a boolean on whether or not the movement
+    // is horizontal, and a reference to sty
+    const isHorizontal = this.props.data.movement === 'x';
+    const sty = this.state.sty;
+
+    // get the nearest block from Level.js, passing in either left or top
+    const nearestBlock = this.props.nearestBlock(
+      isHorizontal ? sty.left : sty.top,
+      isHorizontal
+    );
+
+    // set the new location, either x or y, depending on isHorizontal
+    const index = isHorizontal ? 0 : 1;
+    this.props.data.location[index] = nearestBlock.newLocation;
+
+    // similarly, determine which part of newsty to modify and modify it
+    const newsty = Object.assign({}, sty);
+    const location = isHorizontal ? 'left' : 'top';
+    this.setState(() => {
+      newsty[location] = nearestBlock.newPixelLocation;
+      return {
+        sty: newsty,
+      };
+    });
+  };
+
+  // if the object is movable, call move from Level.js
+  // note that this.state.attached is called first to
+  // be slightly more efficient (no need to call another method)
   move = (e) => {
     if (this.state.attached && this.isMovable()) {
       this.props.move(this, e);
     }
   };
 
+  // check if the container is movable based on its color
   isMovable() {
     switch (this.props.data.color) {
       case 'blue':
@@ -108,8 +119,11 @@ class Container extends Component {
 
   render() {
     return (
-      <div className={this.cn} style={this.state.sty} onMouseDown={this.attach}>
-      </div>
+      <div
+        className={this.cn}
+        style={this.state.sty}
+        onMouseDown={this.attach}
+      ></div>
     );
   }
 }

@@ -143,63 +143,79 @@ class Level extends Component {
   // move the container based on its current position on the new mouse
   // location. this is called passed up from Container.js
   moveContainer = (container, e) => {
-      container.setState((state) => {
-        const newsty = Object.assign({}, state.sty);
+    container.setState((state) => {
+      const newsty = Object.assign({}, state.sty);
 
-        // depending on if the movement is x or y, move the container
-        // the difference as the mouse moves
-        const border = this.getBorder();
-        const mo = container.state.mouseOffset;
-        switch (container.props.data.movement) {
-          case 'x':
-            const { left, right } = this.ref.current.getBoundingClientRect();
-            const minX = left + border;
-            const maxX = right - newsty.width - border;
-            newsty.left = this.moveContainerHelper(
-              mo,
-              newsty.left,
-              e.offsetX,
-              e.clientX,
-              minX,
-              maxX
-            );
-            break;
-          case 'y':
-            const { top, bottom } = this.ref.current.getBoundingClientRect();
-            const minY = top + border;
-            const maxY = bottom - newsty.height - border;
-            newsty.top = this.moveContainerHelper(
-              mo,
-              newsty.top,
-              e.offsetY,
-              e.clientY,
-              minY,
-              maxY
-            );
-            // do same as 'x' but with height, offsetY, clientY, top, and bottom
-            break;
-          default:
-            break;
-        }
+      // depending on if the movement is x or y, move the container
+      // the difference as the mouse moves
+      const border = this.getBorder();
+      const mo = container.state.mouseOffset;
+      switch (container.props.data.movement) {
+        case 'x':
+          const { left, right } = this.ref.current.getBoundingClientRect();
+          const minX = left + border;
+          const maxX = right - newsty.width - border;
+          newsty.left = this.moveContainerHelper(
+            mo,
+            newsty.left,
+            e.offsetX,
+            e.clientX,
+            minX,
+            maxX
+          );
+          break;
+        case 'y':
+          // do same as 'x' but with height, offsetY, clientY, top, and bottom
+          const { top, bottom } = this.ref.current.getBoundingClientRect();
+          const minY = top + border;
+          const maxY = bottom - newsty.height - border;
+          newsty.top = this.moveContainerHelper(
+            mo,
+            newsty.top,
+            e.offsetY,
+            e.clientY,
+            minY,
+            maxY
+          );
+          break;
+        default:
+          break;
+      }
 
-        return { sty: newsty };
-      });
+      return { sty: newsty };
+    });
   };
 
-  // this will always return the block above / to the left of the old location
-  // because rounding could put the container 1 pixel out of the level otherwise
-  // todo: comment
+  // get the nearest block by rounding the ratio of pixels to blocks
+  // then, return both that new location and the new pixel location
+  // called from this.props.nearestBlock, from Container.js
   nearestBlock = (oldLocation, isHorizontal) => {
+    
+    // get spacing so the border and whitespace isn't used
+    // in the calculations
     const { x, y } = this.ref.current.getBoundingClientRect();
     const spacing = (isHorizontal ? x : y) + this.getBorder();
+
+    // determine whether the x or y blocksize should be used
+    // note that this shouldn't matter too much but can still
+    // prevent the container from snapping 
     const index = isHorizontal ? 0 : 1;
-    const newLocation = Math.round((oldLocation - spacing) / this.state.blockSize[index]);
-    const newPixelLocation = newLocation * this.state.blockSize[index] + spacing;
+
+    // oldLocation - spacing to get just the difference from
+    // the level div
+    // divide to get the ratio, then round to get a full
+    // location number
+    const newLocation = Math.round(
+      (oldLocation - spacing) / this.state.blockSize[index]
+    );
+    // remultiply that to get the new locaton, which is "rounded"
+    const newPixelLocation =
+      newLocation * this.state.blockSize[index] + spacing;
     return {
       newPixelLocation: newPixelLocation,
       newLocation: newLocation,
     };
-  }
+  };
 
   // Generate the level containers using array.map
   generateContainers() {
