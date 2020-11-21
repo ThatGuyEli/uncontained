@@ -190,7 +190,6 @@ class Level extends Component {
   // then, return both that new location and the new pixel location
   // called from this.props.nearestBlock, from Container.js
   nearestBlock = (oldLocation, isHorizontal) => {
-    
     // get spacing so the border and whitespace isn't used
     // in the calculations
     const { x, y } = this.ref.current.getBoundingClientRect();
@@ -198,7 +197,7 @@ class Level extends Component {
 
     // determine whether the x or y blocksize should be used
     // note that this shouldn't matter too much but can still
-    // prevent the container from snapping 
+    // prevent the container from snapping
     const index = isHorizontal ? 0 : 1;
 
     // oldLocation - spacing to get just the difference from
