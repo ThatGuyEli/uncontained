@@ -4,16 +4,6 @@ class Container extends Component {
   constructor(props) {
     super(props);
     this.cn = `Container ${this.props.data.color}`; // className
-    //this.state = {
-    //  // whether or not the component should track the mouse
-    //  // and act accordingly
-    //  attached: false,
-    //  // the distance between the mouse and the top left corner,
-    //  // in either x/y depending on the movement of the component
-    //  mouseOffset: 0,
-    //  sty: {},
-    //  hovering: false,
-    //};
   }
 
   componentDidMount() {
@@ -31,9 +21,6 @@ class Container extends Component {
   update = () => {
     const { dimensions, location } = this.props.data;
     const newsty = this.props.updateSize(dimensions, location);
-    //this.setState({
-    //  sty: newsty,
-    //});
     this.props.updateSelfState(this.props.data.id, {sty: newsty, });
   };
 
@@ -43,16 +30,6 @@ class Container extends Component {
   // unnecessary calls to the react api.
   attach = (e) => {
     if (!this.props.selfState.attached && this.isMovable()) {
-      //this.setState({
-      //  attached: true,
-      //  // note that this uses react's synthetic event as opposed
-      //  // to vanilla JS events, so it needs to reference e.nativeEvent
-      //  // as opposed to just regular e.
-      //  mouseOffset:
-      //    this.props.data.movement === 'x'
-      //      ? e.nativeEvent.offsetX
-      //      : e.nativeEvent.offsetY,
-      //});
       this.props.updateSelfState(this.props.data.id, { 
         attached: true, 
         mouseOffset: this.props.data.movement === 'x'
@@ -68,9 +45,6 @@ class Container extends Component {
   // unnecessary calls to the react api.
   detach = () => {
     if (this.props.selfState.attached && this.isMovable()) {
-      //this.setState({
-      //  attached: false,
-      //});
       this.props.updateSelfState(this.props.data.id, { attached: false, });
 
       this.snap();
@@ -103,12 +77,6 @@ class Container extends Component {
     const location = isHorizontal ? 'left' : 'top';
     newsty[location] = nearestBlock.newPixelLocation;
     this.props.updateSelfState(this.props.data.id, {sty: newsty, });
-    //this.setState(() => {
-    //  newsty[location] = nearestBlock.newPixelLocation;
-    //  return {
-    //    sty: newsty,
-    //  };
-    //});
   };
 
   // if the object is movable, call move from Level.js
@@ -131,12 +99,6 @@ class Container extends Component {
         return false;
     }
   }
-
-  //toggleHovering = () => {
-  //  this.props.updateSelfState(this.props.data.id, {
-  //    hovering: !this.props.selfState.hovering,
-  //  })
-  //};
 
   render() {
     return (
