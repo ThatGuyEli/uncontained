@@ -4,15 +4,16 @@ class Container extends Component {
   constructor(props) {
     super(props);
     this.cn = `Container ${this.props.data.color}`; // className
-    this.state = {
-      // whether or not the component should track the mouse
-      // and act accordingly
-      attached: false,
-      // the distance between the mouse and the top left corner,
-      // in either x/y depending on the movement of the component
-      mouseOffset: 0,
-      sty: {},
-    };
+    //this.state = {
+    //  // whether or not the component should track the mouse
+    //  // and act accordingly
+    //  attached: false,
+    //  // the distance between the mouse and the top left corner,
+    //  // in either x/y depending on the movement of the component
+    //  mouseOffset: 0,
+    //  sty: {},
+    //  hovering: false,
+    //};
   }
 
   componentDidMount() {
@@ -30,9 +31,10 @@ class Container extends Component {
   update = () => {
     const { dimensions, location } = this.props.data;
     const newsty = this.props.update(dimensions, location);
-    this.setState({
-      sty: newsty,
-    });
+    //this.setState({
+    //  sty: newsty,
+    //});
+    this.props.updateSelfState(this.props.data.id, {sty: newsty, });
   };
 
   // set the state to attached, also send the offset from the click
@@ -40,16 +42,22 @@ class Container extends Component {
   // note that this checks if the state is attached first to not make
   // unnecessary calls to the react api.
   attach = (e) => {
-    if (!this.state.attached && this.isMovable()) {
-      this.setState({
-        attached: true,
-        // note that this uses react's synthetic event as opposed
-        // to vanilla JS events, so it needs to reference e.nativeEvent
-        // as opposed to just regular e.
-        mouseOffset:
-          this.props.data.movement === 'x'
-            ? e.nativeEvent.offsetX
-            : e.nativeEvent.offsetY,
+    if (!this.props.selfState.attached && this.isMovable()) {
+      //this.setState({
+      //  attached: true,
+      //  // note that this uses react's synthetic event as opposed
+      //  // to vanilla JS events, so it needs to reference e.nativeEvent
+      //  // as opposed to just regular e.
+      //  mouseOffset:
+      //    this.props.data.movement === 'x'
+      //      ? e.nativeEvent.offsetX
+      //      : e.nativeEvent.offsetY,
+      //});
+      this.props.updateSelfState(this.props.data.id, { 
+        attached: true, 
+        mouseOffset: this.props.data.movement === 'x'
+          ? e.nativeEvent.offsetX
+          : e.nativeEvent.offsetY,
       });
       this.props.rewriteBlocks(this, false);
     }
@@ -59,10 +67,11 @@ class Container extends Component {
   // note that this checks if the state is attached first to not make
   // unnecessary calls to the react api.
   detach = () => {
-    if (this.state.attached && this.isMovable()) {
-      this.setState({
-        attached: false,
-      });
+    if (this.props.selfState.attached && this.isMovable()) {
+      //this.setState({
+      //  attached: false,
+      //});
+      this.props.updateSelfState(this.props.data.id, { attached: false, });
 
       this.snap();
       this.props.rewriteBlocks(this, true);
@@ -76,7 +85,7 @@ class Container extends Component {
     // create a boolean on whether or not the movement
     // is horizontal, and a reference to sty
     const isHorizontal = this.props.data.movement === 'x';
-    const sty = this.state.sty;
+    const sty = this.props.selfState.sty;
 
     // get the nearest block from Level.js, passing in either left or top
     const nearestBlock = this.props.nearestBlock(
@@ -92,19 +101,22 @@ class Container extends Component {
     // similarly, determine which part of newsty to modify and modify it
     const newsty = Object.assign({}, sty);
     const location = isHorizontal ? 'left' : 'top';
-    this.setState(() => {
-      newsty[location] = nearestBlock.newPixelLocation;
-      return {
-        sty: newsty,
-      };
-    });
+    newsty[location] = nearestBlock.newPixelLocation;
+    this.props.updateSelfState(this.props.data.id, {sty: newsty, });
+    //this.setState(() => {
+    //  newsty[location] = nearestBlock.newPixelLocation;
+    //  return {
+    //    sty: newsty,
+    //  };
+    //});
   };
 
   // if the object is movable, call move from Level.js
   // note that this.state.attached is called first to
   // be slightly more efficient (no need to call another method)
   move = (e) => {
-    if (this.state.attached && this.isMovable()) {
+    if (this.props.selfState.attached && !this.props.selfState.isMoving && this.isMovable()) {
+      this.props.updateSelfState(this.props.data.id, { isMoving: true });
       this.props.move(this, e);
     }
   };
@@ -120,12 +132,19 @@ class Container extends Component {
     }
   }
 
+  //toggleHovering = () => {
+  //  this.props.updateSelfState(this.props.data.id, {
+  //    hovering: !this.props.selfState.hovering,
+  //  })
+  //};
+
   render() {
     return (
       <div
         className={this.cn}
-        style={this.state.sty}
+        style={this.props.selfState.sty}
         onMouseDown={this.attach}
+        onMouseOut={this.detach}
       ></div>
     );
   }

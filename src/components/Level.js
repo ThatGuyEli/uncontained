@@ -60,8 +60,6 @@ class Level extends Component {
       }
       blocks.push(blockColumn);
     }
-    console.log(blocks);
-
     this.state = {
       // blockSize is the specific pixel:block ratio.
       // For example, a block might be 40px by 40px.
@@ -79,7 +77,25 @@ class Level extends Component {
       // true = container is in that block
       // false = container is not in that block
       blocks: blocks,
+
+      containerStates: [],
     };
+
+    this.levelFile.containers.forEach((container) => {
+      // create a container state
+      const containerState = {
+        id: container.id,
+        // whether or not the component should track the mouse
+        // and act accordingly
+        attached: false,
+        // the distance between the mouse and the top left corner,
+        // in either x/y depending on the movement of the component
+        mouseOffset: 0,
+        sty: {},
+        isMoving: false,
+      };
+      this.state.containerStates.push(containerState);
+    });
   }
 
   // On mount, update the block size.
@@ -211,12 +227,15 @@ class Level extends Component {
     // or the adjacent location is directly before the location,
     // in which case subtract one
     const adjacentLocation = pos
-      ? Math.min(location[index] + dimensions[index], this.levelFile.dimensions[index] - 1)
+      ? Math.min(
+          location[index] + dimensions[index],
+          this.levelFile.dimensions[index] - 1
+        )
       : Math.max(location[index] - 1, 0);
-    
+
     const x = isHorizontal ? adjacentLocation : location[0];
     const y = isHorizontal ? location[1] : adjacentLocation;
-    
+
     return !this.state.blocks[x][y];
   };
 
@@ -237,75 +256,72 @@ class Level extends Component {
   // move the container based on its current position on the new mouse
   // location. this is called passed up from Container.js
   moveContainer = (container, e) => {
-    // todo: check if the mouse is above any other container
-    // if true, return
-    container.setState((state) => {
-      const newsty = Object.assign({}, state.sty);
+    //for (let i = 0; i < this.state.containerStates.length; i++) {
+    //  // if a container that is not the current container is being
+    //  // hovered, don't do anything.
+    //  const otherContainerState = this.state.containerStates[i];
+    //  if (
+    //    container.props.data.id !== otherContainerState.id &&
+    //    otherContainerState.hovering
+    //  )
+    //    return;
+    //}
+    const containerState = this.getContainerStateById(container.props.data.id);
+    const newsty = Object.assign({}, containerState.sty);
+    // depending on if the movement is x or y, move the container
+    // the difference as the mouse moves
+    const border = this.getBorder();
+    const mo = containerState.mouseOffset;
+    const { location } = container.props.data;
+    //const blocks = this.state.blocks;
 
-      // depending on if the movement is x or y, move the container
-      // the difference as the mouse moves
-      const border = this.getBorder();
-      const mo = container.state.mouseOffset;
-      const { location } = container.props.data;
-      //const blocks = this.state.blocks;
-      switch (container.props.data.movement) {
-        case 'x':
-          const { left, right } = this.ref.current.getBoundingClientRect();
-          const minX = left + border;
-          const maxX = right - newsty.width - border;
-          const newleft = this.getNewContainerLocation(
-            mo,
-            newsty.left,
-            e.offsetX,
-            e.clientX,
-            minX,
-            maxX
-          );
+    const isHorizontal = container.props.data.movement === 'x';
+    const rect = this.ref.current.getBoundingClientRect();
+    //const min = rect[isHorizontal ? 'left' : 'top'];
+    //const max = rect[isHorizontal ? 'right' : 'bottom'] -
+    let min, max;
+    if (isHorizontal) {
+      min = rect.left + border;
+      max = rect.right - newsty.width - border;
+    } else {
+      min = rect.top + border;
+      max = rect.bottom - newsty.height - border;
+    }
 
-          const ccmx = this.containerCanMove(container, newsty.left < newleft, true);
-          if (ccmx) {
-            newsty.left = newleft;
-            location[0] = this.nearestBlock(location[1], newleft, false).newLocation;
-          }
+    const newpx = this.getNewContainerLocation(
+      mo,
+      isHorizontal ? newsty.left : newsty.top,
+      isHorizontal ? e.offsetX : e.offsetY,
+      isHorizontal ? e.clientX : e.clientY,
+      min,
+      max
+    );
 
-          break;
-        case 'y':
-          // do same as 'x' but with height, offsetY, clientY, top, and bottom
-          const { top, bottom } = this.ref.current.getBoundingClientRect();
-          const minY = top + border;
-          const maxY = bottom - newsty.height - border;
-          const newtop = this.getNewContainerLocation(
-            mo,
-            newsty.top,
-            e.offsetY,
-            e.clientY,
-            minY,
-            maxY
-          );
-          const ccmy = this.containerCanMove(container, newsty.top < newtop, false);
-          if (ccmy) {
-            newsty.top = newtop;
-            location[1] = this.nearestBlock(location[0], newtop, false).newLocation;
-          }
-          //// ensure that the blocks are not colliding with other blocks
-          //const tLoc = this.nearestBlock(location[0], newtop, false).newLocation;
-          ////const bLoc = Math.min(
-          ////  this.nearestBlock(newtop + newsty.height, false).newLocation - 1,
-          ////  this.levelFile.dimensions[1]
-          ////);
-          //const bLoc = this.nearestBlock(location[0], newtop + newsty.height, false).newLocation - 1;
-          //if (!blocks[location[0]][tLoc] && !blocks[location[0]][bLoc]) {
-          //  newsty.top = newtop;
-          //  //this.rewriteBlocks(container, tLoc, false);
-          //  location[1] = tLoc;
-          //}
-          break;
-        default:
-          break;
-      }
+    const ccm = this.containerCanMove(
+      container,
+      (isHorizontal ? newsty.left : newsty.top) < newpx,
+      isHorizontal
+    );
+    const index = isHorizontal ? 0 : 1;
+    const other = isHorizontal ? 1 : 0;
+    if (ccm) {
+      newsty[isHorizontal ? 'left' : 'top'] = newpx;
+      location[index] = this.nearestBlock(
+        location[other],
+        newpx,
+        isHorizontal
+      ).newLocation;
+    }
 
-      return { sty: newsty };
+    containerState.sty = newsty;
+    containerState.isMoving = false;
+
+    this.setState((state) => {
+      return { containerStates: state.containerStates };
     });
+    //container.setState((state) => {
+    //  const newsty = Object.assign({}, state.sty);
+    //});
   };
 
   // get the nearest block by rounding the ratio of pixels to blocks
@@ -331,19 +347,18 @@ class Level extends Component {
     //const newLocation = Math.round(
     //  (oldPixelLocation - spacing) / this.state.blockSize[index]
     //);
-    let newLocation = (oldPixelLocation - spacing) / this.state.blockSize[index];
+    let newLocation =
+      (oldPixelLocation - spacing) / this.state.blockSize[index];
     const roundedNewLocation = Math.round(newLocation);
     const nlx = isHorizontal ? roundedNewLocation : constLocation;
     const nly = isHorizontal ? constLocation : roundedNewLocation;
     if (this.state.blocks[nlx][nly]) {
       if (newLocation > roundedNewLocation) {
         newLocation = Math.ceil(newLocation);
-      }
-      else {
+      } else {
         newLocation = Math.floor(newLocation);
       }
-    }
-    else {
+    } else {
       newLocation = Math.round(newLocation);
     }
 
@@ -356,18 +371,44 @@ class Level extends Component {
     };
   };
 
+  updateContainerState = (id, newstate) => {
+    for (let i = 0; i < this.state.containerStates.length; i++) {
+      const containerState = this.state.containerStates[i];
+      if (containerState.id === id) {
+        this.setState((state) => {
+          state.containerStates[i] = Object.assign(containerState, newstate);
+          return {
+            containerStates: state.containerStates,
+          };
+        });
+      }
+    }
+  };
+
+  getContainerStateById(id) {
+    for (let i = 0; i < this.state.containerStates.length; i++) {
+      const containerState = this.state.containerStates[i];
+      if (containerState.id === id) return containerState;
+    }
+  }
+
   // Generate the level containers using array.map
   generateContainers() {
-    return this.levelFile.containers.map((container) => (
-      <Container
-        key={container.id}
-        data={container}
-        update={this.updateContainer}
-        move={this.moveContainer}
-        nearestBlock={this.nearestBlock}
-        rewriteBlocks={this.rewriteBlocks}
-      />
-    ));
+    return this.levelFile.containers.map((container) => {
+      const containerState = this.getContainerStateById(container.id);
+      return (
+        <Container
+          key={container.id}
+          data={container}
+          update={this.updateContainer}
+          move={this.moveContainer}
+          nearestBlock={this.nearestBlock}
+          rewriteBlocks={this.rewriteBlocks}
+          updateSelfState={this.updateContainerState}
+          selfState={containerState}
+        />
+      );
+    });
   }
 
   // Render the component
