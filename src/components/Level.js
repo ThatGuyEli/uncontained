@@ -22,6 +22,46 @@ class Level extends Component {
     // all of the data needed to load the level.
     this.levelFile = require(`../data/levels/level${props.id}.json`);
 
+    const { dimensions, containers } = this.levelFile;
+
+    // cycle through the blocks and populate it with booleans
+    // true = container is in that block
+    // false = container is not in that block
+    // note: even though this loop is technically a large calculation,
+    // it will only run once per level load.
+    const blocks = [];
+    for (let x = 0; x < dimensions[0]; x++) {
+      const blockColumn = [];
+      for (let y = 0; y < dimensions[1]; y++) {
+        let blockOccupied = false;
+        for (let i = 0; i < containers.length; i++) {
+          const container = containers[i];
+          const cdimensions = container.dimensions;
+          const clocation = container.location;
+
+          // if:
+          // x is at least at container's x
+          // x is less than the container's x + width
+          // y is at least at container's y
+          // y is less than the container's y + height
+          // then set the block occupied to 1 and replacing
+          //
+          if (
+            x >= clocation[0] &&
+            x < clocation[0] + cdimensions[0] &&
+            y >= clocation[1] &&
+            y < clocation[1] + cdimensions[1]
+          ) {
+            blockOccupied = true;
+            break;
+          }
+        }
+        blockColumn.push(blockOccupied);
+      }
+      blocks.push(blockColumn);
+    }
+    console.log(blocks);
+
     this.state = {
       // blockSize is the specific pixel:block ratio.
       // For example, a block might be 40px by 40px.
@@ -32,6 +72,13 @@ class Level extends Component {
       // note that this is in the state because it is
       // going to change with the window.
       blockSize: [40, 40],
+
+      // blocks determines whether or not a container is
+      // occupying that specific location. this is a 2D array
+      // with the columns (x values) first.
+      // true = container is in that block
+      // false = container is not in that block
+      blocks: blocks,
     };
   }
 
@@ -111,7 +158,14 @@ class Level extends Component {
   // a helper to move the container, because case 'x' and 'y' do
   // the exact same function but use different inputs which are
   // passed into this function
-  moveContainerHelper = (mo, oldLocation, newOffset, mouseClient, min, max) => {
+  getNewContainerLocation = (
+    mo,
+    oldLocation,
+    newOffset,
+    mouseClient,
+    min,
+    max
+  ) => {
     // depending on if the movement is x or y, move the container
     // the difference as the mouse moves
     const newLocation = oldLocation + newOffset - mo;
@@ -140,9 +194,51 @@ class Level extends Component {
     // NaN and underfined errors
   };
 
+  // instead of checking the validity of where the container would be, check whether
+  // or not the container can move in that direction. that direction would be
+  // determined by the relative location of the mouse from the original mouse location
+  // (positive or negative). if it can move in that direction, continuously move
+  // that container in that direction and update its location.
+  // pos = boolean that determines whether or not the container wants to move in a
+  // positive direction
+  containerCanMove = (container, pos, isHorizontal) => {
+    const { location, dimensions } = container.props.data;
+    const index = isHorizontal ? 0 : 1;
+
+    // the adjacent location is either the location directly after
+    // the end of the dimensions, but since location + dimension is
+    // already + 1 over the edge, don't do anything else
+    // or the adjacent location is directly before the location,
+    // in which case subtract one
+    const adjacentLocation = pos
+      ? Math.min(location[index] + dimensions[index], this.levelFile.dimensions[index] - 1)
+      : Math.max(location[index] - 1, 0);
+    
+    const x = isHorizontal ? adjacentLocation : location[0];
+    const y = isHorizontal ? location[1] : adjacentLocation;
+    
+    return !this.state.blocks[x][y];
+  };
+
+  rewriteBlocks = (container, isSetting) => {
+    const { location, dimensions } = container.props.data;
+    // overwrite old x and y with 0s
+    const newBlocks = Object.assign({}, this.state.blocks);
+    for (let x = location[0]; x < location[0] + dimensions[0]; x++) {
+      for (let y = location[1]; y < location[1] + dimensions[1]; y++) {
+        newBlocks[x][y] = isSetting;
+      }
+    }
+    this.setState({
+      blocks: newBlocks,
+    });
+  };
+
   // move the container based on its current position on the new mouse
   // location. this is called passed up from Container.js
   moveContainer = (container, e) => {
+    // todo: check if the mouse is above any other container
+    // if true, return
     container.setState((state) => {
       const newsty = Object.assign({}, state.sty);
 
@@ -150,12 +246,14 @@ class Level extends Component {
       // the difference as the mouse moves
       const border = this.getBorder();
       const mo = container.state.mouseOffset;
+      const { location } = container.props.data;
+      //const blocks = this.state.blocks;
       switch (container.props.data.movement) {
         case 'x':
           const { left, right } = this.ref.current.getBoundingClientRect();
           const minX = left + border;
           const maxX = right - newsty.width - border;
-          newsty.left = this.moveContainerHelper(
+          const newleft = this.getNewContainerLocation(
             mo,
             newsty.left,
             e.offsetX,
@@ -163,13 +261,20 @@ class Level extends Component {
             minX,
             maxX
           );
+
+          const ccmx = this.containerCanMove(container, newsty.left < newleft, true);
+          if (ccmx) {
+            newsty.left = newleft;
+            location[0] = this.nearestBlock(location[1], newleft, false).newLocation;
+          }
+
           break;
         case 'y':
           // do same as 'x' but with height, offsetY, clientY, top, and bottom
           const { top, bottom } = this.ref.current.getBoundingClientRect();
           const minY = top + border;
           const maxY = bottom - newsty.height - border;
-          newsty.top = this.moveContainerHelper(
+          const newtop = this.getNewContainerLocation(
             mo,
             newsty.top,
             e.offsetY,
@@ -177,6 +282,23 @@ class Level extends Component {
             minY,
             maxY
           );
+          const ccmy = this.containerCanMove(container, newsty.top < newtop, false);
+          if (ccmy) {
+            newsty.top = newtop;
+            location[1] = this.nearestBlock(location[0], newtop, false).newLocation;
+          }
+          //// ensure that the blocks are not colliding with other blocks
+          //const tLoc = this.nearestBlock(location[0], newtop, false).newLocation;
+          ////const bLoc = Math.min(
+          ////  this.nearestBlock(newtop + newsty.height, false).newLocation - 1,
+          ////  this.levelFile.dimensions[1]
+          ////);
+          //const bLoc = this.nearestBlock(location[0], newtop + newsty.height, false).newLocation - 1;
+          //if (!blocks[location[0]][tLoc] && !blocks[location[0]][bLoc]) {
+          //  newsty.top = newtop;
+          //  //this.rewriteBlocks(container, tLoc, false);
+          //  location[1] = tLoc;
+          //}
           break;
         default:
           break;
@@ -189,7 +311,9 @@ class Level extends Component {
   // get the nearest block by rounding the ratio of pixels to blocks
   // then, return both that new location and the new pixel location
   // called from this.props.nearestBlock, from Container.js
-  nearestBlock = (oldLocation, isHorizontal) => {
+  // note: only returns an x or a y value for location/pixels,
+  // based on isHorizontal
+  nearestBlock = (constLocation, oldPixelLocation, isHorizontal) => {
     // get spacing so the border and whitespace isn't used
     // in the calculations
     const { x, y } = this.ref.current.getBoundingClientRect();
@@ -204,9 +328,25 @@ class Level extends Component {
     // the level div
     // divide to get the ratio, then round to get a full
     // location number
-    const newLocation = Math.round(
-      (oldLocation - spacing) / this.state.blockSize[index]
-    );
+    //const newLocation = Math.round(
+    //  (oldPixelLocation - spacing) / this.state.blockSize[index]
+    //);
+    let newLocation = (oldPixelLocation - spacing) / this.state.blockSize[index];
+    const roundedNewLocation = Math.round(newLocation);
+    const nlx = isHorizontal ? roundedNewLocation : constLocation;
+    const nly = isHorizontal ? constLocation : roundedNewLocation;
+    if (this.state.blocks[nlx][nly]) {
+      if (newLocation > roundedNewLocation) {
+        newLocation = Math.ceil(newLocation);
+      }
+      else {
+        newLocation = Math.floor(newLocation);
+      }
+    }
+    else {
+      newLocation = Math.round(newLocation);
+    }
+
     // remultiply that to get the new locaton, which is "rounded"
     const newPixelLocation =
       newLocation * this.state.blockSize[index] + spacing;
@@ -225,6 +365,7 @@ class Level extends Component {
         update={this.updateContainer}
         move={this.moveContainer}
         nearestBlock={this.nearestBlock}
+        rewriteBlocks={this.rewriteBlocks}
       />
     ));
   }

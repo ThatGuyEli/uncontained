@@ -18,20 +18,10 @@
       "items": []
     },
     {
-      "id": 4,
-      "color": "blue",
-      "dimensions": [20, 10],
-      "location": [20, 0],
-      "movement": "y",
-      "platforms": [],
-      "openings": [{ "border": "bottom", "location": 1 }],
-      "items": []
-    },
-    {
       "id": 2,
       "color": "blue",
       "dimensions": [30, 10],
-      "location": [10, 10],
+      "location": [0, 10],
       "movement": "x",
       "platforms": [],
       "openings": [
@@ -43,7 +33,7 @@
     {
       "id": 3,
       "color": "gray",
-      "dimensions": [20, 10],
+      "dimensions": [40, 10],
       "location": [0, 20],
       "movement": "x",
       "platforms": [],

@@ -51,6 +51,7 @@ class Container extends Component {
             ? e.nativeEvent.offsetX
             : e.nativeEvent.offsetY,
       });
+      this.props.rewriteBlocks(this, false);
     }
   };
 
@@ -64,6 +65,7 @@ class Container extends Component {
       });
 
       this.snap();
+      this.props.rewriteBlocks(this, true);
     }
   };
 
@@ -78,6 +80,7 @@ class Container extends Component {
 
     // get the nearest block from Level.js, passing in either left or top
     const nearestBlock = this.props.nearestBlock(
+      this.props.data.location[isHorizontal ? 1 : 0],
       isHorizontal ? sty.left : sty.top,
       isHorizontal
     );
