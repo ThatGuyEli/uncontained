@@ -233,10 +233,20 @@ class Level extends Component {
         )
       : Math.max(location[index] - 1, 0);
 
-    const x = isHorizontal ? adjacentLocation : location[0];
-    const y = isHorizontal ? location[1] : adjacentLocation;
+    // top left or top right if horizontal
+    // top left or bottom left if vertical
+    const x1 = isHorizontal ? adjacentLocation : location[0];
+    const y1 = isHorizontal ? location[1] : adjacentLocation;
 
-    return !this.state.blocks[x][y];
+    // also, check the other corner on that side. that means:
+    // for top left, check bottom left
+    // for top right, check bottom right
+    // for bottom left, check bottom right
+    const x2 = isHorizontal ? adjacentLocation : location[0] + dimensions[0] - 1;
+    const y2 = isHorizontal ? location[1] + dimensions[1] - 1 : adjacentLocation;
+
+
+    return !this.state.blocks[x1][y1] && !this.state.blocks[x2][y2];
   };
 
   rewriteBlocks = (container, isSetting) => {
@@ -256,16 +266,6 @@ class Level extends Component {
   // move the container based on its current position on the new mouse
   // location. this is called passed up from Container.js
   moveContainer = (container, e) => {
-    //for (let i = 0; i < this.state.containerStates.length; i++) {
-    //  // if a container that is not the current container is being
-    //  // hovered, don't do anything.
-    //  const otherContainerState = this.state.containerStates[i];
-    //  if (
-    //    container.props.data.id !== otherContainerState.id &&
-    //    otherContainerState.hovering
-    //  )
-    //    return;
-    //}
     const containerState = this.getContainerStateById(container.props.data.id);
     const newsty = Object.assign({}, containerState.sty);
     // depending on if the movement is x or y, move the container
