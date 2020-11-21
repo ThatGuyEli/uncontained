@@ -78,9 +78,13 @@ class Level extends Component {
       // false = container is not in that block
       blocks: blocks,
 
+      // these containerStates act as the states of each
+      // individual container, which are used to determine
+      // the size and location of each container
       containerStates: [],
     };
 
+    // populate the container states with default settings
     this.levelFile.containers.forEach((container) => {
       // create a container state
       const containerState = {
@@ -98,19 +102,21 @@ class Level extends Component {
     });
   }
 
-  // On mount, update the block size.
+  // On mount, update the block size and add a window listener
+  // to automatically readjust the sizes of everything.
   componentDidMount() {
-    this.updateBlockSize();
     window.addEventListener('resize', this.updateBlockSize);
   }
 
+  // Similarly, when the component is being unmouned, remove 
+  // the event listener. This is to prevent unnecessary calls
+  // to no-longer-existing components.
   componentWillUnmount() {
     window.removeEventListener('resize', this.updateBlockSize);
   }
 
   // Update the block size on resize and mount.
   updateBlockSize = () => {
-    if (this.ref.current !== null) {
       const cw = this.ref.current.clientWidth;
       const ch = this.ref.current.clientHeight;
       // Create a temporary blockSize array to replace this.state.blockSize.
@@ -128,12 +134,11 @@ class Level extends Component {
           blockSize: bs,
         });
       }
-    }
-  };
+  }
 
   // Update the container size. Passed up from Container.js in order
   // to access this.ref.current
-  updateContainer = (dimensions, location) => {
+  updateContainerSize = (dimensions, location) => {
     if (this.ref.current !== null) {
       // get level's x and y, and client's height and width
       const { x, y } = this.ref.current.getBoundingClientRect();
@@ -174,7 +179,7 @@ class Level extends Component {
   // a helper to move the container, because case 'x' and 'y' do
   // the exact same function but use different inputs which are
   // passed into this function
-  getNewContainerLocation = (
+  getNewContainerPixelLocation = (
     mo,
     oldLocation,
     newOffset,
@@ -227,6 +232,7 @@ class Level extends Component {
     // or the adjacent location is directly before the location,
     // in which case subtract one
     const adjacentLocation = pos
+    // use Math.min/max to fix edge cases
       ? Math.min(
           location[index] + dimensions[index],
           this.levelFile.dimensions[index] - 1
@@ -245,14 +251,20 @@ class Level extends Component {
     const x2 = isHorizontal ? adjacentLocation : location[0] + dimensions[0] - 1;
     const y2 = isHorizontal ? location[1] + dimensions[1] - 1 : adjacentLocation;
 
-
+    // true if both blocks are not occupied (false)
     return !this.state.blocks[x1][y1] && !this.state.blocks[x2][y2];
   };
 
+  // rewrite the blocks based on whether or not the block is being
+  // clicked on or let go of. 
   rewriteBlocks = (container, isSetting) => {
     const { location, dimensions } = container.props.data;
     // overwrite old x and y with 0s
     const newBlocks = Object.assign({}, this.state.blocks);
+
+    // cycle through the blocks that the container currently is located
+    // in. since this method is only called on click and on "un"click,
+    // the block table is not constantly being rewritten
     for (let x = location[0]; x < location[0] + dimensions[0]; x++) {
       for (let y = location[1]; y < location[1] + dimensions[1]; y++) {
         newBlocks[x][y] = isSetting;
@@ -273,12 +285,15 @@ class Level extends Component {
     const border = this.getBorder();
     const mo = containerState.mouseOffset;
     const { location } = container.props.data;
-    //const blocks = this.state.blocks;
 
     const isHorizontal = container.props.data.movement === 'x';
     const rect = this.ref.current.getBoundingClientRect();
-    //const min = rect[isHorizontal ? 'left' : 'top'];
-    //const max = rect[isHorizontal ? 'right' : 'bottom'] -
+
+    // calculate the min/max based on whether or not the container's
+    // movement is horizontal. if the container is horizontal,
+    // use the left + border as min and the right - width - border
+    // if the container is vertical, use top instead of left,
+    // bottom instead of right, and height instead of width
     let min, max;
     if (isHorizontal) {
       min = rect.left + border;
@@ -288,7 +303,8 @@ class Level extends Component {
       max = rect.bottom - newsty.height - border;
     }
 
-    const newpx = this.getNewContainerLocation(
+    // calculate the new container location, in pixels
+    const newpx = this.getNewContainerPixelLocation(
       mo,
       isHorizontal ? newsty.left : newsty.top,
       isHorizontal ? e.offsetX : e.offsetY,
@@ -297,14 +313,19 @@ class Level extends Component {
       max
     );
 
+    // check whether or not the container can actually move
     const ccm = this.containerCanMove(
       container,
       (isHorizontal ? newsty.left : newsty.top) < newpx,
       isHorizontal
     );
-    const index = isHorizontal ? 0 : 1;
-    const other = isHorizontal ? 1 : 0;
+
+    // if it can actually move, set the calculated location
+    // to the newsty and set the location to the nearest
+    // block.
     if (ccm) {
+      const index = isHorizontal ? 0 : 1;
+      const other = isHorizontal ? 1 : 0;
       newsty[isHorizontal ? 'left' : 'top'] = newpx;
       location[index] = this.nearestBlock(
         location[other],
@@ -313,15 +334,16 @@ class Level extends Component {
       ).newLocation;
     }
 
+    // set the style of the container to the calculated newsty
+    // set the movement to false, because the calculations are
+    // completed.
     containerState.sty = newsty;
     containerState.isMoving = false;
 
+    // reset the container states, which redraws the component
     this.setState((state) => {
       return { containerStates: state.containerStates };
     });
-    //container.setState((state) => {
-    //  const newsty = Object.assign({}, state.sty);
-    //});
   };
 
   // get the nearest block by rounding the ratio of pixels to blocks
@@ -344,12 +366,12 @@ class Level extends Component {
     // the level div
     // divide to get the ratio, then round to get a full
     // location number
-    //const newLocation = Math.round(
-    //  (oldPixelLocation - spacing) / this.state.blockSize[index]
-    //);
     let newLocation =
       (oldPixelLocation - spacing) / this.state.blockSize[index];
     const roundedNewLocation = Math.round(newLocation);
+
+    // to prevent containers leaving the bounds, either ceil() or
+    // floor() the location depending on if the rounded location
     const nlx = isHorizontal ? roundedNewLocation : constLocation;
     const nly = isHorizontal ? constLocation : roundedNewLocation;
     if (this.state.blocks[nlx][nly]) {
@@ -359,7 +381,7 @@ class Level extends Component {
         newLocation = Math.floor(newLocation);
       }
     } else {
-      newLocation = Math.round(newLocation);
+      newLocation = roundedNewLocation;
     }
 
     // remultiply that to get the new locaton, which is "rounded"
@@ -371,10 +393,18 @@ class Level extends Component {
     };
   };
 
+  // this method is intended to replace setState() and is called
+  // by Container.js
   updateContainerState = (id, newstate) => {
+    // note that this does not use getContainerById because
+    // the index is necessary to replace it
+
+    // cycle through container states until the wanted id is found
     for (let i = 0; i < this.state.containerStates.length; i++) {
       const containerState = this.state.containerStates[i];
       if (containerState.id === id) {
+
+        // modify the state by replacing whatever newstate specifies
         this.setState((state) => {
           state.containerStates[i] = Object.assign(containerState, newstate);
           return {
@@ -385,6 +415,9 @@ class Level extends Component {
     }
   };
 
+  // cycle through the state.containerStates until the one with
+  // the requested id is found. note that the id is not always
+  // the same as the index, which is why this method is necessary.
   getContainerStateById(id) {
     for (let i = 0; i < this.state.containerStates.length; i++) {
       const containerState = this.state.containerStates[i];
@@ -400,7 +433,7 @@ class Level extends Component {
         <Container
           key={container.id}
           data={container}
-          update={this.updateContainer}
+          updateSize={this.updateContainerSize}
           move={this.moveContainer}
           nearestBlock={this.nearestBlock}
           rewriteBlocks={this.rewriteBlocks}

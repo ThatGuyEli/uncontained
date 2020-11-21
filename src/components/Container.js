@@ -30,7 +30,7 @@ class Container extends Component {
 
   update = () => {
     const { dimensions, location } = this.props.data;
-    const newsty = this.props.update(dimensions, location);
+    const newsty = this.props.updateSize(dimensions, location);
     //this.setState({
     //  sty: newsty,
     //});
