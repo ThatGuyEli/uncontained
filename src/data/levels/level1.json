@@ -6,6 +6,10 @@
     "points": 0,
     "collected-star": false
   },
+  "character": {
+    "startContainer": 1,
+    "startLocation": [5, 5]
+  },
   "containers": [
     {
       "id": 1,

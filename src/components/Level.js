@@ -1,5 +1,6 @@
-import React, { Component, createRef } from 'react';
+import React, { Component } from 'react';
 import Container from './Container.js';
+import Character from './Character.js';
 
 class Level extends Component {
   constructor(props) {
@@ -8,7 +9,9 @@ class Level extends Component {
     // the component after the component has rendered. This is
     // mainly used to access the height and width of the component
     // to rescale the blocks.
-    this.ref = createRef();
+    // ***disabled in favor of using innerHeight and innerWidth,
+    // which are built into javascript
+
     // The level dimensions refer to how many "blocks"
     // are given to the level. Each block will have
     // an adjustable amount of pixels determined by
@@ -61,6 +64,8 @@ class Level extends Component {
       blocks.push(blockColumn);
     }
     this.state = {
+      sty: {},
+
       // blockSize is the specific pixel:block ratio.
       // For example, a block might be 40px by 40px.
       // This array is preset to 40/40 so that this.updateBlockSize
@@ -78,6 +83,16 @@ class Level extends Component {
       // false = container is not in that block
       blocks: blocks,
 
+      // keep the character state here
+      characterState: {
+        // the character will always be a blocksize of 2,2
+        size: [1, 1],
+        sty: {},
+        container: this.levelFile.character.startContainer,
+        // the location is relative to the container that the
+        // character is located in.
+        location: this.levelFile.character.startLocation,
+      },
       // these containerStates act as the states of each
       // individual container, which are used to determine
       // the size and location of each container
@@ -100,80 +115,125 @@ class Level extends Component {
       };
       this.state.containerStates.push(containerState);
     });
+    
   }
+
+  // update the style. The width, height, and margin are
+  // calculated so that the <div> will always be centered,
+  // adhere to a 4:3 aspect ratio, and be as large as possible.
+  // note that color and border-style is handled by App.css
+  updateSty = () => {
+    const newsty = {};
+    const { innerWidth, innerHeight } = window;
+
+    // set both border radius and size to border.
+    const border = this.getBorder();
+    newsty.borderRadius = border;
+    newsty.borderWidth = border;
+
+    const doubleBorder = 2 * border;
+    const fourThirdsHeight = (innerHeight * 4) / 3;
+
+    // if the width of the viewport is less than 4/3 of the height,
+    // base the style off of the width
+    if (innerWidth < fourThirdsHeight) {
+      const threeFourthsWidth = (innerWidth * 3) / 4;
+      newsty.width = innerWidth - doubleBorder;
+      newsty.height = threeFourthsWidth - doubleBorder;
+
+      const margin = (innerHeight - threeFourthsWidth) / 2;
+      newsty.marginTop = margin;
+      newsty.marginBottom = margin;
+      newsty.marginLeft = 0;
+      newsty.marginRight = 0;
+    }
+    // otherwise, base the style off of the height
+    else {
+      newsty.width = fourThirdsHeight - doubleBorder;
+      newsty.height = innerHeight - doubleBorder;
+
+      const margin = (innerWidth - fourThirdsHeight) / 2;
+      newsty.marginTop = 0;
+      newsty.marginBottom = 0;
+      newsty.marginLeft = margin;
+      newsty.marginRight = margin;
+    }
+
+    // this utilizes the callback parameter of setState.
+    // when the state finishes setting the style to the new
+    // style, also set the new block size
+    this.setState({ sty: newsty }, this.updateBlockSize);
+  };
 
   // On mount, update the block size and add a window listener
   // to automatically readjust the sizes of everything.
   componentDidMount() {
-    window.addEventListener('resize', this.updateBlockSize);
+    this.updateSty();
+    window.addEventListener('resize', this.updateSty);
   }
 
-  // Similarly, when the component is being unmouned, remove 
+  // Similarly, when the component is being unmouned, remove
   // the event listener. This is to prevent unnecessary calls
   // to no-longer-existing components.
   componentWillUnmount() {
-    window.removeEventListener('resize', this.updateBlockSize);
+    window.removeEventListener('resize', this.updateSty);
   }
 
   // Update the block size on resize and mount.
   updateBlockSize = () => {
-      const cw = this.ref.current.clientWidth;
-      const ch = this.ref.current.clientHeight;
-      // Create a temporary blockSize array to replace this.state.blockSize.
-      let bs = [
-        cw / this.levelFile.dimensions[0],
-        ch / this.levelFile.dimensions[1],
-      ];
+    const { width, height } = this.state.sty;
+    // Create a temporary blockSize array to replace this.state.blockSize.
+    let bs = [
+      width / this.levelFile.dimensions[0],
+      height / this.levelFile.dimensions[1],
+    ];
 
-      // If either pixel ratio is not correct, replace the blockSize array.
-      if (
-        bs[0] !== this.state.blockSize[0] ||
-        bs[1] !== this.state.blockSize[1]
-      ) {
-        this.setState({
-          blockSize: bs,
-        });
-      }
-  }
+    // If either pixel ratio is not correct, replace the blockSize array.
+    if (
+      bs[0] !== this.state.blockSize[0] ||
+      bs[1] !== this.state.blockSize[1]
+    ) {
+      this.setState({
+        blockSize: bs,
+      });
+    }
+  };
 
   // Update the container size. Passed up from Container.js in order
-  // to access this.ref.current
-  updateContainerSize = (dimensions, location) => {
-    if (this.ref.current !== null) {
-      // get level's x and y, and client's height and width
-      const { x, y } = this.ref.current.getBoundingClientRect();
-      const border = this.getBorder();
+  // to access this.state.sty
+  updateContainerSty = (dimensions, location) => {
+    // get level's x and y, and client's height and width
+    const { marginLeft, marginTop } = this.state.sty;
+    const x = marginLeft;
+    const y = marginTop;
+    const border = this.getBorder();
 
-      // get blocksize for readability
-      const bs = this.state.blockSize;
+    // get blocksize for readability
+    const bs = this.state.blockSize;
 
-      // pixel width, height, x, and y, respectively
-      // px and py have added level x/y and border to position correctly
-      const pw = dimensions[0] * bs[0];
-      const ph = dimensions[1] * bs[1];
-      const px = location[0] * bs[0] + x + border;
-      const py = location[1] * bs[1] + y + border;
+    // pixel width, height, x, and y, respectively
+    // px and py have added level x/y and border to position correctly
 
-      return {
-        height: ph,
-        width: pw,
-        top: py,
-        left: px,
-      };
-    }
+    return {
+      width: dimensions[0] * bs[0],
+      height: dimensions[1] * bs[1],
+      left: location[0] * bs[0] + x + border,
+      top: location[1] * bs[1] + y + border,
+      borderWidth: border,
+      borderRadius: border,
+    };
   };
 
   // calculate the border of the level window
   getBorder() {
-    const cw = this.ref.current.clientWidth;
-    const ch = this.ref.current.clientHeight;
+    const { innerWidth, innerHeight } = window;
 
     // set the border to be as big as it is in App.css
     // cw/100 and ch/100 are equivalent to 1vw and 1vh
     // in css, respectively
     // if clientWidth < 4/3 clientHeight, border is 1vw
     // else, border is 1vh
-    return (cw + ch) / 200;
+    return (innerWidth + innerHeight) / 200;
   }
 
   // a helper to move the container, because case 'x' and 'y' do
@@ -232,8 +292,8 @@ class Level extends Component {
     // or the adjacent location is directly before the location,
     // in which case subtract one
     const adjacentLocation = pos
-    // use Math.min/max to fix edge cases
-      ? Math.min(
+      ? // use Math.min/max to fix edge cases
+        Math.min(
           location[index] + dimensions[index],
           this.levelFile.dimensions[index] - 1
         )
@@ -248,15 +308,19 @@ class Level extends Component {
     // for top left, check bottom left
     // for top right, check bottom right
     // for bottom left, check bottom right
-    const x2 = isHorizontal ? adjacentLocation : location[0] + dimensions[0] - 1;
-    const y2 = isHorizontal ? location[1] + dimensions[1] - 1 : adjacentLocation;
+    const x2 = isHorizontal
+      ? adjacentLocation
+      : location[0] + dimensions[0] - 1;
+    const y2 = isHorizontal
+      ? location[1] + dimensions[1] - 1
+      : adjacentLocation;
 
     // true if both blocks are not occupied (false)
     return !this.state.blocks[x1][y1] && !this.state.blocks[x2][y2];
   };
 
   // rewrite the blocks based on whether or not the block is being
-  // clicked on or let go of. 
+  // clicked on or let go of.
   rewriteBlocks = (container, isSetting) => {
     const { location, dimensions } = container.props.data;
     // overwrite old x and y with 0s
@@ -287,7 +351,7 @@ class Level extends Component {
     const { location } = container.props.data;
 
     const isHorizontal = container.props.data.movement === 'x';
-    const rect = this.ref.current.getBoundingClientRect();
+    const { marginTop, height, marginLeft, width } = this.state.sty;
 
     // calculate the min/max based on whether or not the container's
     // movement is horizontal. if the container is horizontal,
@@ -296,11 +360,11 @@ class Level extends Component {
     // bottom instead of right, and height instead of width
     let min, max;
     if (isHorizontal) {
-      min = rect.left + border;
-      max = rect.right - newsty.width - border;
+      min = marginLeft + border;
+      max = marginLeft + width - newsty.width + border;
     } else {
-      min = rect.top + border;
-      max = rect.bottom - newsty.height - border;
+      min = marginTop + border;
+      max = marginTop + height - newsty.height + border;
     }
 
     // calculate the new container location, in pixels
@@ -340,10 +404,14 @@ class Level extends Component {
     containerState.sty = newsty;
     containerState.isMoving = false;
 
-    // reset the container states, which redraws the component
-    this.setState((state) => {
-      return { containerStates: state.containerStates };
-    });
+    // if the character is in the container,
+    // update its pixel location
+    if (this.characterIsIn(container)) {
+      this.updateCharacterSty();
+    }
+
+    // redraw the component
+    this.forceUpdate();
   };
 
   // get the nearest block by rounding the ratio of pixels to blocks
@@ -354,7 +422,9 @@ class Level extends Component {
   nearestBlock = (constLocation, oldPixelLocation, isHorizontal) => {
     // get spacing so the border and whitespace isn't used
     // in the calculations
-    const { x, y } = this.ref.current.getBoundingClientRect();
+    const { marginLeft, marginTop } = this.state.sty;
+    const x = marginLeft;
+    const y = marginTop;
     const spacing = (isHorizontal ? x : y) + this.getBorder();
 
     // determine whether the x or y blocksize should be used
@@ -372,6 +442,7 @@ class Level extends Component {
 
     // to prevent containers leaving the bounds, either ceil() or
     // floor() the location depending on if the rounded location
+    // is occupied
     const nlx = isHorizontal ? roundedNewLocation : constLocation;
     const nly = isHorizontal ? constLocation : roundedNewLocation;
     if (this.state.blocks[nlx][nly]) {
@@ -403,7 +474,6 @@ class Level extends Component {
     for (let i = 0; i < this.state.containerStates.length; i++) {
       const containerState = this.state.containerStates[i];
       if (containerState.id === id) {
-
         // modify the state by replacing whatever newstate specifies
         this.setState((state) => {
           state.containerStates[i] = Object.assign(containerState, newstate);
@@ -433,7 +503,7 @@ class Level extends Component {
         <Container
           key={container.id}
           data={container}
-          updateSize={this.updateContainerSize}
+          updateSty={this.updateContainerSty}
           move={this.moveContainer}
           nearestBlock={this.nearestBlock}
           rewriteBlocks={this.rewriteBlocks}
@@ -444,12 +514,58 @@ class Level extends Component {
     });
   }
 
+  getContainerPixelLocation(id) {
+    const containerState = this.getContainerStateById(id);
+    return [containerState.sty.left, containerState.sty.top];
+  }
+
+  updateCharacterState = (newstate) => {
+    this.setState({
+      characterState: newstate,
+    });
+  };
+
+  updateCharacterSty = () => {
+    const characterState = Object.assign({}, this.state.characterState);
+    const bs = this.state.blockSize;
+    const border = this.getBorder();
+    const containerPixelLocation = this.getContainerPixelLocation(
+      characterState.container
+    );
+    const xpxRel =
+      characterState.location[0] * bs[0] + containerPixelLocation[0] + border;
+    const ypxRel =
+      characterState.location[1] * bs[1] + containerPixelLocation[1] + border;
+
+    const sty = {
+      width: bs[0] * characterState.size[0],
+      height: bs[1] * characterState.size[1],
+      left: xpxRel,
+      top: ypxRel,
+      borderWidth: border / 2,
+      borderRadius: border * 1.25,
+    };
+    characterState.sty = sty;
+
+    this.setState({
+      characterState: characterState,
+    });
+  };
+
+  characterIsIn = (container) => {
+    return this.state.characterState.container === container.props.data.id;
+  };
+
   // Render the component
   render() {
     // Return the level object in index.html
     return (
-      <div className='Level' ref={this.ref}>
+      <div className='Level' style={this.state.sty}>
         {this.generateContainers()}
+        <Character
+          selfState={this.state.characterState}
+          updateSty={this.updateCharacterSty}
+        />
       </div>
     );
   }

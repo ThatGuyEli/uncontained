@@ -18,6 +18,14 @@
   --border: calc((1vh + 1vw)/2)
 }
 
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
 
 html, body {
   margin: 0px;
@@ -31,26 +39,21 @@ adhere to a 4:3 aspect ratio, and be as
 large as possible.
 */
 .Level {
-  border: var(--nord0) var(--border) solid;
-  border-radius: 2%;
-  width: calc(133vh - 2 * var(--border));
-  height: calc(100vh - 2 * var(--border));
-  margin: 0% calc((100vw - 133vh)/2);
+  border-style: solid;
+  border-color: var(--nord0);
   background-color: var(--nord7);
 }
 
-@media only screen and (max-width: 133vh) {
-  .Level {
-    width: calc(100vw - 2 * var(--border));
-    height: calc(75vw - 2 * var(--border));
-    margin: calc((100vh - 75vw)/2) 0%;
-  }
+.Character {
+  background-color: var(--nord11);
+  position: absolute;
+  border-style: solid;
+  border-color: var(--nord0);
 }
 
 .Container {
   box-sizing: border-box;
-  border: var(--nord0) var(--border) solid;
-  border-radius: var(--border);
+  border-color: var(--nord0);
   border-style: solid;
   position: absolute;
 }
@@ -62,5 +65,6 @@ large as possible.
 
 .blue {
   background-color: var(--nord9);
+  border-color: var(--nord15);
   border-color: var(--nord10);
 }

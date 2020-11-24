@@ -7,6 +7,7 @@ class Container extends Component {
   }
 
   componentDidMount() {
+    window.setTimeout(this.update, 10);
     window.addEventListener('resize', this.update);
     window.addEventListener('mousemove', this.move);
     window.addEventListener('mouseup', this.detach);
@@ -20,8 +21,8 @@ class Container extends Component {
 
   update = () => {
     const { dimensions, location } = this.props.data;
-    const newsty = this.props.updateSize(dimensions, location);
-    this.props.updateSelfState(this.props.data.id, {sty: newsty, });
+    const newsty = this.props.updateSty(dimensions, location);
+    this.props.updateSelfState(this.props.data.id, { sty: newsty });
   };
 
   // set the state to attached, also send the offset from the click
@@ -30,11 +31,12 @@ class Container extends Component {
   // unnecessary calls to the react api.
   attach = (e) => {
     if (!this.props.selfState.attached && this.isMovable()) {
-      this.props.updateSelfState(this.props.data.id, { 
-        attached: true, 
-        mouseOffset: this.props.data.movement === 'x'
-          ? e.nativeEvent.offsetX
-          : e.nativeEvent.offsetY,
+      this.props.updateSelfState(this.props.data.id, {
+        attached: true,
+        mouseOffset:
+          this.props.data.movement === 'x'
+            ? e.nativeEvent.offsetX
+            : e.nativeEvent.offsetY,
       });
       this.props.rewriteBlocks(this, false);
     }
@@ -45,8 +47,6 @@ class Container extends Component {
   // unnecessary calls to the react api.
   detach = () => {
     if (this.props.selfState.attached && this.isMovable()) {
-      this.props.updateSelfState(this.props.data.id, { attached: false, });
-
       this.snap();
       this.props.rewriteBlocks(this, true);
     }
@@ -76,14 +76,21 @@ class Container extends Component {
     const newsty = Object.assign({}, sty);
     const location = isHorizontal ? 'left' : 'top';
     newsty[location] = nearestBlock.newPixelLocation;
-    this.props.updateSelfState(this.props.data.id, {sty: newsty, });
+    this.props.updateSelfState(this.props.data.id, {
+      attached: false,
+      sty: newsty,
+    });
   };
 
   // if the object is movable, call move from Level.js
   // note that this.state.attached is called first to
   // be slightly more efficient (no need to call another method)
   move = (e) => {
-    if (this.props.selfState.attached && !this.props.selfState.isMoving && this.isMovable()) {
+    if (
+      this.props.selfState.attached &&
+      !this.props.selfState.isMoving &&
+      this.isMovable()
+    ) {
       this.props.updateSelfState(this.props.data.id, { isMoving: true });
       this.props.move(this, e);
     }
