@@ -20,9 +20,8 @@ class Container extends Component {
   }
 
   update = () => {
-    const { dimensions, location } = this.props.data;
-    const newsty = this.props.updateSty(dimensions, location);
-    this.props.updateSelfState(this.props.data.id, { sty: newsty });
+    const { dimensions, location, id } = this.props.data;
+    this.props.updateSty(id, dimensions, location);
   };
 
   // set the state to attached, also send the offset from the click

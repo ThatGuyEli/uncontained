@@ -16,10 +16,6 @@ class Character extends Component {
     window.removeEventListener('resize', this.props.updateSty);
   }
 
-  //updateSize = () => {
-  //  this.props.updateSize();
-  //}
-
   render() {
     return <div className='Character' style={this.props.selfState.sty}></div>;
   }

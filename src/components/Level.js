@@ -2,37 +2,46 @@ import React, { Component } from 'react';
 import Container from './Container.js';
 import Character from './Character.js';
 
+/**
+ * Class that represents the level of the game.
+ * @extends Component
+ */
 class Level extends Component {
+  /**
+   * Create a level based on the level id.
+   *
+   * @param {Object} props The properties necessary to instantiate the level.
+   */
   constructor(props) {
     super(props);
     // The reference allows React to access the properties of
     // the component after the component has rendered. This is
     // mainly used to access the height and width of the component
     // to rescale the blocks.
-    // ***disabled in favor of using innerHeight and innerWidth,
-    // which are built into javascript
+    // this.ref = createRef();
+    // This has been disabled in favor of using innerHeight and innerWidth,
+    // which are built into JavaScript's window object.
 
     // The level dimensions refer to how many "blocks"
     // are given to the level. Each block will have
     // an adjustable amount of pixels determined by
     // the height and width of the window.
-    // this has been disabled and replaced by levelFile.dimensions
-    // because some levels may have different dimensions
     // this.blockDimensions = [400, 300];
+    // This has been disabled in favor of levelFile.dimensions
+    // because some levels may have different dimensions.
 
-    // level is the object imported from the requested level,
-    // which is passed through props. This json file includes
+    // Level is the object imported from the requested level,
+    // which is passed through props. This JSON file includes
     // all of the data needed to load the level.
     this.levelFile = require(`../data/levels/level${props.id}.json`);
 
-    const { dimensions, containers } = this.levelFile;
-
-    // cycle through the blocks and populate it with booleans
+    // Cycle through the blocks and populate it with booleans.
     // true = container is in that block
     // false = container is not in that block
-    // note: even though this loop is technically a large calculation,
+    // Note: even though this loop is technically a large calculation,
     // it will only run once per level load.
     const blocks = [];
+    const { dimensions, containers } = this.levelFile;
     for (let x = 0; x < dimensions[0]; x++) {
       const blockColumn = [];
       for (let y = 0; y < dimensions[1]; y++) {
@@ -42,13 +51,12 @@ class Level extends Component {
           const cdimensions = container.dimensions;
           const clocation = container.location;
 
-          // if:
+          // if all of the following conditions are met:
           // x is at least at container's x
           // x is less than the container's x + width
           // y is at least at container's y
           // y is less than the container's y + height
-          // then set the block occupied to 1 and replacing
-          //
+          // then set the block occupied to true
           if (
             x >= clocation[0] &&
             x < clocation[0] + cdimensions[0] &&
@@ -59,10 +67,17 @@ class Level extends Component {
             break;
           }
         }
+        // Add that boolean to the column.
         blockColumn.push(blockOccupied);
       }
+      // Add that column to the array.
       blocks.push(blockColumn);
     }
+
+    // The state of this class contains the "states" of all
+    // of the other objects/components of the level, because
+    // they are not needed at the higher levels of the game
+    // (such as the menu or title screen).
     this.state = {
       sty: {},
 
@@ -77,51 +92,92 @@ class Level extends Component {
       blockSize: [40, 40],
 
       // blocks determines whether or not a container is
-      // occupying that specific location. this is a 2D array
+      // occupying that specific location. This is a 2D array
       // with the columns (x values) first.
       // true = container is in that block
       // false = container is not in that block
       blocks: blocks,
 
-      // keep the character state here
+      // The character state is stored here to allow everything
+      // to access that state.
       characterState: {
-        // the character will always be a blocksize of 2,2
+        // The character's size will always be [1,1]. This is so that
+        // big and small levels will adjust the character's size
+        // accordingly.
         size: [1, 1],
+
+        // The character's style, like the level style, will change
+        // and so it is kept here in the state.
         sty: {},
-        container: this.levelFile.character.startContainer,
-        // the location is relative to the container that the
+
+        // The location is relative to the container that the
         // character is located in.
+        container: this.levelFile.character.startContainer,
         location: this.levelFile.character.startLocation,
       },
-      // these containerStates act as the states of each
-      // individual container, which are used to determine
-      // the size and location of each container
+
+      // containerStates is an array that keeps track of
+      // each individual container's state, which includes
+      // styling and other information.
       containerStates: [],
     };
 
-    // populate the container states with default settings
+    // Populate the container states with default state.
     this.levelFile.containers.forEach((container) => {
-      // create a container state
+      // Create the default container state.
       const containerState = {
+        // ID for identification.
         id: container.id,
-        // whether or not the component should track the mouse
-        // and act accordingly
+        // Whether or not the component should track the mouse
+        // and act accordingly.
         attached: false,
-        // the distance between the mouse and the top left corner,
-        // in either x/y depending on the movement of the component
+
+        // The distance between the mouse and the top left corner,
+        // in either x/y depending on the movement of the component.
         mouseOffset: 0,
+
+        // The container's style, like the level style, will change
+        // and so it is kept here in the state.
         sty: {},
+
+        // Whether or not the container is moving. This is to prevent
+        // errors from asynchronous tasks.
         isMoving: false,
       };
+
+      // Add this default container state to the list of containerStates.
       this.state.containerStates.push(containerState);
     });
-    
   }
 
-  // update the style. The width, height, and margin are
-  // calculated so that the <div> will always be centered,
-  // adhere to a 4:3 aspect ratio, and be as large as possible.
-  // note that color and border-style is handled by App.css
+  /**
+   * When the component mounts, update the style of this component.
+   * Additionally, add the event listener to update the style whenever
+   * the event listener resizes.
+   */
+  componentDidMount() {
+    this.updateSty();
+    window.addEventListener('resize', this.updateSty);
+  }
+
+  /**
+   * Similarly, when the component is being unmounted, remove
+   * the event listener. This is to prevent unnecessary calls
+   * to no-longer-existing components.
+   */
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.updateSty);
+  }
+
+  /**
+   * Update the style of the level. This includes the margins,
+   * border, and pixel dimensions of the component. The pixel
+   * sizes are calculated so that the component will always be
+   * centered, adhere to a 4:3 aspect ratio, and be as large
+   * as possible. The color and border-style is handled by
+   * /css/App.css. When the style is updated, this method
+   * calls {@link #updateBlockSize}.
+   */
   updateSty = () => {
     const newsty = {};
     const { innerWidth, innerHeight } = window;
@@ -165,21 +221,10 @@ class Level extends Component {
     this.setState({ sty: newsty }, this.updateBlockSize);
   };
 
-  // On mount, update the block size and add a window listener
-  // to automatically readjust the sizes of everything.
-  componentDidMount() {
-    this.updateSty();
-    window.addEventListener('resize', this.updateSty);
-  }
-
-  // Similarly, when the component is being unmouned, remove
-  // the event listener. This is to prevent unnecessary calls
-  // to no-longer-existing components.
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.updateSty);
-  }
-
-  // Update the block size on resize and mount.
+  /**
+   * Called from {@link #updateSty}. This updates the blockSize
+   * based on the height and width of the component.
+   */
   updateBlockSize = () => {
     const { width, height } = this.state.sty;
     // Create a temporary blockSize array to replace this.state.blockSize.
@@ -199,22 +244,28 @@ class Level extends Component {
     }
   };
 
-  // Update the container size. Passed up from Container.js in order
-  // to access this.state.sty
-  updateContainerSty = (dimensions, location) => {
-    // get level's x and y, and client's height and width
-    const { marginLeft, marginTop } = this.state.sty;
-    const x = marginLeft;
-    const y = marginTop;
+  /**
+   * Update the container style. This method is passed into
+   * {@link Container} using {@link Container.props} so that
+   * it can access {@link this.state.sty}. This sets the state
+   * based on the passed in id.
+   *
+   * @param {Number} id         the id of the container
+   * @param {Array}  dimensions the dimensions of the container
+   * @param {Array}  location   the location of the container
+   */
+  updateContainerSty = (id, dimensions, location) => {
+    // Get the x and y of the Level to determine the relative
+    // location of the Container.
+    const { marginLeft: x, marginTop: y } = this.state.sty;
     const border = this.getBorder();
 
-    // get blocksize for readability
+    // Get blocksize for readability.
     const bs = this.state.blockSize;
 
-    // pixel width, height, x, and y, respectively
-    // px and py have added level x/y and border to position correctly
-
-    return {
+    // Calculate the width, height, left, top, and border
+    // sizing of each container.
+    const newsty = {
       width: dimensions[0] * bs[0],
       height: dimensions[1] * bs[1],
       left: location[0] * bs[0] + x + border,
@@ -222,23 +273,38 @@ class Level extends Component {
       borderWidth: border,
       borderRadius: border,
     };
+    this.updateContainerState(id, { sty: newsty });
   };
 
-  // calculate the border of the level window
+  /**
+   * Get the pixel size of the border based on the
+   * viewport. This returns the pixel value of the average
+   * of 1% of the {@link window.innerWidth} and 1%
+   * of the {@link window.innerHeight}.
+   *
+   * @returns the pixel size of the border
+   */
   getBorder() {
     const { innerWidth, innerHeight } = window;
-
-    // set the border to be as big as it is in App.css
-    // cw/100 and ch/100 are equivalent to 1vw and 1vh
-    // in css, respectively
-    // if clientWidth < 4/3 clientHeight, border is 1vw
-    // else, border is 1vh
     return (innerWidth + innerHeight) / 200;
   }
 
-  // a helper to move the container, because case 'x' and 'y' do
-  // the exact same function but use different inputs which are
-  // passed into this function
+  /**
+   * This method is a helper method for {@link this#moveContainer}.
+   * It is used to move the container to a new pixel location,
+   * based on 'x' and 'y'. Note that because 'x' and 'y' use
+   * the exact same logic, the only difference is the input numbers,
+   * so a helper method is perfect for this situation.
+   *
+   * @param {Number} mo          the offset of the mouse
+   * @param {Number} oldLocation the previous location of the container
+   * @param {Number} newOffset   the new location of the mouse, relative to the container
+   * @param {Number} mouseClient the new location of the mouse, absolute
+   * @param {Number} min         the maximum bound of the level
+   * @param {Number} max         the minimum bound of the level
+   *
+   * @returns the new location, or the old location if the new location is invalid
+   */
   getNewContainerPixelLocation = (
     mo,
     oldLocation,
@@ -247,80 +313,91 @@ class Level extends Component {
     min,
     max
   ) => {
-    // depending on if the movement is x or y, move the container
-    // the difference as the mouse moves
+    // Depending on if the movement is x or y, move the container
+    // the distance of the mouse offset as the mouse moves.
     const newLocation = oldLocation + newOffset - mo;
 
-    // if the mouse is under the minimum pixel length,
+    // If the mouse is under the minimum pixel length,
     // plus the offset between the mouse and the corner of the container,
-    // just set the location to the minimum
+    // set the location to the minimum.
     if (mouseClient <= min + mo) {
       return min;
     }
-    // similarly, if the mouse is under the max pixel length,
+    // Similarly, if the mouse is under the max pixel length,
     // plus the offset between the mouse and the corner of the container,
-    // just set the location to the maximum
+    // set the location to the maximum.
     else if (mouseClient >= max + mo + this.getBorder()) {
       return max;
     }
-    // finally, if the new location would be in between the min and max,
+    // Finally, if the new location would be in between the min and max,
     // set it to that.
-    // note that this is still an if statement because the mouse may
+    // Note that this is still an if statement because the mouse may
     // update in a place where the new location would be out of the
     // bounds but the mouse is still within the bounds.
     else if (newLocation > min && newLocation < max) {
       return newLocation;
     } else return oldLocation;
-    // return oldloc if the movement is invalid to prevent
-    // NaN and underfined errors
+    // Return oldLocation if the movement is invalid to prevent
+    // NaN and underfined errors.
   };
 
-  // instead of checking the validity of where the container would be, check whether
-  // or not the container can move in that direction. that direction would be
+  // ** This comment was used for debugging purposes and for a theoretical approach
+  //    to a now fixed bug. However, it was kept here to demonstrate the thought process.
+  // Instead of checking the validity of where the container would be, check whether
+  // or not the container can move in that direction. That direction would be
   // determined by the relative location of the mouse from the original mouse location
   // (positive or negative). if it can move in that direction, continuously move
   // that container in that direction and update its location.
+
   // pos = boolean that determines whether or not the container wants to move in a
-  // positive direction
+  // positive direction.
   containerCanMove = (container, pos, isHorizontal) => {
     const { location, dimensions } = container.props.data;
     const index = isHorizontal ? 0 : 1;
+    const antiIndex = isHorizontal ? 1 : 0;
 
-    // the adjacent location is either the location directly after
+    // The adjacent location is either the location directly after
     // the end of the dimensions, but since location + dimension is
-    // already + 1 over the edge, don't do anything else
-    // or the adjacent location is directly before the location,
-    // in which case subtract one
+    // already + 1 over the edge, don't do anything else.
+    // Or the adjacent location is directly before the location,
+    // in which case subtract one.
     const adjacentLocation = pos
-      ? // use Math.min/max to fix edge cases
+      ? // Use Math.min/max to fix edge cases
         Math.min(
           location[index] + dimensions[index],
           this.levelFile.dimensions[index] - 1
         )
       : Math.max(location[index] - 1, 0);
 
-    // top left or top right if horizontal
-    // top left or bottom left if vertical
-    const x1 = isHorizontal ? adjacentLocation : location[0];
-    const y1 = isHorizontal ? location[1] : adjacentLocation;
-
-    // also, check the other corner on that side. that means:
-    // for top left, check bottom left
-    // for top right, check bottom right
-    // for bottom left, check bottom right
-    const x2 = isHorizontal
-      ? adjacentLocation
-      : location[0] + dimensions[0] - 1;
-    const y2 = isHorizontal
-      ? location[1] + dimensions[1] - 1
-      : adjacentLocation;
-
-    // true if both blocks are not occupied (false)
-    return !this.state.blocks[x1][y1] && !this.state.blocks[x2][y2];
+    // Cycle from 0 to the dimensions of the axis opposite to the moving
+    // axis. Check whether or not each block is occupied. If any of them
+    // are occupied, return false. If the end of the loop is reached,
+    // return true. This is used instead of checking the corners because
+    // a container may be small enough to avoid both corners, breaking
+    // the game.
+    for (
+      let i = 0;
+      i < dimensions[antiIndex];
+      i++
+    ) {
+      const x = isHorizontal ? adjacentLocation : location[0] + i;
+      const y = isHorizontal ? location[1] + i : adjacentLocation;
+      // If this block is occupied, return false.
+      if (this.state.blocks[x][y]) {
+        return false;
+      }
+    }
+    // Otherwise, none of the blocks are occupied, so return true.
+    return true;
   };
 
   // rewrite the blocks based on whether or not the block is being
   // clicked on or let go of.
+  /**
+   *
+   * @param {Object} container
+   * @param {Boolean} isSetting
+   */
   rewriteBlocks = (container, isSetting) => {
     const { location, dimensions } = container.props.data;
     // overwrite old x and y with 0s
@@ -351,7 +428,7 @@ class Level extends Component {
     const { location } = container.props.data;
 
     const isHorizontal = container.props.data.movement === 'x';
-    const { marginTop, height, marginLeft, width } = this.state.sty;
+    const { marginTop: y, height, marginLeft: x, width } = this.state.sty;
 
     // calculate the min/max based on whether or not the container's
     // movement is horizontal. if the container is horizontal,
@@ -360,11 +437,11 @@ class Level extends Component {
     // bottom instead of right, and height instead of width
     let min, max;
     if (isHorizontal) {
-      min = marginLeft + border;
-      max = marginLeft + width - newsty.width + border;
+      min = x + border;
+      max = x + width - newsty.width + border;
     } else {
-      min = marginTop + border;
-      max = marginTop + height - newsty.height + border;
+      min = y + border;
+      max = y + height - newsty.height + border;
     }
 
     // calculate the new container location, in pixels
