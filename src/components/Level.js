@@ -34,6 +34,13 @@ class Level extends Component {
     // which is passed through props. This JSON file includes
     // all of the data needed to load the level.
     this.levelFile = require(`../data/levels/level${props.id}.json`);
+    this.keys = require('../data/keybinds.json');
+    this.actions = {
+      left: false,
+      right: false,
+      jump: false,
+    };
+    this.paused = false;
 
     // Cycle through the blocks and populate it with booleans.
     // true = container is in that block
@@ -110,8 +117,24 @@ class Level extends Component {
         // and so it is kept here in the state.
         sty: {},
 
+        isMoving: false,
+        // The velocities are measured in blocks, but are multiplied
+        // by blockSize to determine the actual amount of pixels moved.
+        // The xVelocity is constant, but is stored in the state because
+        // the yVelocity will not be constant and keeping them together
+        // is important.
+        xVel: 3,
+        yVel: 0,
+        // The character will accelerate vertically to give a curve effect
+        // when falling/jumping.
+        yAcc: 1,
+        // The jump velocity is negative because up is negative
+        yJumpVel: -15,
+
         // The location is relative to the container that the
-        // character is located in.
+        // character is located in. Note that unlike containers,
+        // the character's pixel location does not snap to
+        // the location underneath it.
         container: this.levelFile.character.startContainer,
         location: this.levelFile.character.startLocation,
       },
@@ -170,7 +193,10 @@ class Level extends Component {
    * the event listener resizes.
    */
   componentDidMount() {
+    this.timer = setInterval(this.timerFunc, 1000 / 60);
     this.updateSty();
+    document.onkeydown = this.handleKey;
+    document.onkeyup = this.handleKey;
     window.addEventListener('resize', this.updateSty);
   }
 
@@ -184,6 +210,50 @@ class Level extends Component {
   }
 
   /**
+   * Handles KeyboardEvents from onKeyDown and onKeyUp.
+   *
+   * @param {KeyboardEvent} e the keyboard event to handle
+   */
+  handleKey = (e) => {
+    if (e.key in this.keys) {
+      const action = this.keys[e.key];
+
+      if (e.type === 'keydown') {
+        if (action === 'pause') this.togglePause();
+        else this.actions[action] = true;
+      } else if (e.type === 'keyup' && action !== 'pause') {
+        this.actions[action] = false;
+      }
+    }
+  };
+
+  togglePause = () => {
+    this.paused = !this.paused;
+    if (this.paused) {
+      clearInterval(this.timer);
+    } else {
+      this.timer = setInterval(this.timerFunc, 1000 / 60);
+    }
+    // todo: add pause menu
+    // todo: pause interval that moves the character
+  };
+
+  timerFunc = () => {
+    this.setState(
+      {
+        characterState: Object.assign(this.state.characterState, {
+          isMoving: true,
+        }),
+      },
+      this.moveCharacter
+    );
+  };
+
+  gameIsPaused = () => {
+    return this.paused;
+  };
+
+  /**
    * Update the style of the level. This includes the margins,
    * border, and pixel dimensions of the component. The pixel
    * sizes are calculated so that the component will always be
@@ -193,6 +263,8 @@ class Level extends Component {
    * calls {@link #updateBlockSize}.
    */
   updateSty = () => {
+    // Note: although Object.assign could be used, it is
+    // more efficient to simply list the style changes needed.
     const newsty = {};
     const { innerWidth, innerHeight } = window;
 
@@ -365,8 +437,10 @@ class Level extends Component {
 
   // pos = boolean that determines whether or not the container wants to move in a
   // positive direction.
-  containerCanMove = (container, pos, isHorizontal) => {
-    const { location, dimensions } = container.props.data;
+  containerCanMove = (container) => {
+    const { location, dimensions } = container.props;
+    const isHorizontal = container.props.movement === 'x';
+    const pos = container.props.selfState.isMovingPos;
     const index = isHorizontal ? 0 : 1;
     const antiIndex = isHorizontal ? 1 : 0;
 
@@ -401,70 +475,16 @@ class Level extends Component {
     return true;
   };
 
-  //getContainerBounds = (container, isHorizontal) => {
-  //  const minLoc = this.getContainerBound(container, isHorizontal, true);
-  //  const maxLoc = this.getContainerBound(container, isHorizontal, false);
-  //  const bs = this.state.blockSize;
-  //  const index = isHorizontal ? 0 : 1;
-  //  return {
-  //    min: minLoc * bs[index],
-  //    max: maxLoc * bs[index],
-  //  };
-  //};
-
-  //getContainerBound = (container, isHorizontal, isMin) => {
-  //  const { location, dimensions } = container.props.data;
-  //  const index = isHorizontal ? 0 : 1;
-  //  const sideArr = container.props.selfState.sideArr;
-
-  //  // prevent bound errors using Math.min/max
-  //  let checkingLocation = isMin
-  //    ? Math.max(location[index] - 1, 0)
-  //    : Math.min(
-  //        location[index] + dimensions[index],
-  //        this.levelFile.dimensions[index] - 1
-  //      );
-  //  // Infinitely loop until one of the locations in the sideArr
-  //  // meet an occupied item.
-  //  while (true) {
-  //    for (let i = 0; i < sideArr.length; i++) {
-  //      // If the container is moving horiztonally,
-  //      // the side array is referring to the y-axis.
-  //      // Similarly, if the container is moving
-  //      // vertically, the side array is referring to
-  //      // the x-axis.
-  //      const x = isHorizontal ? checkingLocation : sideArr[i];
-  //      const y = isHorizontal ? sideArr[i] : checkingLocation;
-  //      if (this.state.blocks[x][y]) {
-  //        return checkingLocation;
-  //      }
-  //    }
-  //    // Increment the checking location because all of the
-  //    // locations on the side array were clear.
-  //    checkingLocation += isMin ? -1 : 1;
-
-  //    // Check to ensure that the checking location is still within
-  //    // the bounds. If it is not, return the previous checking
-  //    // location, as it was the maximum/minimum of the entire screen.
-  //    const levelMin = 0;
-  //    const levelMax = this.levelFile.dimensions[index] - 1;
-  //    const isWithinBounds =
-  //      checkingLocation >= levelMin && checkingLocation <= levelMax;
-  //    if (!isWithinBounds) {
-  //      return checkingLocation + (isMin ? 1 : -1);
-  //    }
-  //  }
-  //};
-
-  // rewrite the blocks based on whether or not the block is being
-  // clicked on or let go of.
   /**
+   * Either write {true} or {false} blocks to {@link this.state.blocks}
+   * based on the parameter {isSetting}.
    *
-   * @param {Object} container
-   * @param {Boolean} isSetting
+   * @param {Object} container  the Container to rewrite blocks for
+   * @param {Boolean} isSetting whether or not the Container is being attached or detached
+   * @param {Function} callback the function that will be called back after this function finishes
    */
   rewriteBlocks = (container, isSetting, callback) => {
-    const { location, dimensions } = container.props.data;
+    const { location, dimensions } = container.props;
     // overwrite old x and y with 0s
     const newBlocks = Object.assign({}, this.state.blocks);
 
@@ -487,15 +507,20 @@ class Level extends Component {
   // move the container based on its current position on the new mouse
   // location. this is called passed up from Container.js
   moveContainer = (container, e) => {
-    const containerState = this.getContainerStateById(container.props.data.id);
+    if (this.paused || this.characterIsIn(container)) return;
+    // if the character is in the container,
+    // or if the game is paused,
+    // don't move.
+
+    const containerState = this.getContainerStateById(container.props.id);
     const newsty = Object.assign({}, containerState.sty);
     // depending on if the movement is x or y, move the container
     // the difference as the mouse moves
     const border = this.getBorder();
     const mo = containerState.mouseOffset;
-    const { location } = container.props.data;
+    const location = container.props.location;
 
-    const isHorizontal = container.props.data.movement === 'x';
+    const isHorizontal = container.props.movement === 'x';
     const { marginTop: y, height, marginLeft: x, width } = this.state.sty;
 
     // calculate the min/max based on whether or not the container's
@@ -512,51 +537,31 @@ class Level extends Component {
       max = y + height - newsty.height + border;
     }
 
-    //let { min, max } = this.getContainerBounds(container, isHorizontal);
-    //if (isHorizontal) {
-    //  min += x + border;
-    //  max += x - newsty.width + 3 * border;
-    //}
-    //else {
-    //  min += y + border;
-    //  max += y - newsty.height + 3 * border;
-    //}
-
     const offset = isHorizontal ? e.offsetX : e.offsetY;
     containerState.isMovingPos = offset - mo > 0;
-
 
     // calculate the new container location, in pixels
     const newpx = this.getNewContainerPixelLocation(
       mo,
       isHorizontal ? newsty.left : newsty.top,
-      isHorizontal ? e.offsetX : e.offsetY,
+      offset,
       isHorizontal ? e.clientX : e.clientY,
       min,
       max
     );
 
     // check whether or not the container can actually move
-    const ccm = this.containerCanMove(
-      container,
-      containerState.isMovingPos,
-      isHorizontal
-    );
+    const ccm = this.containerCanMove(container);
 
     // if it can actually move, set the calculated location
     // to the newsty and set the location to the nearest
     // block.
     if (ccm) {
       const index = isHorizontal ? 0 : 1;
-      //const antiIndex = isHorizontal ? 1 : 0;
       newsty[isHorizontal ? 'left' : 'top'] = newpx;
-      location[index] = this.nearestBlock(
-        //location[antiIndex],
+      location[index] = this.nearestContainerLocation(
         container,
-        newpx,
-        //(isHorizontal ? newsty.left : newsty.top) < newpx
-        containerState.isMovingPos,
-        //isHorizontal
+        newpx
       ).newLocation;
     }
 
@@ -566,11 +571,6 @@ class Level extends Component {
     containerState.sty = newsty;
     containerState.isMoving = false;
 
-    // if the character is in the container,
-    // update its pixel location
-    if (this.characterIsIn(container)) {
-      this.updateCharacterSty();
-    }
 
     // redraw the component
     this.forceUpdate();
@@ -581,11 +581,10 @@ class Level extends Component {
   // called from this.props.nearestBlock, from Container.js
   // note: only returns an x or a y value for location/pixels,
   // based on isHorizontal
-  nearestBlock = (container, oldPixelLocation, pos) => {
-    const isHorizontal = container.props.data.movement === 'x';
-    const index = isHorizontal ? 0 : 1;
-    const dimensions = container.props.data.dimensions;
-    const sideArr = container.props.selfState.sideArr;
+  nearestContainerLocation = (container, oldPixelLocation) => {
+    const isHorizontal = container.props.movement === 'x';
+    const dimensions = container.props.dimensions;
+    const { sideArr, isMovingPos: pos } = container.props.selfState;
 
     // get spacing so the border and whitespace isn't used
     // in the calculations
@@ -595,7 +594,7 @@ class Level extends Component {
     // determine whether the x or y blocksize should be used
     // note that this shouldn't matter too much but can still
     // prevent the container from snapping
-    //const index = isHorizontal ? 0 : 1;
+    const index = isHorizontal ? 0 : 1;
 
     // oldLocation - spacing to get just the difference from
     // the level div
@@ -603,45 +602,40 @@ class Level extends Component {
     // location number
     let newLocation =
       (oldPixelLocation - spacing) / this.state.blockSize[index];
-    let roundedNewLocation = Math.round(newLocation);
+    const roundedNewLocation = Math.round(newLocation);
 
-    // to prevent containers leaving the bounds, either ceil() or
-    // floor() the location depending on if the rounded location
-    // is occupied
-    //const constLocation = location[antiIndex];
-    //let nlx = isHorizontal ? roundedNewLocation : constLocation;
-    //let nly = isHorizontal ? constLocation : roundedNewLocation;
-    //if (this.state.blocks[nlx][nly]) {
-    //  if (newLocation > roundedNewLocation) {
-    //    newLocation = Math.ceil(newLocation);
-    //  } else {
-    //    newLocation = Math.floor(newLocation);
-    //  }
-    //} else {
-    //  newLocation = roundedNewLocation;
-    //}
-
-    /**
-     * @todo document this
-     */
+    // While cycling through the opposite axis, if the container
+    // is moving in a positive direction, add the dimension - 1.
+    // This is to ensure that the locations checked are the ones
+    // at the end of the container.
     const backSide = pos ? dimensions[index] - 1 : 0;
-    let nlx, nly, newLocationRelative;
-    newLocationRelative =
-      roundedNewLocation + backSide;
-    console.log(pos, newLocationRelative);
+
+    // nlx = newLocationX, nly = newLocationY, nlr = newLocationRelative
+    let nlx, nly, nlr;
+    nlr = roundedNewLocation + backSide;
+
+    // Loops through every part of the side. If any part is in conflict,
+    // reverse the newLocationRelative until it is not in conflict.
+    // This will find a location in which none of the array is in
+    // conflict, so the container cannot break out of its boundaries.
+    // This solution was implemented to replace the previous method,
+    // which only checked the top left corner of the container for
+    // conflict. That method was limited by only checking the top
+    // left corner and not accounting for mouse events not updating
+    // consistently.
     for (let i = 0; i < sideArr.length; i++) {
-      nlx = isHorizontal ? newLocationRelative : sideArr[i];
-      nly = isHorizontal ? sideArr[i] : newLocationRelative;
+      nlx = isHorizontal ? nlr : sideArr[i];
+      nly = isHorizontal ? sideArr[i] : nlr;
       while (this.state.blocks[nlx][nly]) {
-        if (pos) newLocationRelative--;
-        else newLocationRelative++;
-        nlx = isHorizontal ? newLocationRelative : sideArr[i];
-        nly = isHorizontal ? sideArr[i] : newLocationRelative;
+        if (pos) nlr--;
+        else nlr++;
+        nlx = isHorizontal ? nlr : sideArr[i];
+        nly = isHorizontal ? sideArr[i] : nlr;
       }
     }
-    newLocation = newLocationRelative - backSide;
+    newLocation = nlr - backSide;
 
-    // remultiply that to get the new locaton, which is "rounded"
+    // Remultiply that to get the new location in pixels.
     const newPixelLocation =
       newLocation * this.state.blockSize[index] + spacing;
     return {
@@ -688,13 +682,17 @@ class Level extends Component {
       return (
         <Container
           key={container.id}
-          data={container}
           updateSty={this.updateContainerSty}
           move={this.moveContainer}
-          nearestBlock={this.nearestBlock}
+          nearestLocation={this.nearestContainerLocation}
           rewriteBlocks={this.rewriteBlocks}
           updateSelfState={this.updateContainerState}
           selfState={containerState}
+          gameIsPaused={this.gameIsPaused}
+          {...container}
+          // Instead of using data={container}, this component
+          // uses the spread operator to add clarity when using
+          // information from the levelFile through props.
         />
       );
     });
@@ -718,6 +716,7 @@ class Level extends Component {
     const containerPixelLocation = this.getContainerPixelLocation(
       characterState.container
     );
+
     const xpxRel =
       characterState.location[0] * bs[0] + containerPixelLocation[0] + border;
     const ypxRel =
@@ -728,8 +727,8 @@ class Level extends Component {
       height: bs[1] * characterState.size[1],
       left: xpxRel,
       top: ypxRel,
-      borderWidth: border / 2,
-      borderRadius: border * 1.25,
+      borderWidth: border / 4,
+      borderRadius: border / 2,
     };
     characterState.sty = sty;
 
@@ -738,9 +737,109 @@ class Level extends Component {
     });
   };
 
-  characterIsIn = (container) => {
-    return this.state.characterState.container === container.props.data.id;
+  moveCharacter = () => {
+    const { left, right, jump } = this.actions;
+    const characterState = Object.assign({}, this.state.characterState);
+    const sty = Object.assign({}, characterState.sty);
+    const bs = this.state.blockSize;
+
+    // spacing for the minimum and maximum
+    const border = this.getBorder();
+    const containerPixelLocation = this.getContainerPixelLocation(
+      characterState.container
+    );
+    const { width, height } = this.getContainerStateById(characterState.container).sty;
+    const minX = containerPixelLocation[0] + border;
+    const maxX = containerPixelLocation[0] + width - sty.width - border;
+
+    const minY = containerPixelLocation[1] + border;
+    const maxY = containerPixelLocation[1] + height - sty.height - border;
+
+    if (left && !right) {
+      sty.left -= this.toPixelsPerFrame(characterState.xVel, bs[0]);
+      sty.left = Math.max(minX, sty.left);
+    } else if (!left && right) {
+      sty.left += this.toPixelsPerFrame(characterState.xVel, bs[0]);
+      sty.left = Math.min(maxX, sty.left); 
+    }
+
+    if (this.characterIsInAir()) {
+      sty.top += this.toPixelsPerFrame(characterState.yVel, bs[1]);
+      sty.top = Math.max(minY, Math.min(maxY, sty.top));
+      characterState.yVel += this.toPixelsPerFrame(characterState.yAcc, bs[1]);
+    }
+    else if (jump) {
+      characterState.yVel = characterState.yJumpVel;
+      sty.top += this.toPixelsPerFrame(characterState.yVel, bs[1]);
+    }
+    else {
+      characterState.yVel = 0;
+    }
+
+    characterState.sty = sty;
+    characterState.isMoving = false;
+    this.setState(
+      {
+        characterState: characterState,
+      },
+      this.nearestCharacterLocation
+    );
   };
+
+  toPixelsPerFrame = (unit, blockSize) => {
+    return (unit * blockSize) / (1000 / 60);
+  }
+
+  nearestCharacterLocation = () => {
+    const characterState = Object.assign({}, this.state.characterState);
+    const { left, top } = characterState.sty;
+    const bs = this.state.blockSize;
+
+    // get spacing so the border and whitespace isn't used
+    // in the calculations
+    const containerPixelLocation = this.getContainerPixelLocation(
+      characterState.container
+    );
+    const spacingX = containerPixelLocation[0];
+    const spacingY = containerPixelLocation[1];
+
+    const newlocation = [
+      Math.floor((left - spacingX) / bs[0]),
+      Math.floor((top - spacingY) / bs[1]),
+    ];
+
+    characterState.location = newlocation;
+    this.setState({
+      characterState: characterState,
+    });
+  };
+
+  /**
+   * Checks whether or not the character is in the given container.
+   *
+   * @param {Container} container the container to check
+   *
+   * @returns whether or not the character is in the given container.
+   */
+  characterIsIn = (container) => {
+    return this.state.characterState.container === container.props.id;
+  };
+
+  characterIsInAir = () => {
+    // todo: platforms
+    const characterState = this.state.characterState;
+    const sty = characterState.sty;
+    const border = this.getBorder();
+    const containerPixelLocation = this.getContainerPixelLocation(
+      characterState.container
+    );
+    const height = this.getContainerStateById(characterState.container).sty.height;
+    const max = containerPixelLocation[1] + height - sty.height - border;
+    
+    // if the pixel location of the character is less than the max of the container,
+    // return true
+    return sty.top < max;
+  }
 
   // Render the component
   render() {

@@ -1,0 +1,8 @@
+{
+  "a": "left",
+  "d": "right",
+  "w": "jump",
+  " ": "jump",
+  "e": "interact",
+  "Escape": "pause"
+}

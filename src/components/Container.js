@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 class Container extends Component {
   constructor(props) {
     super(props);
-    this.cn = `Container ${this.props.data.color}`; // className
+    this.cn = `Container ${this.props.color}`; // className
   }
 
   componentDidMount() {
@@ -20,7 +20,7 @@ class Container extends Component {
   }
 
   update = () => {
-    const { dimensions, location, id } = this.props.data;
+    const { dimensions, location, id } = this.props;
     this.props.updateSty(id, dimensions, location);
   };
 
@@ -31,10 +31,10 @@ class Container extends Component {
   attach = (e) => {
     if (!this.props.selfState.attached && this.isMovable()) {
       this.props.rewriteBlocks(this, false, () => {
-        this.props.updateSelfState(this.props.data.id, {
+        this.props.updateSelfState(this.props.id, {
           attached: true,
           mouseOffset:
-            this.props.data.movement === 'x'
+            this.props.movement === 'x'
               ? e.nativeEvent.offsetX
               : e.nativeEvent.offsetY,
         });
@@ -58,27 +58,26 @@ class Container extends Component {
   snap = () => {
     // create a boolean on whether or not the movement
     // is horizontal, and a reference to sty
-    const isHorizontal = this.props.data.movement === 'x';
+    const isHorizontal = this.props.movement === 'x';
     const sty = this.props.selfState.sty;
 
     // get the nearest block from Level.js, passing in either left or top
-    const nearestBlock = this.props.nearestBlock(
-      //this.props.data.location[isHorizontal ? 1 : 0],
+    const nearestBlock = this.props.nearestLocation(
+      //this.props.location[isHorizontal ? 1 : 0],
       this,
-      isHorizontal ? sty.left : sty.top,
-      this.props.selfState.isMovingPos
+      isHorizontal ? sty.left : sty.top
       //isHorizontal
     );
 
     // set the new location, either x or y, depending on isHorizontal
     const index = isHorizontal ? 0 : 1;
-    this.props.data.location[index] = nearestBlock.newLocation;
+    this.props.location[index] = nearestBlock.newLocation;
 
     // similarly, determine which part of newsty to modify and modify it
     const newsty = Object.assign({}, sty);
     const location = isHorizontal ? 'left' : 'top';
     newsty[location] = nearestBlock.newPixelLocation;
-    this.props.updateSelfState(this.props.data.id, {
+    this.props.updateSelfState(this.props.id, {
       attached: false,
       sty: newsty,
     });
@@ -93,14 +92,15 @@ class Container extends Component {
       !this.props.selfState.isMoving &&
       this.isMovable()
     ) {
-      this.props.updateSelfState(this.props.data.id, { isMoving: true });
+      this.props.updateSelfState(this.props.id, { isMoving: true });
       this.props.move(this, e);
     }
   };
 
   // check if the container is movable based on its color
   isMovable() {
-    switch (this.props.data.color) {
+    if (this.props.gameIsPaused()) return false;
+    switch (this.props.color) {
       case 'blue':
       case 'red':
         return true;

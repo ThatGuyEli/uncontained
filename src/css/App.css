@@ -45,6 +45,7 @@ large as possible.
 }
 
 .Character {
+  box-sizing: border-box;
   background-color: var(--nord11);
   position: absolute;
   border-style: solid;
