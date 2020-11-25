@@ -143,6 +143,7 @@ class Level extends Component {
         // Whether or not the container is moving. This is to prevent
         // errors from asynchronous tasks.
         isMoving: false,
+        isMovingPos: false,
 
         // A list of locations that the container's side occupies. This
         // stores the value of the *opposite* axis, which means that it
@@ -522,6 +523,7 @@ class Level extends Component {
     //}
 
     const offset = isHorizontal ? e.offsetX : e.offsetY;
+    containerState.isMovingPos = offset - mo > 0;
 
 
     // calculate the new container location, in pixels
@@ -537,7 +539,7 @@ class Level extends Component {
     // check whether or not the container can actually move
     const ccm = this.containerCanMove(
       container,
-      offset - mo > 0,
+      containerState.isMovingPos,
       isHorizontal
     );
 
@@ -553,7 +555,7 @@ class Level extends Component {
         container,
         newpx,
         //(isHorizontal ? newsty.left : newsty.top) < newpx
-        offset - mo > 0
+        containerState.isMovingPos,
         //isHorizontal
       ).newLocation;
     }
@@ -626,6 +628,7 @@ class Level extends Component {
     let nlx, nly, newLocationRelative;
     newLocationRelative =
       roundedNewLocation + backSide;
+    console.log(pos, newLocationRelative);
     for (let i = 0; i < sideArr.length; i++) {
       nlx = isHorizontal ? newLocationRelative : sideArr[i];
       nly = isHorizontal ? sideArr[i] : newLocationRelative;

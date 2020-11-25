@@ -66,7 +66,7 @@ class Container extends Component {
       //this.props.data.location[isHorizontal ? 1 : 0],
       this,
       isHorizontal ? sty.left : sty.top,
-      true
+      this.props.selfState.isMovingPos
       //isHorizontal
     );
 
