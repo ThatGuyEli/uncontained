@@ -14,7 +14,7 @@
     {
       "id": 1,
       "color": "blue",
-      "dimensions": [30, 10],
+      "dimensions": [28, 10],
       "location": [0, 0],
       "movement": "x",
       "platforms": [],
@@ -28,7 +28,7 @@
       "id": 2,
       "color": "blue",
       "dimensions": [8, 8],
-      "location": [31, 0],
+      "location": [32, 0],
       "movement": "y",
       "platforms": [],
       "openings": [
@@ -40,8 +40,8 @@
     {
       "id": 3,
       "color": "blue",
-      "dimensions": [30, 10],
-      "location": [10, 20],
+      "dimensions": [28, 10],
+      "location": [12, 20],
       "movement": "x",
       "platforms": [],
       "openings": [
@@ -53,7 +53,7 @@
     {
       "id": 4,
       "color": "blue",
-      "dimensions": [10, 20],
+      "dimensions": [10, 10],
       "location": [0, 10],
       "movement": "y",
       "platforms": [],

@@ -30,14 +30,15 @@ class Container extends Component {
   // unnecessary calls to the react api.
   attach = (e) => {
     if (!this.props.selfState.attached && this.isMovable()) {
-      this.props.updateSelfState(this.props.data.id, {
-        attached: true,
-        mouseOffset:
-          this.props.data.movement === 'x'
-            ? e.nativeEvent.offsetX
-            : e.nativeEvent.offsetY,
+      this.props.rewriteBlocks(this, false, () => {
+        this.props.updateSelfState(this.props.data.id, {
+          attached: true,
+          mouseOffset:
+            this.props.data.movement === 'x'
+              ? e.nativeEvent.offsetX
+              : e.nativeEvent.offsetY,
+        });
       });
-      this.props.rewriteBlocks(this, false);
     }
   };
 
@@ -62,9 +63,11 @@ class Container extends Component {
 
     // get the nearest block from Level.js, passing in either left or top
     const nearestBlock = this.props.nearestBlock(
-      this.props.data.location[isHorizontal ? 1 : 0],
+      //this.props.data.location[isHorizontal ? 1 : 0],
+      this,
       isHorizontal ? sty.left : sty.top,
-      isHorizontal
+      true
+      //isHorizontal
     );
 
     // set the new location, either x or y, depending on isHorizontal

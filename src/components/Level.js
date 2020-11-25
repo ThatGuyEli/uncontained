@@ -143,7 +143,20 @@ class Level extends Component {
         // Whether or not the container is moving. This is to prevent
         // errors from asynchronous tasks.
         isMoving: false,
+
+        // A list of locations that the container's side occupies. This
+        // stores the value of the *opposite* axis, which means that it
+        // will never change. This is important because it saves calculation
+        // time during movement.
+        sideArr: [],
       };
+      const isHorizontal = container.movement === 'x';
+      const { location, dimensions } = container;
+      const antiIndex = isHorizontal ? 1 : 0;
+
+      for (let i = 0; i < dimensions[antiIndex]; i++) {
+        containerState.sideArr.push(location[antiIndex] + i);
+      }
 
       // Add this default container state to the list of containerStates.
       this.state.containerStates.push(containerState);
@@ -326,7 +339,7 @@ class Level extends Component {
     // Similarly, if the mouse is under the max pixel length,
     // plus the offset between the mouse and the corner of the container,
     // set the location to the maximum.
-    else if (mouseClient >= max + mo + this.getBorder()) {
+    else if (mouseClient >= max + mo) {
       return max;
     }
     // Finally, if the new location would be in between the min and max,
@@ -375,11 +388,7 @@ class Level extends Component {
     // return true. This is used instead of checking the corners because
     // a container may be small enough to avoid both corners, breaking
     // the game.
-    for (
-      let i = 0;
-      i < dimensions[antiIndex];
-      i++
-    ) {
+    for (let i = 0; i < dimensions[antiIndex]; i++) {
       const x = isHorizontal ? adjacentLocation : location[0] + i;
       const y = isHorizontal ? location[1] + i : adjacentLocation;
       // If this block is occupied, return false.
@@ -391,6 +400,61 @@ class Level extends Component {
     return true;
   };
 
+  //getContainerBounds = (container, isHorizontal) => {
+  //  const minLoc = this.getContainerBound(container, isHorizontal, true);
+  //  const maxLoc = this.getContainerBound(container, isHorizontal, false);
+  //  const bs = this.state.blockSize;
+  //  const index = isHorizontal ? 0 : 1;
+  //  return {
+  //    min: minLoc * bs[index],
+  //    max: maxLoc * bs[index],
+  //  };
+  //};
+
+  //getContainerBound = (container, isHorizontal, isMin) => {
+  //  const { location, dimensions } = container.props.data;
+  //  const index = isHorizontal ? 0 : 1;
+  //  const sideArr = container.props.selfState.sideArr;
+
+  //  // prevent bound errors using Math.min/max
+  //  let checkingLocation = isMin
+  //    ? Math.max(location[index] - 1, 0)
+  //    : Math.min(
+  //        location[index] + dimensions[index],
+  //        this.levelFile.dimensions[index] - 1
+  //      );
+  //  // Infinitely loop until one of the locations in the sideArr
+  //  // meet an occupied item.
+  //  while (true) {
+  //    for (let i = 0; i < sideArr.length; i++) {
+  //      // If the container is moving horiztonally,
+  //      // the side array is referring to the y-axis.
+  //      // Similarly, if the container is moving
+  //      // vertically, the side array is referring to
+  //      // the x-axis.
+  //      const x = isHorizontal ? checkingLocation : sideArr[i];
+  //      const y = isHorizontal ? sideArr[i] : checkingLocation;
+  //      if (this.state.blocks[x][y]) {
+  //        return checkingLocation;
+  //      }
+  //    }
+  //    // Increment the checking location because all of the
+  //    // locations on the side array were clear.
+  //    checkingLocation += isMin ? -1 : 1;
+
+  //    // Check to ensure that the checking location is still within
+  //    // the bounds. If it is not, return the previous checking
+  //    // location, as it was the maximum/minimum of the entire screen.
+  //    const levelMin = 0;
+  //    const levelMax = this.levelFile.dimensions[index] - 1;
+  //    const isWithinBounds =
+  //      checkingLocation >= levelMin && checkingLocation <= levelMax;
+  //    if (!isWithinBounds) {
+  //      return checkingLocation + (isMin ? 1 : -1);
+  //    }
+  //  }
+  //};
+
   // rewrite the blocks based on whether or not the block is being
   // clicked on or let go of.
   /**
@@ -398,7 +462,7 @@ class Level extends Component {
    * @param {Object} container
    * @param {Boolean} isSetting
    */
-  rewriteBlocks = (container, isSetting) => {
+  rewriteBlocks = (container, isSetting, callback) => {
     const { location, dimensions } = container.props.data;
     // overwrite old x and y with 0s
     const newBlocks = Object.assign({}, this.state.blocks);
@@ -411,9 +475,12 @@ class Level extends Component {
         newBlocks[x][y] = isSetting;
       }
     }
-    this.setState({
-      blocks: newBlocks,
-    });
+    this.setState(
+      {
+        blocks: newBlocks,
+      },
+      callback
+    );
   };
 
   // move the container based on its current position on the new mouse
@@ -444,6 +511,19 @@ class Level extends Component {
       max = y + height - newsty.height + border;
     }
 
+    //let { min, max } = this.getContainerBounds(container, isHorizontal);
+    //if (isHorizontal) {
+    //  min += x + border;
+    //  max += x - newsty.width + 3 * border;
+    //}
+    //else {
+    //  min += y + border;
+    //  max += y - newsty.height + 3 * border;
+    //}
+
+    const offset = isHorizontal ? e.offsetX : e.offsetY;
+
+
     // calculate the new container location, in pixels
     const newpx = this.getNewContainerPixelLocation(
       mo,
@@ -457,7 +537,7 @@ class Level extends Component {
     // check whether or not the container can actually move
     const ccm = this.containerCanMove(
       container,
-      (isHorizontal ? newsty.left : newsty.top) < newpx,
+      offset - mo > 0,
       isHorizontal
     );
 
@@ -466,12 +546,15 @@ class Level extends Component {
     // block.
     if (ccm) {
       const index = isHorizontal ? 0 : 1;
-      const other = isHorizontal ? 1 : 0;
+      //const antiIndex = isHorizontal ? 1 : 0;
       newsty[isHorizontal ? 'left' : 'top'] = newpx;
       location[index] = this.nearestBlock(
-        location[other],
+        //location[antiIndex],
+        container,
         newpx,
-        isHorizontal
+        //(isHorizontal ? newsty.left : newsty.top) < newpx
+        offset - mo > 0
+        //isHorizontal
       ).newLocation;
     }
 
@@ -496,18 +579,21 @@ class Level extends Component {
   // called from this.props.nearestBlock, from Container.js
   // note: only returns an x or a y value for location/pixels,
   // based on isHorizontal
-  nearestBlock = (constLocation, oldPixelLocation, isHorizontal) => {
+  nearestBlock = (container, oldPixelLocation, pos) => {
+    const isHorizontal = container.props.data.movement === 'x';
+    const index = isHorizontal ? 0 : 1;
+    const dimensions = container.props.data.dimensions;
+    const sideArr = container.props.selfState.sideArr;
+
     // get spacing so the border and whitespace isn't used
     // in the calculations
-    const { marginLeft, marginTop } = this.state.sty;
-    const x = marginLeft;
-    const y = marginTop;
+    const { marginLeft: x, marginTop: y } = this.state.sty;
     const spacing = (isHorizontal ? x : y) + this.getBorder();
 
     // determine whether the x or y blocksize should be used
     // note that this shouldn't matter too much but can still
     // prevent the container from snapping
-    const index = isHorizontal ? 0 : 1;
+    //const index = isHorizontal ? 0 : 1;
 
     // oldLocation - spacing to get just the difference from
     // the level div
@@ -515,22 +601,42 @@ class Level extends Component {
     // location number
     let newLocation =
       (oldPixelLocation - spacing) / this.state.blockSize[index];
-    const roundedNewLocation = Math.round(newLocation);
+    let roundedNewLocation = Math.round(newLocation);
 
     // to prevent containers leaving the bounds, either ceil() or
     // floor() the location depending on if the rounded location
     // is occupied
-    const nlx = isHorizontal ? roundedNewLocation : constLocation;
-    const nly = isHorizontal ? constLocation : roundedNewLocation;
-    if (this.state.blocks[nlx][nly]) {
-      if (newLocation > roundedNewLocation) {
-        newLocation = Math.ceil(newLocation);
-      } else {
-        newLocation = Math.floor(newLocation);
+    //const constLocation = location[antiIndex];
+    //let nlx = isHorizontal ? roundedNewLocation : constLocation;
+    //let nly = isHorizontal ? constLocation : roundedNewLocation;
+    //if (this.state.blocks[nlx][nly]) {
+    //  if (newLocation > roundedNewLocation) {
+    //    newLocation = Math.ceil(newLocation);
+    //  } else {
+    //    newLocation = Math.floor(newLocation);
+    //  }
+    //} else {
+    //  newLocation = roundedNewLocation;
+    //}
+
+    /**
+     * @todo document this
+     */
+    const backSide = pos ? dimensions[index] - 1 : 0;
+    let nlx, nly, newLocationRelative;
+    newLocationRelative =
+      roundedNewLocation + backSide;
+    for (let i = 0; i < sideArr.length; i++) {
+      nlx = isHorizontal ? newLocationRelative : sideArr[i];
+      nly = isHorizontal ? sideArr[i] : newLocationRelative;
+      while (this.state.blocks[nlx][nly]) {
+        if (pos) newLocationRelative--;
+        else newLocationRelative++;
+        nlx = isHorizontal ? newLocationRelative : sideArr[i];
+        nly = isHorizontal ? sideArr[i] : newLocationRelative;
       }
-    } else {
-      newLocation = roundedNewLocation;
     }
+    newLocation = newLocationRelative - backSide;
 
     // remultiply that to get the new locaton, which is "rounded"
     const newPixelLocation =
