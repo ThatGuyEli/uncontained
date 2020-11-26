@@ -129,7 +129,7 @@ class Level extends Component {
         // when falling/jumping.
         yAcc: 1,
         // The jump velocity is negative because up is negative
-        yJumpVel: -15,
+        yJumpVel: -12,
 
         // The location is relative to the container that the
         // character is located in. Note that unlike containers,
@@ -198,6 +198,7 @@ class Level extends Component {
     document.onkeydown = this.handleKey;
     document.onkeyup = this.handleKey;
     window.addEventListener('resize', this.updateSty);
+    window.addEventListener('resize', this.pauseForResize);
   }
 
   /**
@@ -206,6 +207,7 @@ class Level extends Component {
    * to no-longer-existing components.
    */
   componentWillUnmount() {
+    window.removeEventListener('resize', this.pauseForResize);
     window.removeEventListener('resize', this.updateSty);
   }
 
@@ -236,6 +238,17 @@ class Level extends Component {
     }
     // todo: add pause menu
     // todo: pause interval that moves the character
+  };
+
+  pauseForResize = () => {
+    this.paused = true;
+    clearInterval(this.timer);
+    //clearTimeout(this.timer);
+    //this.timer = setTimeout(() => {
+    //  this.paused = false;
+    //  this.timer = setInterval(this.timerFunc, 1000 / 60);
+    //  this.updateCharacterSty();
+    //}, 100);
   };
 
   timerFunc = () => {
@@ -571,7 +584,6 @@ class Level extends Component {
     containerState.sty = newsty;
     containerState.isMoving = false;
 
-
     // redraw the component
     this.forceUpdate();
   };
@@ -717,11 +729,11 @@ class Level extends Component {
       characterState.container
     );
 
+    // Create a style for the width, height, left, top, and border.
     const xpxRel =
       characterState.location[0] * bs[0] + containerPixelLocation[0] + border;
     const ypxRel =
       characterState.location[1] * bs[1] + containerPixelLocation[1] + border;
-
     const sty = {
       width: bs[0] * characterState.size[0],
       height: bs[1] * characterState.size[1],
@@ -730,54 +742,91 @@ class Level extends Component {
       borderWidth: border / 4,
       borderRadius: border / 2,
     };
-    characterState.sty = sty;
 
+    // Apply the style to the character and set the state.
+    characterState.sty = sty;
     this.setState({
       characterState: characterState,
     });
   };
 
+  /**
+   * Move the character based on the keys being pressed. This method
+   * is called every frame.
+   */
   moveCharacter = () => {
     const { left, right, jump } = this.actions;
+
+    // To prevent unnecessary operations, return if the
+    // character is not falling and is not pressing any controls.
+    if (!left && !right && !jump && !this.characterIsInAir()) {
+      return;
+    }
     const characterState = Object.assign({}, this.state.characterState);
     const sty = Object.assign({}, characterState.sty);
     const bs = this.state.blockSize;
 
-    // spacing for the minimum and maximum
+    // Precalculate spacing used to the minimum and maximum bounds.
     const border = this.getBorder();
     const containerPixelLocation = this.getContainerPixelLocation(
       characterState.container
     );
-    const { width, height } = this.getContainerStateById(characterState.container).sty;
-    const minX = containerPixelLocation[0] + border;
-    const maxX = containerPixelLocation[0] + width - sty.width - border;
+    const { width, height } = this.getContainerStateById(
+      characterState.container
+    ).sty;
 
-    const minY = containerPixelLocation[1] + border;
-    const maxY = containerPixelLocation[1] + height - sty.height - border;
+    // Within this if/else if, calculate either the minX or the maxX
+    // and ensure that the new pixel location is not more/less than it.
 
+    // If the keys pressed move left and not right
     if (left && !right) {
+      const minX = containerPixelLocation[0] + border;
       sty.left -= this.toPixelsPerFrame(characterState.xVel, bs[0]);
       sty.left = Math.max(minX, sty.left);
-    } else if (!left && right) {
+    } 
+    // If the keys pressed move right and not left
+    else if (!left && right) {
+      const maxX = containerPixelLocation[0] + width - sty.width - border;
       sty.left += this.toPixelsPerFrame(characterState.xVel, bs[0]);
-      sty.left = Math.min(maxX, sty.left); 
+      sty.left = Math.min(maxX, sty.left);
     }
+    // Note that when both left and right are pressed, nothing happens.
 
+    // If the character is in the air, make sure that they are not jumping
+    // above the maximum or falling below the floor.
     if (this.characterIsInAir()) {
-      sty.top += this.toPixelsPerFrame(characterState.yVel, bs[1]);
+      const minY = containerPixelLocation[1] + border;
+      const maxY = containerPixelLocation[1] + height - sty.height - border;
+      // Note that this line does not work properly because we have
+      // already converted the velocity to pixels. If we convert it
+      // again, it would be invalid. Instead, opt to just add the
+      // velocity to the position.
+      //sty.top += this.toPixelsPerFrame(characterState.yVel, bs[1]);
+
+      // Add the velocity to the y axis, confirm that is within the bounds,
+      // then increase the acceleration.
+      sty.top += characterState.yVel;
       sty.top = Math.max(minY, Math.min(maxY, sty.top));
       characterState.yVel += this.toPixelsPerFrame(characterState.yAcc, bs[1]);
-    }
+    } 
+    // If the character is jumping, set the velocity to be the jumping velocity.
     else if (jump) {
-      characterState.yVel = characterState.yJumpVel;
+      characterState.yVel = this.toPixelsPerFrame(
+        characterState.yJumpVel,
+        bs[1]
+      );
       sty.top += this.toPixelsPerFrame(characterState.yVel, bs[1]);
-    }
+    } 
+    // Finally, if it is not falling/jumping, it is still. Set the velocity to 0.
     else {
       characterState.yVel = 0;
     }
 
     characterState.sty = sty;
     characterState.isMoving = false;
+
+    // Finally, set the state of the character. Afterwards,
+    // update the character's location.
     this.setState(
       {
         characterState: characterState,
@@ -786,28 +835,42 @@ class Level extends Component {
     );
   };
 
+  /**
+   * Convert a unit to pixels per frame, at 60fps.
+   *
+   * @param {number} unit The unit to multiply.
+   * @param {number} blockSize The ratio of the block.
+   */
   toPixelsPerFrame = (unit, blockSize) => {
     return (unit * blockSize) / (1000 / 60);
-  }
+  };
 
+  /**
+   * Finds the nearest character location and sets the character's
+   * location to that in this.state.characterState. Note that
+   * this does not necessarily mean that the pixels will line up.
+   * However, on resize, the character will snap to the location.
+   */
   nearestCharacterLocation = () => {
     const characterState = Object.assign({}, this.state.characterState);
     const { left, top } = characterState.sty;
     const bs = this.state.blockSize;
 
-    // get spacing so the border and whitespace isn't used
-    // in the calculations
+    // Determine the spacing, which is just the location of the
+    // container.
     const containerPixelLocation = this.getContainerPixelLocation(
       characterState.container
     );
     const spacingX = containerPixelLocation[0];
     const spacingY = containerPixelLocation[1];
 
+    // Calculate the new location, which is px/blockSize.
     const newlocation = [
       Math.floor((left - spacingX) / bs[0]),
       Math.floor((top - spacingY) / bs[1]),
     ];
 
+    // Finally, set the new location.
     characterState.location = newlocation;
     this.setState({
       characterState: characterState,
@@ -819,31 +882,48 @@ class Level extends Component {
    *
    * @param {Container} container the container to check
    *
-   * @returns whether or not the character is in the given container.
+   * @returns {boolean} Whether or not the character is in the given container.
    */
   characterIsIn = (container) => {
     return this.state.characterState.container === container.props.id;
   };
 
+  /**
+   * Determine whether or not the character is in the air. This could be
+   * falling or jumping.
+   *
+   * @returns {boolean} Whether or not the character is in the air.
+   */
   characterIsInAir = () => {
-    // todo: platforms
     const characterState = this.state.characterState;
     const sty = characterState.sty;
+
+    // For spacing
     const border = this.getBorder();
     const containerPixelLocation = this.getContainerPixelLocation(
       characterState.container
     );
-    const height = this.getContainerStateById(characterState.container).sty.height;
-    const max = containerPixelLocation[1] + height - sty.height - border;
-    
-    // if the pixel location of the character is less than the max of the container,
-    // return true
-    return sty.top < max;
-  }
+    const height = this.getContainerStateById(characterState.container).sty
+      .height;
 
-  // Render the component
+    // Only the max is needed, which is the floor.
+    const max = containerPixelLocation[1] + height - sty.height - border;
+
+    // todo: platforms
+    return sty.top < max;
+  };
+
+  /**
+   * Rendering method.
+   *
+   * @returns a <div> that represents the playable level.
+   */
   render() {
-    // Return the level object in index.html
+    // Return the level object in index.html.
+    // Note that the Containers are generated before the
+    // character so that the character naturally is on top
+    // of the Containers. Additionally, the Character needs
+    // a reference, because it always is in a container.
     return (
       <div className='Level' style={this.state.sty}>
         {this.generateContainers()}

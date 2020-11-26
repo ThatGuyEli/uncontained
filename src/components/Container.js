@@ -1,11 +1,29 @@
 import React, { Component } from 'react';
 
+/**
+ * Container component. This Container holds all components
+ * within it except for the character and boxes, which move
+ * between Containers.
+ *
+ * @extends Component
+ */
 class Container extends Component {
+  /**
+   * Generic constructor.
+   * @constructor
+   * @param {Object} props the properties needed to create this object
+   */
   constructor(props) {
     super(props);
     this.cn = `Container ${this.props.color}`; // className
   }
 
+  /**
+   * When the component mounts, update the style after 10ms
+   * to allow the Level to render. Additionally, add the
+   * event listeners to update this component's style on resize,
+   * move on mouse move, attach on mouse down, and detach on mouse up.
+   */
   componentDidMount() {
     window.setTimeout(this.update, 10);
     window.addEventListener('resize', this.update);
@@ -13,23 +31,41 @@ class Container extends Component {
     window.addEventListener('mouseup', this.detach);
   }
 
+  /**
+   * When the component is going to unmount, remove the listener
+   * from the window. This is to prevent unnecessary calls to
+   * no-longer-existing objects.
+   */
   componentWillUnmount() {
     window.removeEventListener('resize', this.update);
     window.removeEventListener('mousemove', this.move);
     window.removeEventListener('mouseup', this.detach);
   }
 
+  /**
+   * Update the style of the component. This is called
+   * on resize to scale the Container up or down depending
+   * on the new height. This method calls updateContainerSty
+   * from Level.
+   */
   update = () => {
     const { dimensions, location, id } = this.props;
     this.props.updateSty(id, dimensions, location);
   };
 
-  // set the state to attached, also send the offset from the click
-  // to the top left of the container
-  // note that this checks if the state is attached first to not make
-  // unnecessary calls to the react api.
+  /**
+   * Attaches the mouse to the Container. This stores the offset
+   * and prepares the Container for movement. The method will not
+   * attach the mouse if it is already attached or if the Container
+   * is not movable.
+   * 
+   * @param {MouseEvent} e the mouse event to get the offset from
+   */
   attach = (e) => {
     if (!this.props.selfState.attached && this.isMovable()) {
+
+      // Utilize rewriteBlocks callback in order to update the state
+      // after the blocks are rewritten.
       this.props.rewriteBlocks(this, false, () => {
         this.props.updateSelfState(this.props.id, {
           attached: true,
@@ -42,9 +78,13 @@ class Container extends Component {
     }
   };
 
-  // set the state to not be attached
-  // note that this checks if the state is attached first to not make
-  // unnecessary calls to the react api.
+  /**
+   * Detaches the mouse from the Cotainer. This method also
+   * snaps the Container to the nearest location so that
+   * other features are possible, such as traveling between
+   * containers. The method will not detach the mouse if it
+   * is not attached or if the Container is not movable.
+   */
   detach = () => {
     if (this.props.selfState.attached && this.isMovable()) {
       this.snap();
@@ -52,40 +92,43 @@ class Container extends Component {
     }
   };
 
-  // snap the container to its bounds. called from this.detach()
-  // if the container is red/blue and this.automove() if it is
-  // green/purple
+  /**
+   * Snap the container to its bounds. This method is called from
+   * this.detach() or this.automove(). 
+   */
   snap = () => {
-    // create a boolean on whether or not the movement
-    // is horizontal, and a reference to sty
+    // Create a boolean on whether or not the movement
+    // is horizontal, and a reference to sty.
     const isHorizontal = this.props.movement === 'x';
     const sty = this.props.selfState.sty;
 
-    // get the nearest block from Level.js, passing in either left or top
+    // Get the nearest block from Level.js, passing in either left or top.
     const nearestBlock = this.props.nearestLocation(
-      //this.props.location[isHorizontal ? 1 : 0],
       this,
       isHorizontal ? sty.left : sty.top
-      //isHorizontal
     );
 
-    // set the new location, either x or y, depending on isHorizontal
+    // Set the new location, either x or y, depending on isHorizontal.
     const index = isHorizontal ? 0 : 1;
     this.props.location[index] = nearestBlock.newLocation;
 
-    // similarly, determine which part of newsty to modify and modify it
+    // Similarly, determine which part of newsty to modify and modify it.
     const newsty = Object.assign({}, sty);
     const location = isHorizontal ? 'left' : 'top';
     newsty[location] = nearestBlock.newPixelLocation;
+
+    // Finally, update the state.
     this.props.updateSelfState(this.props.id, {
       attached: false,
       sty: newsty,
     });
   };
 
-  // if the object is movable, call move from Level.js
-  // note that this.state.attached is called first to
-  // be slightly more efficient (no need to call another method)
+  /**
+   * Movement function. This checks if movement is possible,
+   * then calls the movement function in Level.
+   * @param {MouseEvent} e the mouse event to calculate movement from
+   */
   move = (e) => {
     if (
       this.props.selfState.attached &&
@@ -97,9 +140,17 @@ class Container extends Component {
     }
   };
 
-  // check if the container is movable based on its color
+  /**
+   * Checks whether or not this container is movable.
+   * @returns {boolean} Whether or not this container is movable.
+   */
   isMovable() {
+    // Return false is the game is paused,
+    // because no Container is movable when it is paused.
     if (this.props.gameIsPaused()) return false;
+
+    // If the color is blue or red, return true.
+    // Otherwise, return false.
     switch (this.props.color) {
       case 'blue':
       case 'red':
@@ -109,6 +160,11 @@ class Container extends Component {
     }
   }
 
+  /**
+   * Rendering method.
+   * 
+   * @returns a <div> that represents the container.
+   */
   render() {
     return (
       <div
