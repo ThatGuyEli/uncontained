@@ -173,7 +173,12 @@ class Level extends Component {
         // will never change. This is important because it saves calculation
         // time during movement.
         sideArr: [],
+
+        // A list of all of the states of the openings that the container holds.
+        openingStates: [],
       };
+
+      // Add locations to the sideArr.
       const isHorizontal = container.movement === 'x';
       const { location, dimensions } = container;
       const antiIndex = isHorizontal ? 1 : 0;
@@ -181,6 +186,16 @@ class Level extends Component {
       for (let i = 0; i < dimensions[antiIndex]; i++) {
         containerState.sideArr.push(location[antiIndex] + i);
       }
+
+      // Add openingStates.
+      container.openings.forEach((opening) => {
+        const openingState = {
+          id: opening.id,
+          sty: {},
+          // todo: add "isUnlocked" and calculate for red container
+        };
+        containerState.openingStates.push(openingState);
+      });
 
       // Add this default container state to the list of containerStates.
       this.state.containerStates.push(containerState);
@@ -231,7 +246,7 @@ class Level extends Component {
         // If the action is to pause, pause instead.
         if (action === 'pause') this.togglePause();
         else this.actions[action] = true;
-      } 
+      }
       // Otherwise, set the respective action to false.
       else if (e.type === 'keyup' && action !== 'pause') {
         this.actions[action] = false;
@@ -281,7 +296,7 @@ class Level extends Component {
   /**
    * General accessor. This is used in Container, which cannot
    * normally access {this.paused}.
-   * 
+   *
    * @returns {boolean} Whether or not the game is paused.
    */
   gameIsPaused = () => {
@@ -380,7 +395,7 @@ class Level extends Component {
   getBorder = () => {
     const { innerWidth, innerHeight } = window;
     return (innerWidth + innerHeight) / 200;
-  }
+  };
 
   /**
    * Convert a unit to pixels per frame, at 60fps.
@@ -430,7 +445,7 @@ class Level extends Component {
 
   /**
    * This method is intended to replace setState() for Containers.
-   * 
+   *
    * @param {number} id The id of the container to update the state of.
    * @param {object} newstate The state to replace the old state.
    */
@@ -455,16 +470,16 @@ class Level extends Component {
 
   /**
    * Get the pixel location of the container with the matching id.
-   * 
+   *
    * @param {number} id The id of the container to get the pixel location from.
-   * 
+   *
    * @returns {Array} the pixel location, in [x,y] format.
    */
   getContainerPixelLocation = (id) => {
     // Search for the container, then return its top and left in [x,y] format.
     const containerState = this.getContainerStateById(id);
     return [containerState.sty.left, containerState.sty.top];
-  }
+  };
 
   /**
    * This method is a helper method for {@link this#moveContainer}.
@@ -521,7 +536,7 @@ class Level extends Component {
   /**
    * Move the container based on its current position and the mouse's
    * location. This method is passed down to Container.
-   * 
+   *
    * @param {container} container the container to move
    * @param {MouseEvent} e the mouse event to move the container based on
    */
@@ -605,9 +620,9 @@ class Level extends Component {
 
   /**
    * Determine if the container can move.
-   * 
+   *
    * @param {Container} container The container to move.
-   * 
+   *
    * @returns {boolean} Whether or not the container can move.
    */
   containerCanMove = (container) => {
@@ -662,7 +677,7 @@ class Level extends Component {
     const newBlocks = Object.assign({}, this.state.blocks);
 
     // Cycle through the blocks that the container currently is located
-    // in. Since this method is only called on mouse down and on 
+    // in. Since this method is only called on mouse down and on
     // mouse up, the block table is not constantly being rewritten.
     for (let x = location[0]; x < location[0] + dimensions[0]; x++) {
       for (let y = location[1]; y < location[1] + dimensions[1]; y++) {
@@ -683,7 +698,7 @@ class Level extends Component {
    * This method is passed down to Container.
    * Note: this method only returns information for the axis
    * that the container moves along.
-   * 
+   *
    * @param {Container} container Container to find the nearest location of.
    * @param {number} oldPixelLocation The previous pixel location
    */
@@ -754,9 +769,9 @@ class Level extends Component {
    * Cycle through the container states until the one with the
    * requested id is found. Note that the id is not always the
    * same as the index, which is why this method is necessary.
-   * 
+   *
    * @param {number} id The id of the container to get the state of.
-   * 
+   *
    * @returns {object} The requested container state, or null if none exist.
    */
   getContainerStateById = (id) => {
@@ -765,15 +780,15 @@ class Level extends Component {
       if (containerState.id === id) return containerState;
     }
     return null;
-  }
+  };
 
   /**
    * Generate the container components using JSX.
-   * 
+   *
    * @returns {Array} An array of Containers read from the level file.
    */
   generateContainers = () => {
-    // Use Array.map to create a unique container 
+    // Use Array.map to create a unique container
     // for every single container in the level file.
     return this.levelFile.containers.map((container) => {
       const containerState = this.getContainerStateById(container.id);
@@ -790,6 +805,7 @@ class Level extends Component {
           updateSelfState={this.updateContainerState}
           selfState={containerState}
           gameIsPaused={this.gameIsPaused}
+          updateOpeningSty={this.updateOpeningSty}
           {...container}
           // Instead of using data={container}, this component
           // uses the spread operator to add clarity when using
@@ -797,14 +813,87 @@ class Level extends Component {
         />
       );
     });
-  }
+  };
+
+  //-----------------\\
+  // Opening Methods \\
+  //-----------------\\
+  updateOpeningSty = (container, opening) => {
+    const { dimensions: cdimensions } = container.props;
+    const { location, width: doorWidth } = opening.props;
+
+    const bs = this.state.blockSize;
+    const border = this.getBorder();
+
+    let leftLoc, topLoc, width, height;
+    switch (opening.props.border) {
+      case 'top':
+        leftLoc = location * bs[0];
+        topLoc = 0;
+        width = doorWidth * bs[0];
+        height = border;
+        break;
+      case 'bottom':
+        leftLoc = location * bs[0];
+        topLoc = cdimensions[1] * bs[1] - border;
+        width = doorWidth * bs[0];
+        height = border;
+        break;
+      case 'left':
+        leftLoc = 0;
+        topLoc = location * bs[1];
+        width = border;
+        height = doorWidth * bs[1];
+        break;
+      case 'right':
+        leftLoc = cdimensions[0] * bs[0] - border;
+        topLoc = location * bs[1];
+        width = border;
+        height = doorWidth * bs[1];
+        break;
+      default:
+        return;
+    }
+
+    const newsty = {
+      width: width,
+      height: height,
+      left: leftLoc - border,
+      top: topLoc - border,
+    };
+
+    this.updateOpeningState(container.props.id, opening.props.id, {
+      sty: newsty,
+    });
+  };
+
+  updateOpeningState = (containerid, openingid, newstate) => {
+    const containerState = Object.assign(
+      {},
+      this.getContainerStateById(containerid)
+    );
+    for (let i = 0; i < containerState.openingStates.length; i++) {
+      const openingState = containerState.openingStates[i];
+      if (openingState.id === openingid) {
+        containerState.openingStates[i] = Object.assign(openingState, newstate);
+        this.updateContainerState(containerid, containerState);
+      }
+    }
+  };
+
+  getOpeningStateById = (containerState, id) => {
+    for (let i = 0; i < containerState.openingStates.length; i++) {
+      const openingState = containerState.openingStates[i];
+      if (openingState.id === id) return openingState;
+    }
+  };
 
   //-------------------\\
   // Character Methods \\
   //-------------------\\
 
   /**
-   * Update the character style. This method uses the location of the 
+   * Update the character style. This method uses the location of the
    * character and the pixel location of the container.
    */
   updateCharacterSty = () => {
@@ -869,7 +958,7 @@ class Level extends Component {
       const minX = containerPixelLocation[0] + border;
       sty.left -= this.toPixelsPerFrame(characterState.xVel, bs[0]);
       sty.left = Math.max(minX, sty.left);
-    } 
+    }
     // If the keys pressed move right and not left
     else if (!left && right) {
       const maxX = containerPixelLocation[0] + width - sty.width - border;
@@ -894,7 +983,7 @@ class Level extends Component {
       sty.top += characterState.yVel;
       sty.top = Math.max(minY, Math.min(maxY, sty.top));
       characterState.yVel += this.toPixelsPerFrame(characterState.yAcc, bs[1]);
-    } 
+    }
     // If the character is jumping, set the velocity to be the jumping velocity.
     else if (jump) {
       characterState.yVel = this.toPixelsPerFrame(
@@ -902,7 +991,7 @@ class Level extends Component {
         bs[1]
       );
       sty.top += this.toPixelsPerFrame(characterState.yVel, bs[1]);
-    } 
+    }
     // Finally, if it is not falling/jumping, it is still. Set the velocity to 0.
     else {
       characterState.yVel = 0;

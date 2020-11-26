@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Opening from './Opening.js';
 
 /**
  * Container component. This Container holds all components
@@ -58,12 +59,11 @@ class Container extends Component {
    * and prepares the Container for movement. The method will not
    * attach the mouse if it is already attached or if the Container
    * is not movable.
-   * 
+   *
    * @param {MouseEvent} e the mouse event to get the offset from
    */
   attach = (e) => {
     if (!this.props.selfState.attached && this.isMovable()) {
-
       // Utilize rewriteBlocks callback in order to update the state
       // after the blocks are rewritten.
       this.props.rewriteBlocks(this, false, () => {
@@ -94,7 +94,7 @@ class Container extends Component {
 
   /**
    * Snap the container to its bounds. This method is called from
-   * this.detach() or this.automove(). 
+   * this.detach() or this.automove().
    */
   snap = () => {
     // Create a boolean on whether or not the movement
@@ -144,7 +144,7 @@ class Container extends Component {
    * Checks whether or not this container is movable.
    * @returns {boolean} Whether or not this container is movable.
    */
-  isMovable() {
+  isMovable = () => {
     // Return false is the game is paused,
     // because no Container is movable when it is paused.
     if (this.props.gameIsPaused()) return false;
@@ -158,11 +158,40 @@ class Container extends Component {
       default:
         return false;
     }
-  }
+  };
+
+  //-----------------\\
+  // Opening methods \\
+  //-----------------\\
+  updateOpeningSty = (opening) => {
+    this.props.updateOpeningSty(this, opening);
+  };
+
+  generateOpenings = () => {
+    return this.props.openings.map((opening) => {
+      return (
+        <Opening
+          key={opening.id}
+          updateSty={this.updateOpeningSty}
+          selfState={this.getOpeningStateById(opening.id)}
+          {...opening}
+        />
+      );
+    });
+  };
+
+  getOpeningStateById = (id) => {
+    for (let i = 0; i < this.props.selfState.openingStates.length; i++) {
+      const openingState = this.props.selfState.openingStates[i];
+      if (openingState.id === id) {
+        return openingState;
+      }
+    }
+  };
 
   /**
    * Rendering method.
-   * 
+   *
    * @returns a <div> that represents the container.
    */
   render() {
@@ -172,7 +201,9 @@ class Container extends Component {
         style={this.props.selfState.sty}
         onMouseDown={this.attach}
         onMouseOut={this.detach}
-      ></div>
+      >
+        {this.generateOpenings()}
+      </div>
     );
   }
 }

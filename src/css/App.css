@@ -23,8 +23,7 @@
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
-}
+  -ms-user-select: none; }
 
 
 html, body {
@@ -68,4 +67,9 @@ large as possible.
   background-color: var(--nord9);
   border-color: var(--nord15);
   border-color: var(--nord10);
+}
+
+.Opening {
+  background-color: var(--nord13);
+  position: absolute;
 }
