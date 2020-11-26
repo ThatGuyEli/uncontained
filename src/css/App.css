@@ -15,6 +15,7 @@
   --nord13: #ebcb8b;
   --nord14: #a3be8c;
   --nord15: #b48ead;
+  --brown: #987654;
   --border: calc((1vh + 1vw)/2)
 }
 
@@ -70,6 +71,6 @@ large as possible.
 }
 
 .Opening {
-  background-color: var(--nord13);
+  background-color: var(--nord1);
   position: absolute;
 }

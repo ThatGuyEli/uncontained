@@ -155,6 +155,8 @@ class Level extends Component {
         // and act accordingly.
         attached: false,
 
+        dimensions: container.dimensions,
+
         // The distance between the mouse and the top left corner,
         // in either x/y depending on the movement of the component.
         mouseOffset: 0,
@@ -191,6 +193,10 @@ class Level extends Component {
       container.openings.forEach((opening) => {
         const openingState = {
           id: opening.id,
+          container: container.id,
+          border: opening.border,
+          location: opening.location,
+          width: opening.width,
           sty: {},
           // todo: add "isUnlocked" and calculate for red container
         };
@@ -212,6 +218,7 @@ class Level extends Component {
     this.updateSty();
     document.onkeydown = this.handleKey;
     document.onkeyup = this.handleKey;
+    document.onkeypress = this.handleKeyPress;
     window.addEventListener('resize', this.updateSty);
     window.addEventListener('resize', this.pauseForResize);
   }
@@ -254,6 +261,12 @@ class Level extends Component {
     }
   };
 
+  handleKeyPress = (e) => {
+    if (e.key in this.keys && this.keys[e.key] === 'interact') {
+      this.interact(this.getInteractableNearCharacter());
+    }
+  };
+
   /**
    * Toggle whether or not the game is paused. On pause, pause the
    * timer. On unpause, start the timer again.
@@ -291,6 +304,107 @@ class Level extends Component {
       },
       this.moveCharacter
     );
+    const interactable = this.getInteractableNearCharacter();
+    this.highlightInteractable(interactable, true);
+    const containerState = this.getContainerStateById(
+      this.state.characterState.container
+    );
+    for (let i = 0; i < containerState.openingStates.length; i++) {
+      const openingState = containerState.openingStates[i];
+      if (openingState !== interactable) {
+        const newsty = Object.assign({}, openingState.sty);
+        newsty.backgroundColor = '#3b4252'; // dark
+        this.updateOpeningState(containerState.id, openingState.id, {
+          sty: newsty,
+        });
+      }
+    }
+  };
+
+  interact = (interactable) => {
+    if (interactable === undefined || interactable === null) return;
+    const characterState = this.state.characterState;
+    const containerState = this.getContainerStateById(characterState.container);
+    // if the interactable object is an opening
+    for (let i = 0; i < containerState.openingStates.length; i++) {
+      if (interactable.id === containerState.openingStates[i].id) {
+        const borderIsHorizontal =
+          interactable.border === 'left' || interactable.border === 'right';
+        const index = borderIsHorizontal ? 0 : 1;
+        const antiIndex = borderIsHorizontal ? 1 : 0;
+        const mainLoc = this.getContainerLocationByState(containerState);
+        const mainDim = containerState.dimensions;
+
+        const adjacentContainers = this.getAdjacentContainers(
+          containerState,
+          interactable.border
+        );
+        adjacentContainers.forEach((adjacentContainer) => {
+          adjacentContainer.openingStates.forEach((openingState) => {
+            const otherLoc = this.getContainerLocationByState(
+              adjacentContainer
+            );
+            const otherDim = adjacentContainer.dimensions;
+            // If the locations are equal
+            if (
+              interactable.location + mainLoc[antiIndex] + mainDim[index] ===
+                openingState.location + otherLoc[antiIndex] + otherDim[index] &&
+              interactable.border === this.oppositeSide(openingState.border)
+            ) {
+              // Determine new location of the character as well
+              let newloc;
+              switch (interactable.border) {
+                case 'top':
+                case 'left':
+                  newloc = otherDim[index] - 2;
+                  break;
+                case 'bottom':
+                case 'right':
+                  newloc = 0;
+                  break;
+                default:
+                  break;
+              }
+              const newCharacterState = Object.assign(characterState, {
+                container: adjacentContainer.id,
+                location: [
+                  borderIsHorizontal ? newloc : characterState.location[0],
+                  borderIsHorizontal ? characterState.location[1] : newloc,
+                ],
+              });
+              this.setState(
+                {
+                  characterState: newCharacterState,
+                },
+                this.updateCharacterSty
+              );
+
+              const newsty = Object.assign({}, interactable.sty);
+              newsty.backgroundColor = '#3b4252'; // dark
+              this.updateOpeningState(containerState.id, interactable.id, {
+                sty: newsty,
+              });
+            }
+          });
+        });
+      }
+    }
+    // todo: other items
+  };
+
+  oppositeSide = (side) => {
+    switch (side) {
+      case 'top':
+        return 'bottom';
+      case 'bottom':
+        return 'top';
+      case 'left':
+        return 'right';
+      case 'right':
+        return 'left';
+      default:
+        return null;
+    }
   };
 
   /**
@@ -806,6 +920,7 @@ class Level extends Component {
           selfState={containerState}
           gameIsPaused={this.gameIsPaused}
           updateOpeningSty={this.updateOpeningSty}
+          test={this.getAdjacentContainers}
           {...container}
           // Instead of using data={container}, this component
           // uses the spread operator to add clarity when using
@@ -813,6 +928,46 @@ class Level extends Component {
         />
       );
     });
+  };
+
+  getContainerLocationByState = (containerState) => {
+    const { top, left } = containerState.sty;
+    const { marginTop, marginLeft } = this.state.sty;
+    const bs = this.state.blockSize;
+    const location = [
+      Math.round((left - marginLeft) / bs[0]),
+      Math.round((top - marginTop) / bs[1]),
+    ];
+    return location;
+  };
+
+  getAdjacentContainers = (containerState, side) => {
+    const sideIsHorizontal = side === 'left' || side === 'right';
+    const index = sideIsHorizontal ? 0 : 1;
+    const antiIndex = sideIsHorizontal ? 1 : 0;
+
+    const mainLoc = this.getContainerLocationByState(containerState);
+    const mainDim = containerState.dimensions;
+
+    const adjacentContainers = this.state.containerStates.filter(
+      (otherContainerState) => {
+        const otherLoc = this.getContainerLocationByState(otherContainerState);
+        const otherDim = otherContainerState.dimensions;
+
+        // todo: comment what i was doing here
+        const adjTopOrLeft =
+          (side === 'top' || side === 'left') &&
+          mainLoc[index] === otherLoc[index] + otherDim[index];
+        const adjRightOrBottom =
+          (side === 'right' || side === 'bottom') &&
+          mainLoc[index] + mainDim[index] === otherLoc[index];
+        const adj =
+          mainLoc[antiIndex] < otherLoc[antiIndex] + otherDim[antiIndex] &&
+          mainLoc[antiIndex] + mainDim[antiIndex] > otherLoc[antiIndex];
+        return (adjTopOrLeft || adjRightOrBottom) && adj;
+      }
+    );
+    return adjacentContainers;
   };
 
   //-----------------\\
@@ -1041,6 +1196,66 @@ class Level extends Component {
       characterState: characterState,
     });
   };
+
+  getInteractableNearCharacter = () => {
+    const characterState = this.state.characterState;
+    const containerState = this.getContainerStateById(characterState.container);
+
+    for (let i = 0; i < containerState.openingStates.length; i++) {
+      const openingState = containerState.openingStates[i];
+      const parallelRange = openingState.width / 2;
+      const perpendicularRange = 2;
+      const middle = openingState.location + parallelRange - 1;
+
+      let olocation;
+      let xRange;
+      let yRange;
+      switch (openingState.border) {
+        case 'top':
+          olocation = [middle, 0];
+          xRange = parallelRange;
+          yRange = perpendicularRange;
+          break;
+        case 'bottom':
+          olocation = [middle, containerState.dimensions[1]];
+          xRange = parallelRange;
+          yRange = perpendicularRange;
+          break;
+        case 'left':
+          olocation = [0, middle];
+          yRange = parallelRange;
+          xRange = perpendicularRange;
+          break;
+        case 'right':
+          olocation = [containerState.dimensions[0], middle];
+          yRange = parallelRange;
+          xRange = perpendicularRange;
+          break;
+        default:
+          break;
+      }
+      const deltaX = characterState.location[0] - olocation[0];
+      const deltaY = characterState.location[1] - olocation[1];
+
+      // Determine if the openingState is within range.
+      if (Math.abs(deltaX) <= xRange && Math.abs(deltaY) <= yRange) {
+        return openingState;
+      }
+    }
+  };
+
+  highlightInteractable(interactable, isOpening) {
+    if (interactable !== null && interactable !== undefined) {
+      const newsty = Object.assign({}, interactable.sty);
+      newsty.backgroundColor = '#ebcb8b'; // yellow
+      if (isOpening) {
+        const containerid = this.getContainerStateById(
+          this.state.characterState.container
+        ).id;
+        this.updateOpeningState(containerid, interactable.id, { sty: newsty });
+      }
+    }
+  }
 
   /**
    * Checks whether or not the character is in the given container.
