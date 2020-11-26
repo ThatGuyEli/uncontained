@@ -211,24 +211,38 @@ class Level extends Component {
     window.removeEventListener('resize', this.updateSty);
   }
 
+  //-----------------------------\\
+  // Key Event And Timer Methods \\
+  //-----------------------------\\
+
   /**
    * Handles KeyboardEvents from onKeyDown and onKeyUp.
    *
    * @param {KeyboardEvent} e the keyboard event to handle
    */
   handleKey = (e) => {
+    // Only do something with the key if the key is in the controls.
     if (e.key in this.keys) {
       const action = this.keys[e.key];
 
+      // If the key is being pressed down, set the respective action
+      // to true.
       if (e.type === 'keydown') {
+        // If the action is to pause, pause instead.
         if (action === 'pause') this.togglePause();
         else this.actions[action] = true;
-      } else if (e.type === 'keyup' && action !== 'pause') {
+      } 
+      // Otherwise, set the respective action to false.
+      else if (e.type === 'keyup' && action !== 'pause') {
         this.actions[action] = false;
       }
     }
   };
 
+  /**
+   * Toggle whether or not the game is paused. On pause, pause the
+   * timer. On unpause, start the timer again.
+   */
   togglePause = () => {
     this.paused = !this.paused;
     if (this.paused) {
@@ -240,17 +254,19 @@ class Level extends Component {
     // todo: pause interval that moves the character
   };
 
+  /**
+   * Pause the game and stop the timer.
+   */
   pauseForResize = () => {
     this.paused = true;
     clearInterval(this.timer);
-    //clearTimeout(this.timer);
-    //this.timer = setTimeout(() => {
-    //  this.paused = false;
-    //  this.timer = setInterval(this.timerFunc, 1000 / 60);
-    //  this.updateCharacterSty();
-    //}, 100);
   };
 
+  /**
+   * {this.timer} calls this method every frame. Sets
+   * the state of the character to moving, then moves
+   * the character.
+   */
   timerFunc = () => {
     this.setState(
       {
@@ -262,9 +278,19 @@ class Level extends Component {
     );
   };
 
+  /**
+   * General accessor. This is used in Container, which cannot
+   * normally access {this.paused}.
+   * 
+   * @returns {boolean} Whether or not the game is paused.
+   */
   gameIsPaused = () => {
     return this.paused;
   };
+
+  //---------------\\
+  // Level Methods \\
+  //---------------\\
 
   /**
    * Update the style of the level. This includes the margins,
@@ -344,6 +370,33 @@ class Level extends Component {
   };
 
   /**
+   * Get the pixel size of the border based on the
+   * viewport. This returns the pixel value of the average
+   * of 1% of the {@link window.innerWidth} and 1%
+   * of the {@link window.innerHeight}.
+   *
+   * @returns the pixel size of the border
+   */
+  getBorder = () => {
+    const { innerWidth, innerHeight } = window;
+    return (innerWidth + innerHeight) / 200;
+  }
+
+  /**
+   * Convert a unit to pixels per frame, at 60fps.
+   *
+   * @param {number} unit The unit to multiply.
+   * @param {number} blockSize The ratio of the block.
+   */
+  toPixelsPerFrame = (unit, blockSize) => {
+    return (unit * blockSize) / (1000 / 60);
+  };
+
+  //-------------------\\
+  // Container Methods \\
+  //-------------------\\
+
+  /**
    * Update the container style. This method is passed into
    * {@link Container} using {@link Container.props} so that
    * it can access {@link this.state.sty}. This sets the state
@@ -376,16 +429,41 @@ class Level extends Component {
   };
 
   /**
-   * Get the pixel size of the border based on the
-   * viewport. This returns the pixel value of the average
-   * of 1% of the {@link window.innerWidth} and 1%
-   * of the {@link window.innerHeight}.
-   *
-   * @returns the pixel size of the border
+   * This method is intended to replace setState() for Containers.
+   * 
+   * @param {number} id The id of the container to update the state of.
+   * @param {object} newstate The state to replace the old state.
    */
-  getBorder() {
-    const { innerWidth, innerHeight } = window;
-    return (innerWidth + innerHeight) / 200;
+  updateContainerState = (id, newstate) => {
+    // Note that this does not use getContainerById because
+    // the index is necessary to replace it.
+
+    // Cycle through container states until the requested id is found.
+    for (let i = 0; i < this.state.containerStates.length; i++) {
+      const containerState = this.state.containerStates[i];
+      if (containerState.id === id) {
+        // Modify the state by replacing whatever newstate specifies.
+        this.setState((state) => {
+          state.containerStates[i] = Object.assign(containerState, newstate);
+          return {
+            containerStates: state.containerStates,
+          };
+        });
+      }
+    }
+  };
+
+  /**
+   * Get the pixel location of the container with the matching id.
+   * 
+   * @param {number} id The id of the container to get the pixel location from.
+   * 
+   * @returns {Array} the pixel location, in [x,y] format.
+   */
+  getContainerPixelLocation = (id) => {
+    // Search for the container, then return its top and left in [x,y] format.
+    const containerState = this.getContainerStateById(id);
+    return [containerState.sty.left, containerState.sty.top];
   }
 
   /**
@@ -440,6 +518,83 @@ class Level extends Component {
     // NaN and underfined errors.
   };
 
+  /**
+   * Move the container based on its current position and the mouse's
+   * location. This method is passed down to Container.
+   * 
+   * @param {container} container the container to move
+   * @param {MouseEvent} e the mouse event to move the container based on
+   */
+  moveContainer = (container, e) => {
+    // If the character is in the container,
+    // or if the game is paused,
+    // don't move.
+    if (this.paused || this.characterIsIn(container)) return;
+
+    const containerState = this.getContainerStateById(container.props.id);
+    const newsty = Object.assign({}, containerState.sty);
+
+    // Depending on if the movement is x or y, move the container
+    // the difference as the mouse moves.
+    const border = this.getBorder();
+    const mo = containerState.mouseOffset;
+    const location = container.props.location;
+
+    const isHorizontal = container.props.movement === 'x';
+    const { marginTop: y, height, marginLeft: x, width } = this.state.sty;
+
+    // Calculate the min/max based on whether or not the container's
+    // movement is horizontal. If the container is horizontal,
+    // use the left + border as min and the right - width - border.
+    // If the container is vertical, use top instead of left,
+    // bottom instead of right, and height instead of width.
+    let min, max;
+    if (isHorizontal) {
+      min = x + border;
+      max = x + width - newsty.width + border;
+    } else {
+      min = y + border;
+      max = y + height - newsty.height + border;
+    }
+
+    const offset = isHorizontal ? e.offsetX : e.offsetY;
+    containerState.isMovingPos = offset - mo > 0;
+
+    // Calculate the new container location, in pixels.
+    const newpx = this.getNewContainerPixelLocation(
+      mo,
+      isHorizontal ? newsty.left : newsty.top,
+      offset,
+      isHorizontal ? e.clientX : e.clientY,
+      min,
+      max
+    );
+
+    // Check whether or not the container can actually move.
+    const ccm = this.containerCanMove(container);
+
+    // If it can actually move, set the calculated location
+    // to the newsty and set the location to the nearest
+    // block.
+    if (ccm) {
+      const index = isHorizontal ? 0 : 1;
+      newsty[isHorizontal ? 'left' : 'top'] = newpx;
+      location[index] = this.nearestContainerLocation(
+        container,
+        newpx
+      ).newLocation;
+    }
+
+    // Set the style of the container to the calculated newsty.
+    // Set the movement to false, because the calculations are
+    // completed.
+    containerState.sty = newsty;
+    containerState.isMoving = false;
+
+    // Redraw the component.
+    this.forceUpdate();
+  };
+
   // ** This comment was used for debugging purposes and for a theoretical approach
   //    to a now fixed bug. However, it was kept here to demonstrate the thought process.
   // Instead of checking the validity of where the container would be, check whether
@@ -448,8 +603,13 @@ class Level extends Component {
   // (positive or negative). if it can move in that direction, continuously move
   // that container in that direction and update its location.
 
-  // pos = boolean that determines whether or not the container wants to move in a
-  // positive direction.
+  /**
+   * Determine if the container can move.
+   * 
+   * @param {Container} container The container to move.
+   * 
+   * @returns {boolean} Whether or not the container can move.
+   */
   containerCanMove = (container) => {
     const { location, dimensions } = container.props;
     const isHorizontal = container.props.movement === 'x';
@@ -489,7 +649,7 @@ class Level extends Component {
   };
 
   /**
-   * Either write {true} or {false} blocks to {@link this.state.blocks}
+   * Either write {true} or {false} blocks to {this.blocks}.
    * based on the parameter {isSetting}.
    *
    * @param {Object} container  the Container to rewrite blocks for
@@ -498,12 +658,12 @@ class Level extends Component {
    */
   rewriteBlocks = (container, isSetting, callback) => {
     const { location, dimensions } = container.props;
-    // overwrite old x and y with 0s
+    // Overwrite old x and y with 0s.
     const newBlocks = Object.assign({}, this.state.blocks);
 
-    // cycle through the blocks that the container currently is located
-    // in. since this method is only called on click and on "un"click,
-    // the block table is not constantly being rewritten
+    // Cycle through the blocks that the container currently is located
+    // in. Since this method is only called on mouse down and on 
+    // mouse up, the block table is not constantly being rewritten.
     for (let x = location[0]; x < location[0] + dimensions[0]; x++) {
       for (let y = location[1]; y < location[1] + dimensions[1]; y++) {
         newBlocks[x][y] = isSetting;
@@ -517,101 +677,35 @@ class Level extends Component {
     );
   };
 
-  // move the container based on its current position on the new mouse
-  // location. this is called passed up from Container.js
-  moveContainer = (container, e) => {
-    if (this.paused || this.characterIsIn(container)) return;
-    // if the character is in the container,
-    // or if the game is paused,
-    // don't move.
-
-    const containerState = this.getContainerStateById(container.props.id);
-    const newsty = Object.assign({}, containerState.sty);
-    // depending on if the movement is x or y, move the container
-    // the difference as the mouse moves
-    const border = this.getBorder();
-    const mo = containerState.mouseOffset;
-    const location = container.props.location;
-
-    const isHorizontal = container.props.movement === 'x';
-    const { marginTop: y, height, marginLeft: x, width } = this.state.sty;
-
-    // calculate the min/max based on whether or not the container's
-    // movement is horizontal. if the container is horizontal,
-    // use the left + border as min and the right - width - border
-    // if the container is vertical, use top instead of left,
-    // bottom instead of right, and height instead of width
-    let min, max;
-    if (isHorizontal) {
-      min = x + border;
-      max = x + width - newsty.width + border;
-    } else {
-      min = y + border;
-      max = y + height - newsty.height + border;
-    }
-
-    const offset = isHorizontal ? e.offsetX : e.offsetY;
-    containerState.isMovingPos = offset - mo > 0;
-
-    // calculate the new container location, in pixels
-    const newpx = this.getNewContainerPixelLocation(
-      mo,
-      isHorizontal ? newsty.left : newsty.top,
-      offset,
-      isHorizontal ? e.clientX : e.clientY,
-      min,
-      max
-    );
-
-    // check whether or not the container can actually move
-    const ccm = this.containerCanMove(container);
-
-    // if it can actually move, set the calculated location
-    // to the newsty and set the location to the nearest
-    // block.
-    if (ccm) {
-      const index = isHorizontal ? 0 : 1;
-      newsty[isHorizontal ? 'left' : 'top'] = newpx;
-      location[index] = this.nearestContainerLocation(
-        container,
-        newpx
-      ).newLocation;
-    }
-
-    // set the style of the container to the calculated newsty
-    // set the movement to false, because the calculations are
-    // completed.
-    containerState.sty = newsty;
-    containerState.isMoving = false;
-
-    // redraw the component
-    this.forceUpdate();
-  };
-
-  // get the nearest block by rounding the ratio of pixels to blocks
-  // then, return both that new location and the new pixel location
-  // called from this.props.nearestBlock, from Container.js
-  // note: only returns an x or a y value for location/pixels,
-  // based on isHorizontal
+  /**
+   * Get the nearest block by rounding the ratio of pixels to blocks.
+   * Then, return both that new location and the new pixel location.
+   * This method is passed down to Container.
+   * Note: this method only returns information for the axis
+   * that the container moves along.
+   * 
+   * @param {Container} container Container to find the nearest location of.
+   * @param {number} oldPixelLocation The previous pixel location
+   */
   nearestContainerLocation = (container, oldPixelLocation) => {
     const isHorizontal = container.props.movement === 'x';
     const dimensions = container.props.dimensions;
     const { sideArr, isMovingPos: pos } = container.props.selfState;
 
-    // get spacing so the border and whitespace isn't used
-    // in the calculations
+    // Get spacing so the border and whitespace isn't used
+    // in the calculations.
     const { marginLeft: x, marginTop: y } = this.state.sty;
     const spacing = (isHorizontal ? x : y) + this.getBorder();
 
-    // determine whether the x or y blocksize should be used
-    // note that this shouldn't matter too much but can still
-    // prevent the container from snapping
+    // Determine whether the x or y blockSize should be used.
+    // Note that this shouldn't matter too much but can still
+    // prevent the container from snapping to the wrong location.
     const index = isHorizontal ? 0 : 1;
 
-    // oldLocation - spacing to get just the difference from
+    // oldLocation - spacing to get the difference from
     // the level div
-    // divide to get the ratio, then round to get a full
-    // location number
+    // Divide to get the ratio, then round to get a full
+    // location number.
     let newLocation =
       (oldPixelLocation - spacing) / this.state.blockSize[index];
     const roundedNewLocation = Math.round(newLocation);
@@ -656,41 +750,36 @@ class Level extends Component {
     };
   };
 
-  // this method is intended to replace setState() and is called
-  // by Container.js
-  updateContainerState = (id, newstate) => {
-    // note that this does not use getContainerById because
-    // the index is necessary to replace it
-
-    // cycle through container states until the wanted id is found
-    for (let i = 0; i < this.state.containerStates.length; i++) {
-      const containerState = this.state.containerStates[i];
-      if (containerState.id === id) {
-        // modify the state by replacing whatever newstate specifies
-        this.setState((state) => {
-          state.containerStates[i] = Object.assign(containerState, newstate);
-          return {
-            containerStates: state.containerStates,
-          };
-        });
-      }
-    }
-  };
-
-  // cycle through the state.containerStates until the one with
-  // the requested id is found. note that the id is not always
-  // the same as the index, which is why this method is necessary.
-  getContainerStateById(id) {
+  /**
+   * Cycle through the container states until the one with the
+   * requested id is found. Note that the id is not always the
+   * same as the index, which is why this method is necessary.
+   * 
+   * @param {number} id The id of the container to get the state of.
+   * 
+   * @returns {object} The requested container state, or null if none exist.
+   */
+  getContainerStateById = (id) => {
     for (let i = 0; i < this.state.containerStates.length; i++) {
       const containerState = this.state.containerStates[i];
       if (containerState.id === id) return containerState;
     }
+    return null;
   }
 
-  // Generate the level containers using array.map
-  generateContainers() {
+  /**
+   * Generate the container components using JSX.
+   * 
+   * @returns {Array} An array of Containers read from the level file.
+   */
+  generateContainers = () => {
+    // Use Array.map to create a unique container 
+    // for every single container in the level file.
     return this.levelFile.containers.map((container) => {
       const containerState = this.getContainerStateById(container.id);
+
+      // Create a container based on the container state, and pass down
+      // props that need to be called from the container.
       return (
         <Container
           key={container.id}
@@ -710,17 +799,14 @@ class Level extends Component {
     });
   }
 
-  getContainerPixelLocation(id) {
-    const containerState = this.getContainerStateById(id);
-    return [containerState.sty.left, containerState.sty.top];
-  }
+  //-------------------\\
+  // Character Methods \\
+  //-------------------\\
 
-  updateCharacterState = (newstate) => {
-    this.setState({
-      characterState: newstate,
-    });
-  };
-
+  /**
+   * Update the character style. This method uses the location of the 
+   * character and the pixel location of the container.
+   */
   updateCharacterSty = () => {
     const characterState = Object.assign({}, this.state.characterState);
     const bs = this.state.blockSize;
@@ -836,16 +922,6 @@ class Level extends Component {
   };
 
   /**
-   * Convert a unit to pixels per frame, at 60fps.
-   *
-   * @param {number} unit The unit to multiply.
-   * @param {number} blockSize The ratio of the block.
-   */
-  toPixelsPerFrame = (unit, blockSize) => {
-    return (unit * blockSize) / (1000 / 60);
-  };
-
-  /**
    * Finds the nearest character location and sets the character's
    * location to that in this.state.characterState. Note that
    * this does not necessarily mean that the pixels will line up.
@@ -912,6 +988,10 @@ class Level extends Component {
     // todo: platforms
     return sty.top < max;
   };
+
+  //---------------\\
+  // Render Method \\
+  //---------------\\
 
   /**
    * Rendering method.
