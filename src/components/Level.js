@@ -405,6 +405,12 @@ class Level extends Component {
     // todo: other items
   };
 
+  /**
+   * Interact with the opening. This interactable must be
+   * an opening, or else the program will throw an error.
+   * 
+   * @param {object} interactable The interactable opening.
+   */
   interactOpening = (interactable) => {
     const characterState = this.state.characterState;
     const containerState = this.getContainerStateById(characterState.container);
@@ -501,6 +507,12 @@ class Level extends Component {
     });
   };
 
+  /**
+   * Interact with the item. This interactable must be
+   * an item, or else the program will throw an error.
+   * 
+   * @param {object} interactable The interactable item.
+   */
   interactItem = (interactable) => {
     //const characterState = this.state.characterState;
     //const containerState = this.getContainerStateById(characterState.container);
@@ -1410,6 +1422,15 @@ class Level extends Component {
 
   // Calculate the distance from the character to the object
   // to interact with
+  /**
+   * Determine whether or not an object is in range of the character to interact with.
+   * 
+   * @param {Array} objectLocation The location of the object (centered and in [x,y] format)
+   * @param {number} xRange The maximum distance the object can be to be in range on the x axis.
+   * @param {number} yRange The maximum distance the object can be to be in range on the y axis.
+   * 
+   * @returns {boolean} Whether or not the object is in range.
+   */
   objectIsInRange = (objectLocation, xRange, yRange) => {
     const characterState = this.state.characterState;
     const deltaX = characterState.location[0] - objectLocation[0];
@@ -1561,6 +1582,13 @@ class Level extends Component {
   //--------------\\
   // Item Methods \\
   //--------------\\
+  /**
+   * Update the style of the Item. Like Openings, this method is
+   * called from Item, passed through Container, and passed up to here.
+   * 
+   * @param {Container} container The Container that holds the Item.
+   * @param {Item} item The Item to update the style of.
+   */
   updateItemSty = (container, item) => {
     const dimensions = item.dimensions;
     const location = item.props.location;
@@ -1577,12 +1605,21 @@ class Level extends Component {
     });
   };
 
+  /**
+   * Update the item state.
+   * 
+   * @param {number} containerid The id of the container that has the item.
+   * @param {number} itemid The id of the item to update.
+   * @param {object} newstate The state to update the item with.
+   */
   updateItemState = (containerid, itemid, newstate) => {
+    // Get a mutatable copy of the containerState.
     const containerState = Object.assign(
       {},
       this.getContainerStateById(containerid)
     );
 
+    // Cycle through the itemStates until one with a matching id is found.
     for (let i = 0; i < containerState.itemStates.length; i++) {
       const itemState = containerState.itemStates[i];
       if (itemState.id === itemid) {
@@ -1592,6 +1629,14 @@ class Level extends Component {
     }
   };
 
+  /**
+   * Check whether or not an item is interactable. If the item is
+   * an exit or a lever, return true.
+   * 
+   * @param {object} itemState The item to check.
+   * 
+   * @returns {boolean} Whether or not the item is interactable.
+   */
   itemIsInteractable = (itemState) => {
     switch (itemState.itemType) {
       case 'exit':

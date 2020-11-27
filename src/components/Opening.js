@@ -25,6 +25,10 @@ class Opening extends Component {
     window.removeEventListener('resize', this.updateSty);
   }
 
+  /**
+   * Update the style of this component. This gets passed into Container,
+   * which passes it into Level. Read more about this method there.
+   */
   updateSty = () => {
     this.props.updateSty(this);
   }

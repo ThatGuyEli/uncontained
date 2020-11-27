@@ -165,11 +165,23 @@ class Container extends Component {
   //-----------------\\
   // Opening methods \\
   //-----------------\\
+  /**
+   * This method is passing the Container and the Item to Level,
+   * which updates the style of the Item.
+   * 
+   * @param {Opening} opening The Opening to update the style of.
+   */
   updateOpeningSty = (opening) => {
     this.props.updateOpeningSty(this, opening);
   };
 
+  /**
+   * Generate the opening within this Container.
+   * 
+   * @returns {Array} An Array of Openings attached to this Container.
+   */
   generateOpenings = () => {
+    // Use higher order function array.map.
     return this.props.openings.map((opening) => {
       return (
         <Opening
@@ -182,6 +194,13 @@ class Container extends Component {
     });
   };
 
+  /**
+   * Get the openingState with the given id.
+   * 
+   * @param {number} id The id of the opening to search for.
+   * 
+   * @returns {object} The openingState with the given id.
+   */
   getOpeningStateById = (id) => {
     for (let i = 0; i < this.props.selfState.openingStates.length; i++) {
       const openingState = this.props.selfState.openingStates[i];
@@ -194,7 +213,13 @@ class Container extends Component {
   //--------------\\
   // Item methods \\
   //--------------\\
+  /**
+   * Generate the items within this Container.
+   * 
+   * @returns {Array} An Array of Items attached to this Container.
+   */
   generateItems = () => {
+    // Use higher order function array.map.
     return this.props.items.map((item) => {
       return (
         <Item 
@@ -207,17 +232,30 @@ class Container extends Component {
     });
   }
 
+  /**
+   * This method is passing the Container and the Item to
+   * Level, which updates the style of the Item.
+   * 
+   * @param {Item} item The item to update the style of.
+   */
   updateItemSty = (item) => {
     this.props.updateItemSty(this, item);
   }
   
+  /**
+   * Get the itemState with the given id.
+   * 
+   * @param {number} id The id of the item to search for.
+   * 
+   * @returns {object} The itemState with the given id.
+   */
   getItemStateById = (id) => {
+    // Cycle through the itemStates until the matching id is found.
     for (let i = 0; i < this.props.selfState.itemStates.length; i++) {
       const itemState = this.props.selfState.itemStates[i];
       if (itemState.id === id) return itemState;
     }
   }
-
 
   /**
    * Rendering method.
