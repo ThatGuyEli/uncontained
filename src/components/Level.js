@@ -2,6 +2,12 @@ import React, { Component } from 'react';
 import Container from './Container.js';
 import Character from './Character.js';
 
+// Note: although I would have liked to break this
+// into multiple smaller files, React.js recommends
+// state to be as high in the component structure as
+// necessary. This state contains information necessary
+// to the level, but not to the entire application.
+
 /**
  * Class that represents the level of the game.
  * @extends Component
@@ -40,6 +46,8 @@ class Level extends Component {
       right: false,
       jump: false,
     };
+
+    // Whether or not the game is paused.
     this.paused = false;
 
     // Cycle through the blocks and populate it with booleans.
@@ -129,7 +137,7 @@ class Level extends Component {
         // when falling/jumping.
         yAcc: 1,
         // The jump velocity is negative because up is negative
-        yJumpVel: -12,
+        yJumpVel: -13,
 
         // The location is relative to the container that the
         // character is located in. Note that unlike containers,
@@ -155,6 +163,8 @@ class Level extends Component {
         // and act accordingly.
         attached: false,
 
+        // Add the dimensions to the state, not because it changes, but
+        // because it is easier to access this way from certain methods.
         dimensions: container.dimensions,
 
         // The distance between the mouse and the top left corner,
@@ -189,7 +199,7 @@ class Level extends Component {
         containerState.sideArr.push(location[antiIndex] + i);
       }
 
-      // Add openingStates.
+      // Add openingStates for each opening.
       container.openings.forEach((opening) => {
         const openingState = {
           id: opening.id,
@@ -211,7 +221,8 @@ class Level extends Component {
   /**
    * When the component mounts, update the style of this component.
    * Additionally, add the event listener to update the style whenever
-   * the event listener resizes.
+   * the event listener resizes. Finally, add keyboard controls and
+   * create a timer.
    */
   componentDidMount() {
     this.timer = setInterval(this.timerFunc, 1000 / 60);
@@ -225,10 +236,11 @@ class Level extends Component {
 
   /**
    * Similarly, when the component is being unmounted, remove
-   * the event listener. This is to prevent unnecessary calls
-   * to no-longer-existing components.
+   * the event listeners and stop the timer. This is to prevent
+   * unnecessary calls to no-longer-existing components.
    */
   componentWillUnmount() {
+    clearInterval(this.timer);
     window.removeEventListener('resize', this.pauseForResize);
     window.removeEventListener('resize', this.updateSty);
   }
@@ -240,7 +252,7 @@ class Level extends Component {
   /**
    * Handles KeyboardEvents from onKeyDown and onKeyUp.
    *
-   * @param {KeyboardEvent} e the keyboard event to handle
+   * @param {KeyboardEvent} e The keyboard event to handle.
    */
   handleKey = (e) => {
     // Only do something with the key if the key is in the controls.
@@ -261,6 +273,13 @@ class Level extends Component {
     }
   };
 
+  /**
+   * Handle interactions with a keypress, which should only
+   * trigger an interaction once, as opposed to a keydown
+   * which continuously calls.
+   *
+   * @param {KeyboardEvent} e The keyboard event to handle.
+   */
   handleKeyPress = (e) => {
     if (e.key in this.keys && this.keys[e.key] === 'interact') {
       this.interact(this.getInteractableNearCharacter());
@@ -293,7 +312,9 @@ class Level extends Component {
   /**
    * {this.timer} calls this method every frame. Sets
    * the state of the character to moving, then moves
-   * the character.
+   * the character. Additionally, highlight a nearby
+   * interactable object (if any) and unhighlight all
+   * other objects.
    */
   timerFunc = () => {
     this.setState(
@@ -306,9 +327,24 @@ class Level extends Component {
     );
     const interactable = this.getInteractableNearCharacter();
     this.highlightInteractable(interactable, true);
+    this.unhighlightAll(interactable);
+  };
+
+  /**
+   * Unhighlight all of the interactable objects within the container
+   * that the character is located in except for a nearby interactable
+   * object (if any).
+   *
+   * @param {Object} interactable The object to not unhighlight (keep highlighted).
+   */
+  unhighlightAll(interactable) {
+    // Get the container state of the container that the character is in.
     const containerState = this.getContainerStateById(
       this.state.characterState.container
     );
+
+    // Loop through the opening states and if they are not the interactable,
+    // then mark it a dark color.
     for (let i = 0; i < containerState.openingStates.length; i++) {
       const openingState = containerState.openingStates[i];
       if (openingState !== interactable) {
@@ -319,55 +355,96 @@ class Level extends Component {
         });
       }
     }
-  };
+  }
 
+  /**
+   * Interact with the given object.
+   *
+   * @param {Object} interactable The object to interact with
+   */
   interact = (interactable) => {
-    if (this.paused || interactable === undefined || interactable === null) return;
+    // Prevent errors and interacting with objects while the game is paused.
+    if (this.paused || interactable === undefined || interactable === null)
+      return;
+
+    // Prepare for interaction.
     const characterState = this.state.characterState;
     const containerState = this.getContainerStateById(characterState.container);
-    // if the interactable object is an opening
+
+    // Cycle through the openingStates to determine whether or not this
+    // interaction is an opening.
     for (let i = 0; i < containerState.openingStates.length; i++) {
+      // If the interactable object is *this* interactable object,
+      // interact with it.
       if (interactable.id === containerState.openingStates[i].id) {
+        // Prepare for opening interaction.
+        // Whether or not the border is on a horizontal axis or vertical axis.
+        // Note that this is not what the border looks like visually, but rather
+        // the side that the border rests on.
         const borderIsHorizontal =
           interactable.border === 'left' || interactable.border === 'right';
+        // Index and antiIndex, for referencing both x and y in one line.
         const index = borderIsHorizontal ? 0 : 1;
         const antiIndex = borderIsHorizontal ? 1 : 0;
+        // The location of the original location.
         const mainLoc = this.getContainerLocationByState(containerState);
-        const mainDim = containerState.dimensions;
 
+        // Get all adjacent containers on the side that the opening is on.
         const adjacentContainers = this.getAdjacentContainers(
           containerState,
           interactable.border
         );
+        // Loop through each adjacent container on that side, then
+        // loop through all of that container's openings. Even though
+        // this could result in a large calculation, it usually does not,
+        // as a container likely only has one or two adjacent locations.
         adjacentContainers.forEach((adjacentContainer) => {
           adjacentContainer.openingStates.forEach((openingState) => {
+            // Only continue if the openings are on opposite sides. This ensures
+            // that minimum calculations are done on each opening is not on.
+            if (interactable.border !== this.oppositeSide(openingState.border))
+              return;
+
+            // Prepare for interaction.
             const otherLoc = this.getContainerLocationByState(
               adjacentContainer
             );
             const otherDim = adjacentContainer.dimensions;
-            // If the locations are equal
+            // If the absolute locations are equal.
             if (
-              interactable.location + mainLoc[antiIndex] /*+ mainDim[index]*/ ===
-                openingState.location + otherLoc[antiIndex] /*+ otherDim[index]*/ &&
-              interactable.border === this.oppositeSide(openingState.border)
+              interactable.location + mainLoc[antiIndex] ===
+              openingState.location + otherLoc[antiIndex]
             ) {
-              // Determine new location of the character as well
+              // Determine new location of the character as well.
               let newLocOfIndex;
-              const openingRelativeLocation = characterState.location[antiIndex] - interactable.location;
-              const newLocOfAntiIndex = openingRelativeLocation + openingState.location;
+              // The location of the character in relation to the opening.
+              // This ensures that when travelling between containers of
+              // different dimensions, the character is still placed
+              // next to the opening.
+              const charRelLoc =
+                characterState.location[antiIndex] - interactable.location;
+              const newLocOfAntiIndex = charRelLoc + openingState.location;
+
+              // Set the newLocationOfIndex based on if the character is going
+              // "negatively" or "positively"
               switch (interactable.border) {
                 case 'top':
                 case 'left':
+                  // If top or left, set the new location to be just within
+                  // the bounds, which is 2 blocks less than the max dimensions.
                   newLocOfIndex = otherDim[index] - 2;
                   break;
                 case 'bottom':
                 case 'right':
+                  // If bottom or right, the new location only has to be 0.
                   newLocOfIndex = 0;
-                  // The openingState.location + whatever the relative location that the character had.
                   break;
                 default:
                   break;
               }
+
+              // Set the new character state, which sets a new container location
+              // and new location relative to that container.
               const newCharacterState = Object.assign(characterState, {
                 container: adjacentContainer.id,
                 location: [
@@ -375,6 +452,8 @@ class Level extends Component {
                   borderIsHorizontal ? newLocOfAntiIndex : newLocOfIndex,
                 ],
               });
+
+              // Set the state of the character, then update its style (rerender it).
               this.setState(
                 {
                   characterState: newCharacterState,
@@ -382,6 +461,7 @@ class Level extends Component {
                 this.updateCharacterSty
               );
 
+              // Finally, unhighlight the interactable.
               const newsty = Object.assign({}, interactable.sty);
               newsty.backgroundColor = '#3b4252'; // dark
               this.updateOpeningState(containerState.id, interactable.id, {
@@ -395,6 +475,15 @@ class Level extends Component {
     // todo: other items
   };
 
+  /**
+   * Get the reverse side. If the side is top, return bottom,
+   * and vice versa. If the side is left, return right, and
+   * vice versa.
+   *
+   * @param {string} side The side to get the reverse of.
+   *
+   * @returns {string} The opposite side.
+   */
   oppositeSide = (side) => {
     switch (side) {
       case 'top':
@@ -412,7 +501,7 @@ class Level extends Component {
 
   /**
    * General accessor. This is used in Container, which cannot
-   * normally access {this.paused}.
+   * normally access this.paused.
    *
    * @returns {boolean} Whether or not the game is paused.
    */
@@ -933,56 +1022,108 @@ class Level extends Component {
     });
   };
 
+  /**
+   * Get the location of the container based on its container state.
+   *
+   * @param {object} containerState The containerState to calculate the location from.
+   *
+   * @returns {Array} An array of length two of the location, in the format [x,y].
+   */
   getContainerLocationByState = (containerState) => {
+    // Get the pixel locations of the container and the level box.
     const { top, left } = containerState.sty;
     const { marginTop, marginLeft } = this.state.sty;
     const bs = this.state.blockSize;
-    const location = [
+
+    // Calculate and return the location.
+    return [
       Math.round((left - marginLeft) / bs[0]),
       Math.round((top - marginTop) / bs[1]),
     ];
-    return location;
   };
 
+  /**
+   * Generates an array of containerStates adjacent to the given containerState
+   * on the given side. For example, if a container is touching two containers
+   * on its right side, this method will return an array of those two containerStates.
+   *
+   * @param {object} containerState The containerState to find adjacent containers from.
+   * @param {string} side The side to find adjacent containers from.
+   *
+   * @returns {Array} An array of containerStates of adjacent containers.
+   */
   getAdjacentContainers = (containerState, side) => {
+    // Access x and y in one variable.
     const sideIsHorizontal = side === 'left' || side === 'right';
     const index = sideIsHorizontal ? 0 : 1;
     const antiIndex = sideIsHorizontal ? 1 : 0;
 
+    // Get the location and dimensions of the main container.
     const mainLoc = this.getContainerLocationByState(containerState);
     const mainDim = containerState.dimensions;
 
-    const adjacentContainers = this.state.containerStates.filter(
-      (otherContainerState) => {
-        const otherLoc = this.getContainerLocationByState(otherContainerState);
-        const otherDim = otherContainerState.dimensions;
+    // Filter the containerStates based on whether or not they are adjacent,
+    // then return it.
+    return this.state.containerStates.filter((otherContainerState) => {
 
-        // todo: comment what i was doing here
-        const adjTopOrLeft =
-          (side === 'top' || side === 'left') &&
-          mainLoc[index] === otherLoc[index] + otherDim[index];
-        const adjRightOrBottom =
-          (side === 'right' || side === 'bottom') &&
-          mainLoc[index] + mainDim[index] === otherLoc[index];
-        const adj =
-          mainLoc[antiIndex] < otherLoc[antiIndex] + otherDim[antiIndex] &&
-          mainLoc[antiIndex] + mainDim[antiIndex] > otherLoc[antiIndex];
-        return (adjTopOrLeft || adjRightOrBottom) && adj;
-      }
-    );
-    return adjacentContainers;
+      // Get the location and dimensions of the other container.
+      const otherLoc = this.getContainerLocationByState(otherContainerState);
+      const otherDim = otherContainerState.dimensions;
+
+      // adjTopOrLeft and adjRightOrBottom determine if the containers'
+      // important axis (remember, using index ensures that x and y work)
+      // are only one apart. The location + dimensions of a container will
+      // be one above the location of its edge. This allows us to simply add
+      // the location and dimensions and compare it to the other location.
+      const adjTopOrLeft =
+        (side === 'top' || side === 'left') &&
+        // This infers that the other container is above / to the left of it.
+        mainLoc[index] === otherLoc[index] + otherDim[index];
+      const adjRightOrBottom =
+        (side === 'right' || side === 'bottom') &&
+        // This infers that the other container is below / to the right of it.
+        mainLoc[index] + mainDim[index] === otherLoc[index];
+
+      // Then, this determines if the containers are actually touching. The 
+      // booleans above only determine if they share one axis; they could
+      // but not be touching, such as a diagonal square on a checkerboard.
+      // This method ensures that the first edge (top or left) of one
+      // container is not after the last edge of the other container.
+      // In essence, this boolean gives the containers a range that they must
+      // be in on the opposite axis.
+      const adj =
+        mainLoc[antiIndex] < otherLoc[antiIndex] + otherDim[antiIndex] &&
+        mainLoc[antiIndex] + mainDim[antiIndex] > otherLoc[antiIndex];
+
+      // Finally, return the three booleans combines. Only one of the initial
+      // two need to be correct, because only one of them *can* be correct.
+      return (adjTopOrLeft || adjRightOrBottom) && adj;
+    });
   };
 
   //-----------------\\
   // Opening Methods \\
   //-----------------\\
+  /**
+   * Update the style of a given opening. Called from Opening, which
+   * passes to Container, which passes to here.
+   * 
+   * @param {Container} container The container that holds the opening.
+   * @param {Opening} opening The opening to update.
+   */
   updateOpeningSty = (container, opening) => {
+    // Prepare to calculate based on the dimensions of the container
+    // And the location/width of the opening.
     const { dimensions: cdimensions } = container.props;
     const { location, width: doorWidth } = opening.props;
-
     const bs = this.state.blockSize;
     const border = this.getBorder();
 
+    // Use a switch statement to determine the following variables.
+    // Note: I would have liked to compress this down, but all of the
+    // sides have too different results that it is too difficult to do
+    // nicely. Other examples of reduced code are most of the methods
+    // that use "index" or "isHorizontal".
     let leftLoc, topLoc, width, height;
     switch (opening.props.border) {
       case 'top':
@@ -1013,6 +1154,7 @@ class Level extends Component {
         return;
     }
 
+    // Createa a style using this, then update the opening state.
     const newsty = {
       width: width,
       height: height,
@@ -1025,13 +1167,27 @@ class Level extends Component {
     });
   };
 
+  /**
+   * Update the openingState with the given container id and opening id.
+   * This does not replace the state with newstate, but rather simply
+   * assigns updated values.
+   * 
+   * @param {number} containerid The id of the container that the state is in.
+   * @param {number} openingid The id of the opening to update.
+   * @param {object} newstate The state to set.
+   */
   updateOpeningState = (containerid, openingid, newstate) => {
+    // Create a modifiable copy of the containerState.
     const containerState = Object.assign(
       {},
       this.getContainerStateById(containerid)
     );
+
+    // Iterate through the openingStates of the container.
     for (let i = 0; i < containerState.openingStates.length; i++) {
       const openingState = containerState.openingStates[i];
+      // Once the desired id is found, update the values of the openingState
+      // and set the containerState with this state.
       if (openingState.id === openingid) {
         containerState.openingStates[i] = Object.assign(openingState, newstate);
         this.updateContainerState(containerid, containerState);
@@ -1039,7 +1195,16 @@ class Level extends Component {
     }
   };
 
+  /**
+   * Get the openingState with the given id from the given containerState.
+   * 
+   * @param {object} containerState The containerState to search through for the openingState.
+   * @param {number} id The id of the requested openingState.
+   * 
+   * @returns {object} The requested openingState, or none.
+   */
   getOpeningStateById = (containerState, id) => {
+    // Iterate through the opening states until the requested openingState is found.
     for (let i = 0; i < containerState.openingStates.length; i++) {
       const openingState = containerState.openingStates[i];
       if (openingState.id === id) return openingState;
@@ -1200,19 +1365,37 @@ class Level extends Component {
     });
   };
 
+  /**
+   * Get a nearby interactable near the character. The priority is as follows:
+   * exit, opening (in order of instantiation), switches (in order of instantiation).
+   * 
+   * @returns {object} the state of the interactable object near the character.
+   */
   getInteractableNearCharacter = () => {
+    // Prepare to iterate over the openingStates of the container that the
+    // character is in.
     const characterState = this.state.characterState;
     const containerState = this.getContainerStateById(characterState.container);
 
+    // Note: this will not throw any errors even when items are nearby;
+    // openings will simply take priority on interaction. Similarly,
+    // openings instantiated first will take priority. This does not have
+    // a major impact on the game as long as the level is designed to have
+    // a normal distance between openings and items.
+    // Iterate.
     for (let i = 0; i < containerState.openingStates.length; i++) {
+      // For openings, the interactable distance comes from the middle
+      // of the opening, not the top/left of it. This calculates that.
       const openingState = containerState.openingStates[i];
+      // The maximum distance from the middle.
       const parallelRange = openingState.width / 2;
+      // The maximum distance away from the middle, not along the line.
       const perpendicularRange = 2;
       const middle = openingState.location + parallelRange - 1;
 
-      let olocation;
-      let xRange;
-      let yRange;
+      let olocation, xRange, yRange;
+      // Like some other methods, this result is a little too complicated
+      // to compress efficiently.
       switch (openingState.border) {
         case 'top':
           olocation = [middle, 0];
@@ -1226,29 +1409,41 @@ class Level extends Component {
           break;
         case 'left':
           olocation = [0, middle];
-          yRange = parallelRange;
           xRange = perpendicularRange;
+          yRange = parallelRange;
           break;
         case 'right':
           olocation = [containerState.dimensions[0], middle];
-          yRange = parallelRange;
           xRange = perpendicularRange;
+          yRange = parallelRange;
           break;
         default:
           break;
       }
+      // Calculate the distance from the character to the opening location.
       const deltaX = characterState.location[0] - olocation[0];
       const deltaY = characterState.location[1] - olocation[1];
 
-      // Determine if the openingState is within range.
+      // Determine if the openingState is within range. If true,
+      // return the openingState.
       if (Math.abs(deltaX) <= xRange && Math.abs(deltaY) <= yRange) {
         return openingState;
       }
     }
   };
 
+  /**
+   * Highlights the interactable object. Requires a specification of whether or not
+   * the object is an opening.
+   * 
+   * @param {object} interactable The object to highlight.
+   * @param {boolean} isOpening Whether or not this object is an opening or another item.
+   */
   highlightInteractable = (interactable, isOpening) => {
+    // Prevent errors.
     if (interactable !== null && interactable !== undefined) {
+
+      // Copy the style, then update it.
       const newsty = Object.assign({}, interactable.sty);
       newsty.backgroundColor = '#ebcb8b'; // yellow
       if (isOpening) {
@@ -1257,8 +1452,9 @@ class Level extends Component {
         ).id;
         this.updateOpeningState(containerid, interactable.id, { sty: newsty });
       }
+      // todo: else statement
     }
-  }
+  };
 
   /**
    * Checks whether or not the character is in the given container.
