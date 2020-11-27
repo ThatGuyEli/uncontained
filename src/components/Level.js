@@ -188,6 +188,8 @@ class Level extends Component {
 
         // A list of all of the states of the openings that the container holds.
         openingStates: [],
+        // A list of all of the states of the items that the container holds.
+        itemStates: [],
       };
 
       // Add locations to the sideArr.
@@ -211,6 +213,20 @@ class Level extends Component {
           // todo: add "isUnlocked" and calculate for red container
         };
         containerState.openingStates.push(openingState);
+      });
+
+      // Add itemStates for each item.
+      container.items.forEach((item) => {
+        const itemState = {
+          id: item.id,
+          container: container.id,
+          itemType: item.itemType,
+          location: item.location,
+          dimensions: [1, item.itemType === 'exit' ? 2 : 1],
+          activated: false,
+          sty: {},
+        };
+        containerState.itemStates.push(itemState);
       });
 
       // Add this default container state to the list of containerStates.
@@ -326,7 +342,11 @@ class Level extends Component {
       this.moveCharacter
     );
     const interactable = this.getInteractableNearCharacter();
-    this.highlightInteractable(interactable, true);
+
+    if (interactable !== null && interactable !== undefined) {
+      const isOpening = !interactable.hasOwnProperty('itemType');
+      this.highlightInteractable(interactable, isOpening);
+    }
     this.unhighlightAll(interactable);
   };
 
@@ -343,13 +363,24 @@ class Level extends Component {
       this.state.characterState.container
     );
 
+    for (let i = 0; i < containerState.itemStates.length; i++) {
+      const itemState = containerState.itemStates[i];
+      if (this.itemIsInteractable(itemState) && itemState !== interactable) {
+        const newsty = Object.assign({}, itemState.sty);
+        newsty.backgroundColor = ''; // default
+        this.updateItemState(containerState.id, itemState.id, {
+          sty: newsty,
+        });
+      }
+    }
+
     // Loop through the opening states and if they are not the interactable,
     // then mark it a dark color.
     for (let i = 0; i < containerState.openingStates.length; i++) {
       const openingState = containerState.openingStates[i];
       if (openingState !== interactable) {
         const newsty = Object.assign({}, openingState.sty);
-        newsty.backgroundColor = '#3b4252'; // dark
+        newsty.backgroundColor = ''; // default
         this.updateOpeningState(containerState.id, openingState.id, {
           sty: newsty,
         });
@@ -367,112 +398,124 @@ class Level extends Component {
     if (this.paused || interactable === undefined || interactable === null)
       return;
 
-    // Prepare for interaction.
+    const isOpening = !interactable.hasOwnProperty('itemType');
+
+    if (isOpening) this.interactOpening(interactable);
+    else this.interactItem(interactable);
+    // todo: other items
+  };
+
+  interactOpening = (interactable) => {
     const characterState = this.state.characterState;
     const containerState = this.getContainerStateById(characterState.container);
+    // Prepare for opening interaction.
+    // Whether or not the border is on a horizontal axis or vertical axis.
+    // Note that this is not what the border looks like visually, but rather
+    // the side that the border rests on.
+    const borderIsHorizontal =
+      interactable.border === 'left' || interactable.border === 'right';
+    // Index and antiIndex, for referencing both x and y in one line.
+    const index = borderIsHorizontal ? 0 : 1;
+    const antiIndex = borderIsHorizontal ? 1 : 0;
+    // The location of the original location.
+    const mainLoc = this.getContainerLocationByState(containerState);
 
-    // Cycle through the openingStates to determine whether or not this
-    // interaction is an opening.
-    for (let i = 0; i < containerState.openingStates.length; i++) {
-      // If the interactable object is *this* interactable object,
-      // interact with it.
-      if (interactable.id === containerState.openingStates[i].id) {
-        // Prepare for opening interaction.
-        // Whether or not the border is on a horizontal axis or vertical axis.
-        // Note that this is not what the border looks like visually, but rather
-        // the side that the border rests on.
-        const borderIsHorizontal =
-          interactable.border === 'left' || interactable.border === 'right';
-        // Index and antiIndex, for referencing both x and y in one line.
-        const index = borderIsHorizontal ? 0 : 1;
-        const antiIndex = borderIsHorizontal ? 1 : 0;
-        // The location of the original location.
-        const mainLoc = this.getContainerLocationByState(containerState);
+    // Get all adjacent containers on the side that the opening is on.
+    const adjacentContainers = this.getAdjacentContainers(
+      containerState,
+      interactable.border
+    );
+    // Loop through each adjacent container on that side, then
+    // loop through all of that container's openings. Even though
+    // this could result in a large calculation, it usually does not,
+    // as a container likely only has one or two adjacent locations.
+    adjacentContainers.forEach((adjacentContainer) => {
+      adjacentContainer.openingStates.forEach((openingState) => {
+        // Only continue if the openings are on opposite sides. This ensures
+        // that minimum calculations are done on each opening is not on.
+        if (interactable.border !== this.oppositeSide(openingState.border))
+          return;
 
-        // Get all adjacent containers on the side that the opening is on.
-        const adjacentContainers = this.getAdjacentContainers(
-          containerState,
-          interactable.border
-        );
-        // Loop through each adjacent container on that side, then
-        // loop through all of that container's openings. Even though
-        // this could result in a large calculation, it usually does not,
-        // as a container likely only has one or two adjacent locations.
-        adjacentContainers.forEach((adjacentContainer) => {
-          adjacentContainer.openingStates.forEach((openingState) => {
-            // Only continue if the openings are on opposite sides. This ensures
-            // that minimum calculations are done on each opening is not on.
-            if (interactable.border !== this.oppositeSide(openingState.border))
-              return;
+        // Prepare for interaction.
+        const otherLoc = this.getContainerLocationByState(adjacentContainer);
+        const otherDim = adjacentContainer.dimensions;
+        // If the absolute locations are equal.
+        if (
+          interactable.location + mainLoc[antiIndex] ===
+          openingState.location + otherLoc[antiIndex]
+        ) {
+          // Determine new location of the character as well.
+          let newLocOfIndex;
+          // The location of the character in relation to the opening.
+          // This ensures that when travelling between containers of
+          // different dimensions, the character is still placed
+          // next to the opening.
+          const charRelLoc =
+            characterState.location[antiIndex] - interactable.location;
+          const newLocOfAntiIndex = charRelLoc + openingState.location;
 
-            // Prepare for interaction.
-            const otherLoc = this.getContainerLocationByState(
-              adjacentContainer
-            );
-            const otherDim = adjacentContainer.dimensions;
-            // If the absolute locations are equal.
-            if (
-              interactable.location + mainLoc[antiIndex] ===
-              openingState.location + otherLoc[antiIndex]
-            ) {
-              // Determine new location of the character as well.
-              let newLocOfIndex;
-              // The location of the character in relation to the opening.
-              // This ensures that when travelling between containers of
-              // different dimensions, the character is still placed
-              // next to the opening.
-              const charRelLoc =
-                characterState.location[antiIndex] - interactable.location;
-              const newLocOfAntiIndex = charRelLoc + openingState.location;
+          // Set the newLocationOfIndex based on if the character is going
+          // "negatively" or "positively"
+          switch (interactable.border) {
+            case 'top':
+            case 'left':
+              // If top or left, set the new location to be just within
+              // the bounds, which is 2 blocks less than the max dimensions.
+              newLocOfIndex = otherDim[index] - 2;
+              break;
+            case 'bottom':
+            case 'right':
+              // If bottom or right, the new location only has to be 0.
+              newLocOfIndex = 0;
+              break;
+            default:
+              break;
+          }
 
-              // Set the newLocationOfIndex based on if the character is going
-              // "negatively" or "positively"
-              switch (interactable.border) {
-                case 'top':
-                case 'left':
-                  // If top or left, set the new location to be just within
-                  // the bounds, which is 2 blocks less than the max dimensions.
-                  newLocOfIndex = otherDim[index] - 2;
-                  break;
-                case 'bottom':
-                case 'right':
-                  // If bottom or right, the new location only has to be 0.
-                  newLocOfIndex = 0;
-                  break;
-                default:
-                  break;
-              }
-
-              // Set the new character state, which sets a new container location
-              // and new location relative to that container.
-              const newCharacterState = Object.assign(characterState, {
-                container: adjacentContainer.id,
-                location: [
-                  borderIsHorizontal ? newLocOfIndex : newLocOfAntiIndex,
-                  borderIsHorizontal ? newLocOfAntiIndex : newLocOfIndex,
-                ],
-              });
-
-              // Set the state of the character, then update its style (rerender it).
-              this.setState(
-                {
-                  characterState: newCharacterState,
-                },
-                this.updateCharacterSty
-              );
-
-              // Finally, unhighlight the interactable.
-              const newsty = Object.assign({}, interactable.sty);
-              newsty.backgroundColor = '#3b4252'; // dark
-              this.updateOpeningState(containerState.id, interactable.id, {
-                sty: newsty,
-              });
-            }
+          // Set the new character state, which sets a new container location
+          // and new location relative to that container.
+          const newCharacterState = Object.assign(characterState, {
+            container: adjacentContainer.id,
+            location: [
+              borderIsHorizontal ? newLocOfIndex : newLocOfAntiIndex,
+              borderIsHorizontal ? newLocOfAntiIndex : newLocOfIndex,
+            ],
           });
-        });
-      }
+
+          // Set the state of the character, then update its style (rerender it).
+          this.setState(
+            {
+              characterState: newCharacterState,
+            },
+            this.updateCharacterSty
+          );
+
+          // Finally, unhighlight the interactable.
+          const newsty = Object.assign({}, interactable.sty);
+          newsty.backgroundColor = ''; // default
+          this.updateOpeningState(containerState.id, interactable.id, {
+            sty: newsty,
+          });
+        }
+      });
+    });
+  };
+
+  interactItem = (interactable) => {
+    //const characterState = this.state.characterState;
+    //const containerState = this.getContainerStateById(characterState.container);
+    switch (interactable.itemType) {
+      case 'exit':
+        console.log('exit');
+        //todo: end level
+        break;
+      case 'lever':
+        // todo
+        console.log('lever');
+        break;
+      default:
+        break;
     }
-    // todo: other items
   };
 
   /**
@@ -1012,6 +1055,7 @@ class Level extends Component {
           selfState={containerState}
           gameIsPaused={this.gameIsPaused}
           updateOpeningSty={this.updateOpeningSty}
+          updateItemSty={this.updateItemSty}
           characterIsIn={this.characterIsIn}
           {...container}
           // Instead of using data={container}, this component
@@ -1065,7 +1109,6 @@ class Level extends Component {
     // Filter the containerStates based on whether or not they are adjacent,
     // then return it.
     return this.state.containerStates.filter((otherContainerState) => {
-
       // Get the location and dimensions of the other container.
       const otherLoc = this.getContainerLocationByState(otherContainerState);
       const otherDim = otherContainerState.dimensions;
@@ -1084,7 +1127,7 @@ class Level extends Component {
         // This infers that the other container is below / to the right of it.
         mainLoc[index] + mainDim[index] === otherLoc[index];
 
-      // Then, this determines if the containers are actually touching. The 
+      // Then, this determines if the containers are actually touching. The
       // booleans above only determine if they share one axis; they could
       // but not be touching, such as a diagonal square on a checkerboard.
       // This method ensures that the first edge (top or left) of one
@@ -1107,7 +1150,7 @@ class Level extends Component {
   /**
    * Update the style of a given opening. Called from Opening, which
    * passes to Container, which passes to here.
-   * 
+   *
    * @param {Container} container The container that holds the opening.
    * @param {Opening} opening The opening to update.
    */
@@ -1154,7 +1197,7 @@ class Level extends Component {
         return;
     }
 
-    // Createa a style using this, then update the opening state.
+    // Createa a style using this, th/deen update the opening state.
     const newsty = {
       width: width,
       height: height,
@@ -1171,7 +1214,7 @@ class Level extends Component {
    * Update the openingState with the given container id and opening id.
    * This does not replace the state with newstate, but rather simply
    * assigns updated values.
-   * 
+   *
    * @param {number} containerid The id of the container that the state is in.
    * @param {number} openingid The id of the opening to update.
    * @param {object} newstate The state to set.
@@ -1197,10 +1240,10 @@ class Level extends Component {
 
   /**
    * Get the openingState with the given id from the given containerState.
-   * 
+   *
    * @param {object} containerState The containerState to search through for the openingState.
    * @param {number} id The id of the requested openingState.
-   * 
+   *
    * @returns {object} The requested openingState, or none.
    */
   getOpeningStateById = (containerState, id) => {
@@ -1365,10 +1408,19 @@ class Level extends Component {
     });
   };
 
+  // Calculate the distance from the character to the object
+  // to interact with
+  objectIsInRange = (objectLocation, xRange, yRange) => {
+    const characterState = this.state.characterState;
+    const deltaX = characterState.location[0] - objectLocation[0];
+    const deltaY = characterState.location[1] - objectLocation[1];
+    return Math.abs(deltaX) <= xRange && Math.abs(deltaY) <= yRange;
+  };
+
   /**
    * Get a nearby interactable near the character. The priority is as follows:
-   * exit, opening (in order of instantiation), switches (in order of instantiation).
-   * 
+   * exit, opening (in order of instantiation), levers (in order of instantiation).
+   *
    * @returns {object} the state of the interactable object near the character.
    */
   getInteractableNearCharacter = () => {
@@ -1378,10 +1430,25 @@ class Level extends Component {
     const containerState = this.getContainerStateById(characterState.container);
 
     // Note: this will not throw any errors even when items are nearby;
-    // openings will simply take priority on interaction. Similarly,
-    // openings instantiated first will take priority. This does not have
+    // items will simply take priority on interaction. Similarly,
+    // objects instantiated first will take priority. This does not have
     // a major impact on the game as long as the level is designed to have
     // a normal distance between openings and items.
+
+    for (let i = 0; i < containerState.itemStates.length; i++) {
+      const itemState = containerState.itemStates[i];
+      if (!this.itemIsInteractable(itemState)) continue;
+      const { location, dimensions } = itemState;
+      // middle of the object
+      const iLocation = [
+        location[0] + dimensions[0] / 2,
+        location[1] + dimensions[1] / 2,
+      ];
+      if (this.objectIsInRange(iLocation, 2, 2)) {
+        return itemState;
+      }
+    }
+
     // Iterate.
     for (let i = 0; i < containerState.openingStates.length; i++) {
       // For openings, the interactable distance comes from the middle
@@ -1420,13 +1487,9 @@ class Level extends Component {
         default:
           break;
       }
-      // Calculate the distance from the character to the opening location.
-      const deltaX = characterState.location[0] - olocation[0];
-      const deltaY = characterState.location[1] - olocation[1];
-
       // Determine if the openingState is within range. If true,
       // return the openingState.
-      if (Math.abs(deltaX) <= xRange && Math.abs(deltaY) <= yRange) {
+      if (this.objectIsInRange(olocation, xRange, yRange)) {
         return openingState;
       }
     }
@@ -1435,24 +1498,27 @@ class Level extends Component {
   /**
    * Highlights the interactable object. Requires a specification of whether or not
    * the object is an opening.
-   * 
+   *
    * @param {object} interactable The object to highlight.
    * @param {boolean} isOpening Whether or not this object is an opening or another item.
    */
   highlightInteractable = (interactable, isOpening) => {
     // Prevent errors.
     if (interactable !== null && interactable !== undefined) {
-
       // Copy the style, then update it.
       const newsty = Object.assign({}, interactable.sty);
       newsty.backgroundColor = '#ebcb8b'; // yellow
+      //if (!isOpening && interactable.itemType === 'lever') {
+      //  newsty.backgroundColor = ''; // default
+      //}
+      const containerid = this.getContainerStateById(
+        this.state.characterState.container
+      ).id;
       if (isOpening) {
-        const containerid = this.getContainerStateById(
-          this.state.characterState.container
-        ).id;
         this.updateOpeningState(containerid, interactable.id, { sty: newsty });
+      } else {
+        this.updateItemState(containerid, interactable.id, { sty: newsty });
       }
-      // todo: else statement
     }
   };
 
@@ -1490,6 +1556,50 @@ class Level extends Component {
 
     // todo: platforms
     return sty.top < max;
+  };
+
+  //--------------\\
+  // Item Methods \\
+  //--------------\\
+  updateItemSty = (container, item) => {
+    const dimensions = item.dimensions;
+    const location = item.props.location;
+    const bs = this.state.blockSize;
+
+    const newsty = {
+      width: dimensions[0] * bs[0],
+      height: dimensions[1] * bs[1],
+      left: location[0] * bs[0],
+      top: location[1] * bs[1],
+    };
+    this.updateItemState(container.props.id, item.props.id, {
+      sty: newsty,
+    });
+  };
+
+  updateItemState = (containerid, itemid, newstate) => {
+    const containerState = Object.assign(
+      {},
+      this.getContainerStateById(containerid)
+    );
+
+    for (let i = 0; i < containerState.itemStates.length; i++) {
+      const itemState = containerState.itemStates[i];
+      if (itemState.id === itemid) {
+        containerState.itemStates[i] = Object.assign(itemState, newstate);
+        this.updateContainerState(containerid, containerState);
+      }
+    }
+  };
+
+  itemIsInteractable = (itemState) => {
+    switch (itemState.itemType) {
+      case 'exit':
+      case 'lever':
+        return true;
+      default:
+        return false;
+    }
   };
 
   //---------------\\

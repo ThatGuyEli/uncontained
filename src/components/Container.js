@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Item from './Item.js';
 import Opening from './Opening.js';
 
 /**
@@ -190,6 +191,34 @@ class Container extends Component {
     }
   };
 
+  //--------------\\
+  // Item methods \\
+  //--------------\\
+  generateItems = () => {
+    return this.props.items.map((item) => {
+      return (
+        <Item 
+        key={item.id}
+        updateSty={this.updateItemSty}
+        selfState={this.getItemStateById(item.id)}
+        {...item}
+        />
+      );
+    });
+  }
+
+  updateItemSty = (item) => {
+    this.props.updateItemSty(this, item);
+  }
+  
+  getItemStateById = (id) => {
+    for (let i = 0; i < this.props.selfState.itemStates.length; i++) {
+      const itemState = this.props.selfState.itemStates[i];
+      if (itemState.id === id) return itemState;
+    }
+  }
+
+
   /**
    * Rendering method.
    *
@@ -204,6 +233,7 @@ class Container extends Component {
         onMouseOut={this.detach}
       >
         {this.generateOpenings()}
+        {this.generateItems()}
       </div>
     );
   }
