@@ -133,7 +133,8 @@ class Container extends Component {
     if (
       this.props.selfState.attached &&
       !this.props.selfState.isMoving &&
-      this.isMovable()
+      this.isMovable() &&
+      !this.props.characterIsIn(this)
     ) {
       this.props.updateSelfState(this.props.id, { isMoving: true });
       this.props.move(this, e);

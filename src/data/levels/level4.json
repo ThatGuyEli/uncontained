@@ -1,5 +1,5 @@
 {
-  "name": "Release",
+  "name": "level 2",
   "dimensions": [40, 30],
   "userdata": {
     "completed": false,
@@ -14,7 +14,7 @@
     {
       "id": 1,
       "color": "gray",
-      "dimensions": [20, 10],
+      "dimensions": [30, 10],
       "location": [0, 0],
       "movement": "x",
       "platforms": [],
@@ -33,7 +33,7 @@
       "color": "blue",
       "dimensions": [30, 10],
       "location": [0, 10],
-      "movement": "x",
+      "movement": "y",
       "platforms": [],
       "openings": [
         {
@@ -41,44 +41,9 @@
           "border": "top",
           "location": 1,
           "width": 5
-        },
-        {
-          "id": 4,
-          "border": "left",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 3,
-          "border": "right",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 2,
-          "border": "bottom",
-          "location": 10,
-          "width": 5
-        }
+        }      
       ],
       "items": [{ "type": "star", "location": [25, 5] }]
-    },
-    {
-      "id": 3,
-      "color": "gray",
-      "dimensions": [40, 10],
-      "location": [0, 20],
-      "movement": "x",
-      "platforms": [],
-      "openings": [
-        {
-          "id": 1,
-          "border": "top",
-          "location": 10,
-          "width": 5
-        }
-      ],
-      "items": [{ "type": "exit", "location": [35, 5] }]
     }
   ]
 }

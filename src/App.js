@@ -16,7 +16,7 @@ class App extends Component {
    */
   render() {
     return (
-      <Level id='1' />
+      <Level id='2' />
     );
   }
 }

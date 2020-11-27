@@ -322,7 +322,7 @@ class Level extends Component {
   };
 
   interact = (interactable) => {
-    if (interactable === undefined || interactable === null) return;
+    if (this.paused || interactable === undefined || interactable === null) return;
     const characterState = this.state.characterState;
     const containerState = this.getContainerStateById(characterState.container);
     // if the interactable object is an opening
@@ -347,20 +347,23 @@ class Level extends Component {
             const otherDim = adjacentContainer.dimensions;
             // If the locations are equal
             if (
-              interactable.location + mainLoc[antiIndex] + mainDim[index] ===
-                openingState.location + otherLoc[antiIndex] + otherDim[index] &&
+              interactable.location + mainLoc[antiIndex] /*+ mainDim[index]*/ ===
+                openingState.location + otherLoc[antiIndex] /*+ otherDim[index]*/ &&
               interactable.border === this.oppositeSide(openingState.border)
             ) {
               // Determine new location of the character as well
-              let newloc;
+              let newLocOfIndex;
+              const openingRelativeLocation = characterState.location[antiIndex] - interactable.location;
+              const newLocOfAntiIndex = openingRelativeLocation + openingState.location;
               switch (interactable.border) {
                 case 'top':
                 case 'left':
-                  newloc = otherDim[index] - 2;
+                  newLocOfIndex = otherDim[index] - 2;
                   break;
                 case 'bottom':
                 case 'right':
-                  newloc = 0;
+                  newLocOfIndex = 0;
+                  // The openingState.location + whatever the relative location that the character had.
                   break;
                 default:
                   break;
@@ -368,8 +371,8 @@ class Level extends Component {
               const newCharacterState = Object.assign(characterState, {
                 container: adjacentContainer.id,
                 location: [
-                  borderIsHorizontal ? newloc : characterState.location[0],
-                  borderIsHorizontal ? characterState.location[1] : newloc,
+                  borderIsHorizontal ? newLocOfIndex : newLocOfAntiIndex,
+                  borderIsHorizontal ? newLocOfAntiIndex : newLocOfIndex,
                 ],
               });
               this.setState(
@@ -920,7 +923,7 @@ class Level extends Component {
           selfState={containerState}
           gameIsPaused={this.gameIsPaused}
           updateOpeningSty={this.updateOpeningSty}
-          test={this.getAdjacentContainers}
+          characterIsIn={this.characterIsIn}
           {...container}
           // Instead of using data={container}, this component
           // uses the spread operator to add clarity when using
@@ -1244,7 +1247,7 @@ class Level extends Component {
     }
   };
 
-  highlightInteractable(interactable, isOpening) {
+  highlightInteractable = (interactable, isOpening) => {
     if (interactable !== null && interactable !== undefined) {
       const newsty = Object.assign({}, interactable.sty);
       newsty.backgroundColor = '#ebcb8b'; // yellow
