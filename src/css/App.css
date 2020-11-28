@@ -94,6 +94,10 @@ large as possible.
   background-color: var(--gray);
 }
 
+.plate {
+  background-color: var(--nord12);
+}
+
 .switch {
   /*
   the following attributes are testing attributes

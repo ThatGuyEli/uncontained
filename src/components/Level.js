@@ -225,6 +225,8 @@ class Level extends Component {
           dimensions: [1, item.itemType === 'exit' ? 2 : 1],
           activated: false,
           sty: {},
+          yVel: 0,
+          yAcc: 1,
         };
         containerState.itemStates.push(itemState);
       });
@@ -341,6 +343,16 @@ class Level extends Component {
       },
       this.moveCharacter
     );
+
+    this.state.containerStates.forEach((containerState) => {
+      containerState.itemStates.forEach((itemState) => {
+        this.moveItem(itemState);
+        //if (itemState.container === this.state.characterState.container && this.characterIsCollidingWithItem(itemState)) {
+        //  console.log('hit:', itemState.itemType);
+        //}
+      });
+    });
+
     const interactable = this.getInteractableNearCharacter();
 
     if (interactable !== null && interactable !== undefined) {
@@ -408,7 +420,7 @@ class Level extends Component {
   /**
    * Interact with the opening. This interactable must be
    * an opening, or else the program will throw an error.
-   * 
+   *
    * @param {object} interactable The interactable opening.
    */
   interactOpening = (interactable) => {
@@ -510,7 +522,7 @@ class Level extends Component {
   /**
    * Interact with the item. This interactable must be
    * an item, or else the program will throw an error.
-   * 
+   *
    * @param {object} interactable The interactable item.
    */
   interactItem = (interactable) => {
@@ -1424,11 +1436,11 @@ class Level extends Component {
   // to interact with
   /**
    * Determine whether or not an object is in range of the character to interact with.
-   * 
+   *
    * @param {Array} objectLocation The location of the object (centered and in [x,y] format)
    * @param {number} xRange The maximum distance the object can be to be in range on the x axis.
    * @param {number} yRange The maximum distance the object can be to be in range on the y axis.
-   * 
+   *
    * @returns {boolean} Whether or not the object is in range.
    */
   objectIsInRange = (objectLocation, xRange, yRange) => {
@@ -1585,7 +1597,7 @@ class Level extends Component {
   /**
    * Update the style of the Item. Like Openings, this method is
    * called from Item, passed through Container, and passed up to here.
-   * 
+   *
    * @param {Container} container The Container that holds the Item.
    * @param {Item} item The Item to update the style of.
    */
@@ -1600,6 +1612,10 @@ class Level extends Component {
       left: location[0] * bs[0],
       top: location[1] * bs[1],
     };
+    if (item.props.itemType === 'plate') {
+      newsty.height *= 0.25;
+    }
+
     this.updateItemState(container.props.id, item.props.id, {
       sty: newsty,
     });
@@ -1607,7 +1623,7 @@ class Level extends Component {
 
   /**
    * Update the item state.
-   * 
+   *
    * @param {number} containerid The id of the container that has the item.
    * @param {number} itemid The id of the item to update.
    * @param {object} newstate The state to update the item with.
@@ -1632,9 +1648,9 @@ class Level extends Component {
   /**
    * Check whether or not an item is interactable. If the item is
    * an exit or a lever, return true.
-   * 
+   *
    * @param {object} itemState The item to check.
-   * 
+   *
    * @returns {boolean} Whether or not the item is interactable.
    */
   itemIsInteractable = (itemState) => {
@@ -1645,6 +1661,113 @@ class Level extends Component {
       default:
         return false;
     }
+  };
+
+  /**
+   * Determine whether or not a given item is in the air. This could be
+   * falling or jumping.
+   *
+   * @param {object} itemState The item to check.
+   *
+   * @returns {boolean} Whether or not the item is in the air.
+   */
+  itemIsInAir = (itemState) => {
+    const sty = itemState.sty;
+
+    // For spacing
+    const border = this.getBorder();
+    const height = this.getContainerStateById(itemState.container).sty.height;
+
+    // Only the max is needed, which is the floor.
+    const max = height - sty.height - border;
+
+    // todo: platforms
+    return sty.top < max;
+  };
+
+  /**
+   * Move an item, only downwards due to gravity.
+   * @param {object} initItemState The item to move.
+   */
+  moveItem = (initItemState) => {
+    const itemState = Object.assign({}, initItemState);
+
+    // If the item is not in the air, set its velocity to 0.
+    if (!this.itemIsInAir(itemState) && itemState.yVel !== 0) {
+      itemState.yVel = 0;
+      this.updateItemState(itemState.container, itemState.id, itemState);
+      return;
+    }
+
+    const sty = Object.assign({}, itemState.sty);
+    const bs = this.state.blockSize;
+
+    // Precalculate spacing used for the minimum and maximum bounds.
+    const border = this.getBorder();
+    const height = this.getContainerStateById(itemState.container).sty.height;
+
+    // Because the items can only move downwards (except for the box), only calculate
+    // the maxY.
+    const maxY = height - sty.height - 2 * border;
+
+    // Move the position based on velocity; move the velocity based on acceleration.
+    sty.top += itemState.yVel;
+    sty.top = Math.min(maxY, sty.top);
+    itemState.yVel += this.toPixelsPerFrame(itemState.yAcc, bs[1]);
+    itemState.sty = sty;
+
+    // Update the item location and itemState.
+    this.nearestItemLocation(itemState);
+    this.updateItemState(itemState.container, itemState.id, itemState);
+  };
+
+  /**
+   * Updates the itemState to have the most recent itemLocation.
+   *
+   * @param {object} itemState The item state to update.
+   */
+  nearestItemLocation = (itemState) => {
+    const { left, top } = itemState.sty;
+    const bs = this.state.blockSize;
+
+    // Calculate the new location, which is px/blockSize.
+    const newlocation = [Math.floor(left / bs[0]), Math.floor(top / bs[1])];
+
+    // Finally, set the new location.
+    itemState.location = newlocation;
+  };
+
+  /**
+   * Checks if a noninteractable item is colliding with the character.
+   *
+   * @param {object} itemState The item to check collision with.
+   *
+   * @returns {boolean} Whether or not the character is colliding with the item.
+   */
+  characterIsCollidingWithItem = (itemState) => {
+    if (this.itemIsInteractable(itemState)) return false;
+
+    const characterState = this.state.characterState;
+    const itemSty = itemState.sty;
+    const containerPixelLocation = this.getContainerPixelLocation(
+      characterState.container
+    );
+    const {
+      top: cTop,
+      height: cHeight,
+      left: cLeft,
+      width: cWidth,
+    } = characterState.sty;
+
+    const iTop = itemSty.top + containerPixelLocation[1];
+    const iHeight = itemSty.height;
+    const iLeft = itemSty.left + containerPixelLocation[0];
+    const iWidth = itemSty.width;
+
+    const horizontalCollision =
+      cLeft + cWidth > iLeft && cLeft < iLeft + iWidth;
+    const verticalCollision = cTop + cHeight > iTop && cTop < iTop + iHeight;
+    return horizontalCollision && verticalCollision;
   };
 
   //---------------\\

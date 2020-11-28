@@ -155,7 +155,13 @@
           "width": 5
         }
       ],
-      "items": []
+      "items": [
+        {
+          "id": 1,
+          "itemType": "plate",
+          "location": [5, 7]
+        }
+      ]
     },
     {
       "id": 5,
