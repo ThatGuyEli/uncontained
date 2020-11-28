@@ -16,8 +16,9 @@
   --nord14: #a3be8c;
   --nord15: #b48ead;
   --brown: #987654;
-  --gold: #e7ad81;
+  --gold: #BF720D;
   --gray: #525352;
+  --dark-red: #800500;
   --border: calc((1vh + 1vw)/2)
 }
 
@@ -68,7 +69,6 @@ large as possible.
 
 .blue {
   background-color: var(--nord9);
-  border-color: var(--nord15);
   border-color: var(--nord10);
 }
 
@@ -79,19 +79,25 @@ large as possible.
 
 .Item {
   position: absolute;
+  box-sizing: border-box;
 }
 
 .exit {
-  background-color: var(--brown);
+  background-color: var(--nord1);
+  border-top: var(--nord3) solid;
+  border-right: var(--nord3) solid;
+  border-left: var(--nord3) solid;
 }
 
 .collectible {
   background-color: var(--nord13);
   border-radius: 50%;
+  border: var(--gold) solid;
 }
 
 .box {
-  background-color: var(--gray);
+  background-color: var(--nord7);
+  border: var(--nord3) solid;
 }
 
 .plate {
@@ -103,9 +109,9 @@ large as possible.
   the following attributes are testing attributes
   */
   background-color: var(--nord11);
-  top: 100px;
-  left: 71px;
-  transform: rotate(45deg);
-  height: 10px;
-  width: 50px;
+  border-radius: 50%;
+}
+
+.base {
+  background-color: var(--nord3);
 }

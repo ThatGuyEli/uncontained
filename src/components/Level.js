@@ -217,17 +217,23 @@ class Level extends Component {
 
       // Add itemStates for each item.
       container.items.forEach((item) => {
+        const isExit = item.itemType === 'exit';
         const itemState = {
           id: item.id,
           container: container.id,
           itemType: item.itemType,
           location: item.location,
-          dimensions: [1, item.itemType === 'exit' ? 2 : 1],
+          dimensions: isExit ? [2, 2] : [1, 1],
           activated: false,
           sty: {},
           yVel: 0,
           yAcc: 1,
         };
+        // lever-only styles
+        if (item.itemType === 'lever') {
+          itemState.lever = {};
+          itemState.base = {};
+        }
         containerState.itemStates.push(itemState);
       });
 
@@ -335,6 +341,7 @@ class Level extends Component {
    * other objects.
    */
   timerFunc = () => {
+    // Set the character to moving, then move the character.
     this.setState(
       {
         characterState: Object.assign(this.state.characterState, {
@@ -344,12 +351,51 @@ class Level extends Component {
       this.moveCharacter
     );
 
+    // For each item item in each container, move it if it is falling (or on the box's case,
+    // if it is being pushed on). Additionally,
     this.state.containerStates.forEach((containerState) => {
       containerState.itemStates.forEach((itemState) => {
         this.moveItem(itemState);
-        //if (itemState.container === this.state.characterState.container && this.characterIsCollidingWithItem(itemState)) {
-        //  console.log('hit:', itemState.itemType);
-        //}
+        if (
+          itemState.container === this.state.characterState.container &&
+          !this.itemIsInteractable(itemState)
+        ) {
+          const activated = this.characterIsCollidingWithItem(itemState);
+          switch (itemState.itemType) {
+            case 'plate':
+              const newsty = Object.assign({}, itemState.sty);
+              const bs = this.state.blockSize;
+
+              // This modifies the height and width of the plate based on if it
+              // should be pressed down or up.
+              if (activated && newsty.height !== 0.125 * bs[1]) {
+                newsty.height = 0.125 * bs[1];
+                newsty.top += 0.125 * bs[1];
+              } else if (!activated && newsty.height === 0.125 * bs[1]) {
+                newsty.top -= 0.125 * bs[1];
+                newsty.height = 0.25 * bs[1];
+              }
+
+              // Only make this call if the state is not in sync.
+              if (itemState.activated !== activated) {
+                this.updateItemState(itemState.container, itemState.id, {
+                  sty: newsty,
+                  activated: activated,
+                });
+              }
+              break;
+            case 'collectible':
+              // If the collectible is activated, set it to activated permanently.
+              if (activated) {
+                this.updateItemState(itemState.container, itemState.id, {
+                  activated: activated,
+                });
+              }
+              break;
+            default:
+              break;
+          }
+        }
       });
     });
 
@@ -369,7 +415,7 @@ class Level extends Component {
    *
    * @param {Object} interactable The object to not unhighlight (keep highlighted).
    */
-  unhighlightAll(interactable) {
+  unhighlightAll= (interactable) => {
     // Get the container state of the container that the character is in.
     const containerState = this.getContainerStateById(
       this.state.characterState.container
@@ -526,16 +572,34 @@ class Level extends Component {
    * @param {object} interactable The interactable item.
    */
   interactItem = (interactable) => {
-    //const characterState = this.state.characterState;
-    //const containerState = this.getContainerStateById(characterState.container);
-    switch (interactable.itemType) {
+    // Flip the activated boolean, then act based on that.
+    const itemState = Object.assign({}, interactable);
+    itemState.activated = !itemState.activated;
+
+    switch (itemState.itemType) {
+      // If the character is interacting with an exit, finish the level.
       case 'exit':
         console.log('exit');
         //todo: end level
         break;
+
+      // If the character is interacting with a lever, switch lever.
       case 'lever':
-        // todo
-        console.log('lever');
+        const itemLever = Object.assign({}, itemState.lever);
+        const plusOrMinus = itemState.activated ? -1 : 1;
+        itemLever.transform = `rotate(${itemState.activated ? 135 : 45}deg)`;
+        itemLever.left =
+          itemState.sty.left -
+          (plusOrMinus * itemState.lever.width) / (2 * Math.SQRT2);
+        this.updateItemState(itemState.container, itemState.id, {
+          lever: itemLever,
+          activated: itemState.activated,
+        });
+        break;
+      case 'box':
+        this.updateItemState(itemState.container, itemState.id, {
+          activated: itemState.activated,
+        });
         break;
       default:
         break;
@@ -1304,7 +1368,7 @@ class Level extends Component {
       height: bs[1] * characterState.size[1],
       left: xpxRel,
       top: ypxRel,
-      borderWidth: border / 4,
+      borderWidth: border / 2,
       borderRadius: border / 2,
     };
 
@@ -1336,9 +1400,19 @@ class Level extends Component {
     const containerPixelLocation = this.getContainerPixelLocation(
       characterState.container
     );
-    const { width, height } = this.getContainerStateById(
+    const containerState = this.getContainerStateById(
       characterState.container
-    ).sty;
+    );
+
+    // If a box is attached to the character, prepare to move that as well.
+    let boxState, boxSty;
+    for (let i = 0; i < containerState.itemStates.length; i++) {
+      const itemState = containerState.itemStates[i];
+      if (itemState.itemType === 'box' && itemState.activated) {
+        boxState = Object.assign({}, itemState);
+        boxSty = Object.assign({}, boxState.sty);
+      }
+    };
 
     // Within this if/else if, calculate either the minX or the maxX
     // and ensure that the new pixel location is not more/less than it.
@@ -1346,13 +1420,25 @@ class Level extends Component {
     // If the keys pressed move left and not right
     if (left && !right) {
       const minX = containerPixelLocation[0] + border;
-      sty.left -= this.toPixelsPerFrame(characterState.xVel, bs[0]);
+      const deltaX = this.toPixelsPerFrame(characterState.xVel, bs[0]);
+      sty.left -= deltaX;
+      if (boxState !== undefined) {
+        boxSty.left -= deltaX;
+        const boxMinX = 0;
+        boxSty.left = Math.max(boxMinX, boxSty.left);
+      }
       sty.left = Math.max(minX, sty.left);
     }
     // If the keys pressed move right and not left
     else if (!left && right) {
-      const maxX = containerPixelLocation[0] + width - sty.width - border;
-      sty.left += this.toPixelsPerFrame(characterState.xVel, bs[0]);
+      const maxX = containerPixelLocation[0] + containerState.sty.width - sty.width - border;
+      const deltaX = this.toPixelsPerFrame(characterState.xVel, bs[0]);
+      sty.left += deltaX;
+      if (boxState !== undefined) {
+        boxSty.left += deltaX;
+        const boxMaxX = containerState.sty.width - boxSty.width - 2 * border;
+        boxSty.left = Math.min(boxMaxX, boxSty.left);
+      }
       sty.left = Math.min(maxX, sty.left);
     }
     // Note that when both left and right are pressed, nothing happens.
@@ -1361,7 +1447,7 @@ class Level extends Component {
     // above the maximum or falling below the floor.
     if (this.characterIsInAir()) {
       const minY = containerPixelLocation[1] + border;
-      const maxY = containerPixelLocation[1] + height - sty.height - border;
+      const maxY = containerPixelLocation[1] + containerState.sty.height - sty.height - border + 1;
       // Note that this line does not work properly because we have
       // already converted the velocity to pixels. If we convert it
       // again, it would be invalid. Instead, opt to just add the
@@ -1372,6 +1458,11 @@ class Level extends Component {
       // then increase the acceleration.
       sty.top += characterState.yVel;
       sty.top = Math.max(minY, Math.min(maxY, sty.top));
+      if (boxState !== undefined) {
+        boxSty.top += characterState.yVel;
+        const boxMaxY = containerState.sty.height - boxSty.height - 2 * border + 1;
+        boxSty.top = Math.max(minY, Math.min(boxMaxY, boxSty.top));
+      }
       characterState.yVel += this.toPixelsPerFrame(characterState.yAcc, bs[1]);
     }
     // If the character is jumping, set the velocity to be the jumping velocity.
@@ -1380,7 +1471,9 @@ class Level extends Component {
         characterState.yJumpVel,
         bs[1]
       );
-      sty.top += this.toPixelsPerFrame(characterState.yVel, bs[1]);
+
+      sty.top += characterState.yVel;
+      if (boxState !== undefined) boxSty.top += characterState.yVel;
     }
     // Finally, if it is not falling/jumping, it is still. Set the velocity to 0.
     else {
@@ -1389,6 +1482,11 @@ class Level extends Component {
 
     characterState.sty = sty;
     characterState.isMoving = false;
+
+    if (boxState !== undefined) {
+      boxState.sty = boxSty;
+      this.updateItemState(boxState.container, boxState.id, boxState);
+    }
 
     // Finally, set the state of the character. Afterwards,
     // update the character's location.
@@ -1470,14 +1568,18 @@ class Level extends Component {
 
     for (let i = 0; i < containerState.itemStates.length; i++) {
       const itemState = containerState.itemStates[i];
+      // Prevent items such as collectibles from being interacted with, because
+      // they can only be used through nearby movement.
       if (!this.itemIsInteractable(itemState)) continue;
-      const { location, dimensions } = itemState;
-      // middle of the object
-      const iLocation = [
-        location[0] + dimensions[0] / 2,
-        location[1] + dimensions[1] / 2,
-      ];
-      if (this.objectIsInRange(iLocation, 2, 2)) {
+      // Taking the middle of the object when the object is small produces
+      // a larger offset than desired. itemState.location works just fine.
+      //const { location, dimensions } = itemState;
+      //// middle of the object
+      //const iLocation = [
+      //  location[0] + dimensions[0] / 2,
+      //  location[1] + dimensions[1] / 2,
+      //];
+      if (this.objectIsInRange(itemState.location, 2, 2)) {
         return itemState;
       }
     }
@@ -1541,9 +1643,6 @@ class Level extends Component {
       // Copy the style, then update it.
       const newsty = Object.assign({}, interactable.sty);
       newsty.backgroundColor = '#ebcb8b'; // yellow
-      //if (!isOpening && interactable.itemType === 'lever') {
-      //  newsty.backgroundColor = ''; // default
-      //}
       const containerid = this.getContainerStateById(
         this.state.characterState.container
       ).id;
@@ -1612,10 +1711,62 @@ class Level extends Component {
       left: location[0] * bs[0],
       top: location[1] * bs[1],
     };
-    if (item.props.itemType === 'plate') {
-      newsty.height *= 0.25;
+    const border = this.getBorder();
+
+    // Apply item-specific styling. Note that this is not the top/left,
+    // which has to be done in this.moveItem().
+    switch (item.props.itemType) {
+      // If the item is a plate, make its height 1/4.
+      case 'plate':
+        newsty.height *= 0.25;
+        break;
+
+      // If the item is an exit, give it a border and round the top corners.
+      case 'exit':
+        newsty.borderWidth = border;
+        newsty.borderTopLeftRadius = border;
+        newsty.borderTopRightRadius = border;
+        break;
+
+      // If the item is a box, round all the corners. This has a similar shape
+      // to the character.
+      case 'box':
+        newsty.borderRadius = border / 2;
+        newsty.borderWidth = border / 2;
+        break;
+
+      // The collectible should have a border width equal to the box and character.
+      case 'collectible':
+        newsty.borderWidth = border / 2;
+        break;
+
+      // The lever has two special <div>s within it, so make specific modifications.
+      // The lever itself should be a diagonal line with rounded corners, like a pill.
+      // The base should have rounded top corners and half the normal height.
+      case 'lever':
+        const lever = {
+          width: newsty.width,
+          height: newsty.height / 4,
+          transform: `rotate(${item.props.selfState.activated ? 135 : 45}deg)`,
+          borderRadius: newsty.width / 2,
+        };
+        const base = {
+          height: newsty.height * 0.5,
+          borderTopLeftRadius: border,
+          borderTopRightRadius: border,
+        };
+        this.updateItemState(container.props.id, item.props.id, {
+          lever: lever,
+          base: base,
+        });
+
+        newsty.height *= 0.5;
+        break;
+      default:
+        break;
     }
 
+    // Update the style, now that it has been modified for each type of item.
     this.updateItemState(container.props.id, item.props.id, {
       sty: newsty,
     });
@@ -1647,7 +1798,7 @@ class Level extends Component {
 
   /**
    * Check whether or not an item is interactable. If the item is
-   * an exit or a lever, return true.
+   * an exit, a box, or a lever, return true.
    *
    * @param {object} itemState The item to check.
    *
@@ -1657,6 +1808,7 @@ class Level extends Component {
     switch (itemState.itemType) {
       case 'exit':
       case 'lever':
+      case 'box':
         return true;
       default:
         return false;
@@ -1672,6 +1824,8 @@ class Level extends Component {
    * @returns {boolean} Whether or not the item is in the air.
    */
   itemIsInAir = (itemState) => {
+    // Prevent the collectible from falling, as it is supposed to float.
+    if (itemState.itemType === 'collectible') return false;
     const sty = itemState.sty;
 
     // For spacing
@@ -1679,7 +1833,7 @@ class Level extends Component {
     const height = this.getContainerStateById(itemState.container).sty.height;
 
     // Only the max is needed, which is the floor.
-    const max = height - sty.height - border;
+    const max = height - sty.height - 2 * border + 1;
 
     // todo: platforms
     return sty.top < max;
@@ -1692,8 +1846,16 @@ class Level extends Component {
   moveItem = (initItemState) => {
     const itemState = Object.assign({}, initItemState);
 
+    // If the item is an activated box, let the character movement dictate it.
+    if (itemState.itemType === 'box' && itemState.activated) {
+      itemState.yVel = 0;
+      this.nearestItemLocation(itemState);
+      this.updateItemState(itemState.container, itemState.id, itemState);
+      return;
+    }
+
     // If the item is not in the air, set its velocity to 0.
-    if (!this.itemIsInAir(itemState) && itemState.yVel !== 0) {
+    if (!this.itemIsInAir(itemState)) {
       itemState.yVel = 0;
       this.updateItemState(itemState.container, itemState.id, itemState);
       return;
@@ -1708,13 +1870,23 @@ class Level extends Component {
 
     // Because the items can only move downwards (except for the box), only calculate
     // the maxY.
-    const maxY = height - sty.height - 2 * border;
+    const maxY = height - sty.height - 2 * border + 1;
 
     // Move the position based on velocity; move the velocity based on acceleration.
     sty.top += itemState.yVel;
     sty.top = Math.min(maxY, sty.top);
     itemState.yVel += this.toPixelsPerFrame(itemState.yAcc, bs[1]);
     itemState.sty = sty;
+
+    // Lever only location: if the item is a lever, modify the "lever" part of the lever.
+    if (itemState.itemType === 'lever') {
+      itemState.lever.top =
+        itemState.sty.top - itemState.lever.height + itemState.base.height / 4;
+      const plusOrMinus = itemState.activated ? -1 : 1;
+      itemState.lever.left =
+        itemState.sty.left -
+        (plusOrMinus * itemState.lever.width) / (2 * Math.SQRT2);
+    }
 
     // Update the item location and itemState.
     this.nearestItemLocation(itemState);
@@ -1745,13 +1917,14 @@ class Level extends Component {
    * @returns {boolean} Whether or not the character is colliding with the item.
    */
   characterIsCollidingWithItem = (itemState) => {
-    if (this.itemIsInteractable(itemState)) return false;
-
+    // Prepare the states.
     const characterState = this.state.characterState;
     const itemSty = itemState.sty;
     const containerPixelLocation = this.getContainerPixelLocation(
       characterState.container
     );
+
+    // For readability
     const {
       top: cTop,
       height: cHeight,
@@ -1764,6 +1937,7 @@ class Level extends Component {
     const iLeft = itemSty.left + containerPixelLocation[0];
     const iWidth = itemSty.width;
 
+    // If the items are intersecting, on both the x and y axis, return true;
     const horizontalCollision =
       cLeft + cWidth > iLeft && cLeft < iLeft + iWidth;
     const verticalCollision = cTop + cHeight > iTop && cTop < iTop + iHeight;

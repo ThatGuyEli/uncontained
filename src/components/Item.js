@@ -30,14 +30,14 @@ import React, { Component } from 'react';
 class Item extends Component {
   /**
    * Constructs the item.
-   * 
+   *
    * @constructor
    * @param {object} props A set of props to attach to this object.
    */
   constructor(props) {
     super(props);
     // Exits will be [1,2] instead of [1,1].
-    if (this.props.itemType === 'exit') this.dimensions = [1, 2];
+    if (this.props.itemType === 'exit') this.dimensions = [2, 2];
     else this.dimensions = [1, 1];
   }
 
@@ -66,7 +66,7 @@ class Item extends Component {
    */
   updateSty = () => {
     this.props.updateSty(this);
-  }
+  };
 
   /**
    * Rendering method.
@@ -74,20 +74,31 @@ class Item extends Component {
    * @returns JSX that represents an item.
    */
   render() {
-    if (this.props.itemType === 'lever')
+    if (this.props.itemType === 'lever') {
+      const selfState = this.props.selfState;
+      const leverSty = Object.assign({}, selfState.sty, selfState.lever);
+      const baseSty = Object.assign({}, selfState.sty, selfState.base);
+      //console.log(leverSty, baseSty);
       return (
         <>
-          <div className='Item switch' style={this.props.selfState.sty}></div>
-          <div className='Item base' style={this.props.selfState.sty}></div>
+          <div className='Item switch' style={leverSty}></div>
+          <div className='Item base' style={baseSty}></div>
         </>
       );
-    else
-      return (
-        <div
-          className={`Item ${this.props.itemType}`}
-          style={this.props.selfState.sty}
-        ></div>
-      );
+    } else {
+      if (
+        this.props.itemType === 'collectible' &&
+        this.props.selfState.activated
+      ) {
+        return <></>;
+      } else
+        return (
+          <div
+            className={`Item ${this.props.itemType}`}
+            style={this.props.selfState.sty}
+          ></div>
+        );
+    }
   }
 }
 
