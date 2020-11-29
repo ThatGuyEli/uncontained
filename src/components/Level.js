@@ -1594,12 +1594,12 @@ class Level extends Component {
         // If the velocity is positive, the character is falling downwards.
         // In that case, move the character to the top of the platform.
         if (characterState.yVel > 0) {
-          sty.top = minY + platformState.sty.top - sty.height - 1;
+          sty.top = minY + platformState.sty.top - sty.height - 2;
         }
         // Otherwise, the character is moving upwards (from a jump).
         // In that case, the move the character to the bottom of the platform.
         else {
-          sty.top = minY + platformState.sty.top + platformState.sty.height;
+          sty.top = minY + platformState.sty.top + platformState.sty.height + 1;
         }
         characterState.yVel = 0;
       } else {
@@ -1848,7 +1848,7 @@ class Level extends Component {
     const tempCharacterState = Object.assign({}, characterState);
     const tempsty = Object.assign({}, tempCharacterState.sty);
     tempCharacterState.sty = tempsty;
-    tempsty.top += 1; //
+    tempsty.top += 1; // To test if it is going to collide immediately.
 
     // If the character and platform would collide, return false. Otherwise, calculate
     // whether or not the character is hitting the ground.
