@@ -368,12 +368,12 @@ class Level extends Component {
 
               // This modifies the height and width of the plate based on if it
               // should be pressed down or up.
-              if (activated && newsty.height !== 0.125 * bs[1]) {
-                newsty.height = 0.125 * bs[1];
-                newsty.top += 0.125 * bs[1];
-              } else if (!activated && newsty.height === 0.125 * bs[1]) {
-                newsty.top -= 0.125 * bs[1];
-                newsty.height = 0.25 * bs[1];
+              if (activated && newsty.height !== 0.2 * bs[1]) {
+                newsty.height = 0.2 * bs[1];
+                newsty.top += 0.2 * bs[1];
+              } else if (!activated && newsty.height === 0.2 * bs[1]) {
+                newsty.top -= 0.2 * bs[1];
+                newsty.height = 0.4 * bs[1];
               }
 
               // Only make this call if the state is not in sync.
@@ -415,7 +415,7 @@ class Level extends Component {
    *
    * @param {Object} interactable The object to not unhighlight (keep highlighted).
    */
-  unhighlightAll= (interactable) => {
+  unhighlightAll = (interactable) => {
     // Get the container state of the container that the character is in.
     const containerState = this.getContainerStateById(
       this.state.characterState.container
@@ -444,7 +444,7 @@ class Level extends Component {
         });
       }
     }
-  }
+  };
 
   /**
    * Interact with the given object.
@@ -1400,9 +1400,7 @@ class Level extends Component {
     const containerPixelLocation = this.getContainerPixelLocation(
       characterState.container
     );
-    const containerState = this.getContainerStateById(
-      characterState.container
-    );
+    const containerState = this.getContainerStateById(characterState.container);
 
     // If a box is attached to the character, prepare to move that as well.
     let boxState, boxSty;
@@ -1412,7 +1410,7 @@ class Level extends Component {
         boxState = Object.assign({}, itemState);
         boxSty = Object.assign({}, boxState.sty);
       }
-    };
+    }
 
     // Within this if/else if, calculate either the minX or the maxX
     // and ensure that the new pixel location is not more/less than it.
@@ -1431,7 +1429,11 @@ class Level extends Component {
     }
     // If the keys pressed move right and not left
     else if (!left && right) {
-      const maxX = containerPixelLocation[0] + containerState.sty.width - sty.width - border;
+      const maxX =
+        containerPixelLocation[0] +
+        containerState.sty.width -
+        sty.width -
+        border;
       const deltaX = this.toPixelsPerFrame(characterState.xVel, bs[0]);
       sty.left += deltaX;
       if (boxState !== undefined) {
@@ -1447,7 +1449,12 @@ class Level extends Component {
     // above the maximum or falling below the floor.
     if (this.characterIsInAir()) {
       const minY = containerPixelLocation[1] + border;
-      const maxY = containerPixelLocation[1] + containerState.sty.height - sty.height - border + 1;
+      const maxY =
+        containerPixelLocation[1] +
+        containerState.sty.height -
+        sty.height -
+        border +
+        1;
       // Note that this line does not work properly because we have
       // already converted the velocity to pixels. If we convert it
       // again, it would be invalid. Instead, opt to just add the
@@ -1460,8 +1467,9 @@ class Level extends Component {
       sty.top = Math.max(minY, Math.min(maxY, sty.top));
       if (boxState !== undefined) {
         boxSty.top += characterState.yVel;
-        const boxMaxY = containerState.sty.height - boxSty.height - 2 * border + 1;
-        boxSty.top = Math.max(minY, Math.min(boxMaxY, boxSty.top));
+        const boxMaxY =
+          containerState.sty.height - boxSty.height - 2 * border + 1;
+        boxSty.top = Math.max(0, Math.min(boxMaxY, boxSty.top));
       }
       characterState.yVel += this.toPixelsPerFrame(characterState.yAcc, bs[1]);
     }
@@ -1716,9 +1724,12 @@ class Level extends Component {
     // Apply item-specific styling. Note that this is not the top/left,
     // which has to be done in this.moveItem().
     switch (item.props.itemType) {
-      // If the item is a plate, make its height 1/4.
+      // If the item is a plate, make its height 1/4 and give it rounded corners.
       case 'plate':
-        newsty.height *= 0.25;
+        newsty.height *= 0.4;
+        newsty.borderTopLeftRadius = border / 2;
+        newsty.borderTopRightRadius = border / 2;
+        newsty.borderWidth = border / 4;
         break;
 
       // If the item is an exit, give it a border and round the top corners.
@@ -1749,6 +1760,7 @@ class Level extends Component {
           height: newsty.height / 4,
           transform: `rotate(${item.props.selfState.activated ? 135 : 45}deg)`,
           borderRadius: newsty.width / 2,
+          borderWidth: border / 4,
         };
         const base = {
           height: newsty.height * 0.5,

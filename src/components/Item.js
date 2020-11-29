@@ -81,24 +81,30 @@ class Item extends Component {
       //console.log(leverSty, baseSty);
       return (
         <>
-          <div className='Item switch' style={leverSty}></div>
+          <div
+            className={`Item switch ${this.props.color}`}
+            style={leverSty}
+          ></div>
           <div className='Item base' style={baseSty}></div>
         </>
       );
-    } else {
-      if (
-        this.props.itemType === 'collectible' &&
-        this.props.selfState.activated
-      ) {
-        return <></>;
-      } else
-        return (
-          <div
-            className={`Item ${this.props.itemType}`}
-            style={this.props.selfState.sty}
-          ></div>
-        );
+    } else if (
+      this.props.itemType === 'collectible' &&
+      this.props.selfState.activated
+    ) {
+      return <></>;
+    } else if (this.props.itemType === 'plate') {
+      return (
+        <div className={`Item plate ${this.props.color}`} style={this.props.selfState.sty}></div>
+      )
     }
+    else
+      return (
+        <div
+          className={`Item ${this.props.itemType}`}
+          style={this.props.selfState.sty}
+        ></div>
+      );
   }
 }
 

@@ -48,6 +48,7 @@
         {
           "id": 1,
           "itemType": "lever",
+          "color": "red",
           "location": [10, 1]
         }
       ]
@@ -125,6 +126,11 @@
           "id": 1,
           "itemType": "collectible",
           "location": [5, 5]
+        },
+        {
+          "id": 2,
+          "itemType": "box",
+          "location": [7, 5]
         }
       ]
     },
@@ -159,6 +165,7 @@
         {
           "id": 1,
           "itemType": "plate",
+          "color": "purple",
           "location": [5, 7]
         }
       ]

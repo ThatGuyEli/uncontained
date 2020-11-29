@@ -19,7 +19,7 @@
   --gold: #BF720D;
   --gray: #525352;
   --dark-red: #800500;
-  --border: calc((1vh + 1vw)/2)
+  --dark-purple: rgb(161, 67, 161);
 }
 
 * {
@@ -72,6 +72,16 @@ large as possible.
   border-color: var(--nord10);
 }
 
+.red {
+  background-color: var(--nord11);
+  border-color: var(--dark-red);
+}
+
+.purple {
+  background-color: var(--nord15);
+  border-color: var(--dark-purple);
+}
+
 .Opening {
   background-color: var(--nord1);
   position: absolute;
@@ -101,15 +111,11 @@ large as possible.
 }
 
 .plate {
-  background-color: var(--nord12);
+  border-style: solid;
 }
 
 .switch {
-  /*
-  the following attributes are testing attributes
-  */
-  background-color: var(--nord11);
-  border-radius: 50%;
+  border-style: solid;
 }
 
 .base {

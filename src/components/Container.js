@@ -226,6 +226,7 @@ class Container extends Component {
         key={item.id}
         updateSty={this.updateItemSty}
         selfState={this.getItemStateById(item.id)}
+        getParentId={this.getParentId}
         {...item}
         />
       );
@@ -255,6 +256,14 @@ class Container extends Component {
       const itemState = this.props.selfState.itemStates[i];
       if (itemState.id === id) return itemState;
     }
+  }
+
+  /**
+   * Gets this id. This is passed to Item.
+   * @returns {number} The id of the Container.
+   */
+  getParentId = () => {
+    return this.props.id;
   }
 
   /**
