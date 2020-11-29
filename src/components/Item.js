@@ -42,7 +42,7 @@ class Item extends Component {
   }
 
   /**
-   * When the component mounts, update the style after 11ms
+   * When the component mounts, update the style after 10ms
    * to allow the Container to render. Additionally, add the
    * event listener to update this component's style on resize.
    */
@@ -52,8 +52,8 @@ class Item extends Component {
   }
 
   /**
-   * When the component is going to unmoun, remove the listener
-   * from the window. This is to prevnt unnecessary calls to
+   * When the component is going to unmount, remove the listener
+   * from the window. This is to prevent unnecessary calls to
    * no-longer-existing objects.
    */
   componentWillUnmount() {

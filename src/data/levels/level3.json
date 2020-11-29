@@ -17,7 +17,18 @@
       "dimensions": [30, 10],
       "location": [0, 0],
       "movement": "x",
-      "platforms": [],
+      "platforms": [
+        {
+          "id": 1,
+          "location": [10, 5],
+          "dimensions": [10, 1]
+        },
+        {
+          "id": 2,
+          "location": [9, 2],
+          "dimensions": [1, 7]
+        }
+      ],
       "openings": [
         {
           "id": 1,
@@ -50,6 +61,16 @@
           "itemType": "lever",
           "color": "red",
           "location": [10, 1]
+        },
+        {
+          "id": 2,
+          "itemType": "box",
+          "location": [20, 5]
+        },
+        {
+          "id": 3,
+          "itemType": "box",
+          "location": [1, 1]
         }
       ]
     },

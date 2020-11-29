@@ -190,6 +190,8 @@ class Level extends Component {
         openingStates: [],
         // A list of all of the states of the items that the container holds.
         itemStates: [],
+        // A list of all of the states of the platforms that the container holds.
+        platformStates: [],
       };
 
       // Add locations to the sideArr.
@@ -237,6 +239,18 @@ class Level extends Component {
         containerState.itemStates.push(itemState);
       });
 
+      // Add platformStates for each platform.
+      container.platforms.forEach((platform) => {
+        const platformState = {
+          id: platform.id,
+          container: container.id,
+          color: container.color,
+          location: platform.location,
+          dimensions: platform.dimensions,
+          sty: {},
+        };
+        containerState.platformStates.push(platformState);
+      });
       // Add this default container state to the list of containerStates.
       this.state.containerStates.push(containerState);
     });
@@ -352,7 +366,7 @@ class Level extends Component {
     );
 
     // For each item item in each container, move it if it is falling (or on the box's case,
-    // if it is being pushed on). Additionally,
+    // if it is being pushed on). Additionally, activate any uninteractable items.
     this.state.containerStates.forEach((containerState) => {
       containerState.itemStates.forEach((itemState) => {
         this.moveItem(itemState);
@@ -360,8 +374,8 @@ class Level extends Component {
       });
     });
 
+    // Highlight an interactable, and unhighlight all other interactables.
     const interactable = this.getInteractableNearCharacter();
-
     if (interactable !== null && interactable !== undefined) {
       const isOpening = !interactable.hasOwnProperty('itemType');
       this.highlightInteractable(interactable, isOpening);
@@ -380,7 +394,10 @@ class Level extends Component {
       itemState.container === this.state.characterState.container &&
       !this.itemIsInteractable(itemState)
     ) {
-      const activated = this.characterIsCollidingWithItem(itemState);
+      const activated = this.characterIsCollidingWithItem(
+        this.state.characterState,
+        itemState
+      );
       switch (itemState.itemType) {
         case 'plate':
           const newsty = Object.assign({}, itemState.sty);
@@ -391,7 +408,7 @@ class Level extends Component {
           for (let i = 0; i < containerState.itemStates.length; i++) {
             const otherItemState = containerState.itemStates[i];
             if (otherItemState.itemType === 'box')
-              boxIsColliding = this.boxIsCollidingWithPlate(
+              boxIsColliding = this.itemsAreColliding(
                 otherItemState,
                 itemState
               );
@@ -481,7 +498,6 @@ class Level extends Component {
 
     if (isOpening) this.interactOpening(interactable);
     else this.interactItem(interactable);
-    // todo: other items
   };
 
   /**
@@ -524,11 +540,19 @@ class Level extends Component {
         // Prepare for interaction.
         const otherLoc = this.getContainerLocationByState(adjacentContainer);
         const otherDim = adjacentContainer.dimensions;
-        // If the absolute locations are equal.
+        // If the absolute locations are equal, interact with the opening.
         if (
           interactable.location + mainLoc[antiIndex] ===
           openingState.location + otherLoc[antiIndex]
         ) {
+          // Before moving, deactivate any activated boxes.
+          for (let i = 0; i < containerState.itemStates.length; i++) {
+            const itemState = containerState.itemStates[i];
+            if (itemState.itemType === 'box' && itemState.activated) {
+              this.interactItem(itemState);
+            }
+          }
+
           // Determine new location of the character as well.
           let newLocOfIndex;
           // The location of the character in relation to the opening.
@@ -1165,6 +1189,7 @@ class Level extends Component {
           gameIsPaused={this.gameIsPaused}
           updateOpeningSty={this.updateOpeningSty}
           updateItemSty={this.updateItemSty}
+          updatePlatformSty={this.updatePlatformSty}
           characterIsIn={this.characterIsIn}
           {...container}
           // Instead of using data={container}, this component
@@ -1414,6 +1439,7 @@ class Level extends Component {
     }
     const characterState = Object.assign({}, this.state.characterState);
     const sty = Object.assign({}, characterState.sty);
+    characterState.sty = sty;
     const bs = this.state.blockSize;
 
     // Precalculate spacing used to the minimum and maximum bounds.
@@ -1428,25 +1454,58 @@ class Level extends Component {
     for (let i = 0; i < containerState.itemStates.length; i++) {
       const itemState = containerState.itemStates[i];
       if (itemState.itemType === 'box' && itemState.activated) {
-        boxState = Object.assign({}, itemState);
-        boxSty = Object.assign({}, boxState.sty);
+        // Check to make sure that the box is still in range. If it is not,
+        // deactivate it. Because the box could only leave range if the character is
+        // moving, this is done here.
+        if (this.objectIsInRange(itemState.location, 3, 3)) {
+          boxState = Object.assign({}, itemState);
+          boxSty = Object.assign({}, boxState.sty);
+          boxState.sty = boxSty;
+        }
+        else {
+          this.interactItem(itemState);
+        }
       }
     }
+
+    // Normally, this would be within the if (left && !right) statement,
+    // but because of platforms this has been moved so that the else if
+    // can access it.
+    const minX = containerPixelLocation[0] + border;
 
     // Within this if/else if, calculate either the minX or the maxX
     // and ensure that the new pixel location is not more/less than it.
 
+    // The following code relates to the x axis.
     // If the keys pressed move left and not right
     if (left && !right) {
-      const minX = containerPixelLocation[0] + border;
       const deltaX = this.toPixelsPerFrame(characterState.xVel, bs[0]);
       sty.left -= deltaX;
+
+      // Implement very similar logic to the code below this if
+      // statement for the activated box.
       if (boxState !== undefined) {
         boxSty.left -= deltaX;
-        const boxMinX = 0;
-        boxSty.left = Math.max(boxMinX, boxSty.left);
+        const platformState = this.itemIsCollidingWithPlatform(boxState);
+        if (platformState !== undefined && platformState !== null) {
+          const { left: pLeft, width: pWidth } = platformState.sty;
+          boxSty.left = pLeft + pWidth;
+        } else {
+          boxSty.left = Math.max(0, boxSty.left);
+        }
       }
-      sty.left = Math.max(minX, sty.left);
+
+      // If the character is trying to move left and colliding with the platform,
+      // set its position to be the end of the platform.
+      const platformState = this.characterIsCollidingWithPlatform(
+        characterState
+      );
+      if (platformState !== undefined && platformState !== null) {
+        const { left: pLeft, width: pWidth } = platformState.sty;
+        sty.left = minX + pLeft + pWidth;
+      } else {
+        sty.left = Math.max(minX, sty.left);
+      }
     }
     // If the keys pressed move right and not left
     else if (!left && right) {
@@ -1457,17 +1516,39 @@ class Level extends Component {
         border;
       const deltaX = this.toPixelsPerFrame(characterState.xVel, bs[0]);
       sty.left += deltaX;
+
+      // Implement very similar logic to the code below this if
+      // statement for the activated box.
       if (boxState !== undefined) {
         boxSty.left += deltaX;
-        const boxMaxX = containerState.sty.width - boxSty.width - 2 * border;
-        boxSty.left = Math.min(boxMaxX, boxSty.left);
+        const platformState = this.itemIsCollidingWithPlatform(boxState);
+        if (platformState !== undefined && platformState !== null) {
+          const { left: pLeft } = platformState.sty;
+          boxSty.left = pLeft - sty.width;
+        } else {
+          const boxMaxX = containerState.sty.width - boxSty.width - 2 * border;
+          boxSty.left = Math.min(boxMaxX, boxSty.left);
+        }
       }
-      sty.left = Math.min(maxX, sty.left);
+
+      // If the character is trying to move right and colliding with the platform,
+      // set its position to be the end of the platform.
+      const platformState = this.characterIsCollidingWithPlatform(
+        characterState
+      );
+      if (platformState !== undefined && platformState !== null) {
+        const { left: pLeft } = platformState.sty;
+        sty.left = minX + pLeft - sty.width;
+      } else {
+        sty.left = Math.min(maxX, sty.left);
+      }
     }
     // Note that when both left and right are pressed, nothing happens.
 
+    // The following code relates to the y axis.
     // If the character is in the air, make sure that they are not jumping
     // above the maximum or falling below the floor.
+    //console.log(characterState.yVel, this.characterIsInAir());
     if (this.characterIsInAir()) {
       const minY = containerPixelLocation[1] + border;
       const maxY =
@@ -1485,14 +1566,49 @@ class Level extends Component {
       // Add the velocity to the y axis, confirm that is within the bounds,
       // then increase the acceleration.
       sty.top += characterState.yVel;
-      sty.top = Math.max(minY, Math.min(maxY, sty.top));
       if (boxState !== undefined) {
         boxSty.top += characterState.yVel;
-        const boxMaxY =
-          containerState.sty.height - boxSty.height - 2 * border + 1;
-        boxSty.top = Math.max(0, Math.min(boxMaxY, boxSty.top));
+        const platformState = this.itemIsCollidingWithPlatform(boxState);
+        if (platformState !== undefined && platformState !== null) {
+          // If the velocity is positive, the character is falling downwards.
+          // In that case, move the activated box to the top of the platform.
+          if (characterState.yVel > 0) {
+            boxSty.top = platformState.sty.top - boxSty.height - 1;
+          }
+          // Otherwise, the character is moving upwards (from a jump).
+          // In that case, the move the activated box to the bottom of the platform.
+          else {
+            boxSty.top = platformState.sty.top + platformState.sty.height;
+          }
+        } else {
+          const boxMaxY =
+            containerState.sty.height - boxSty.height - 2 * border + 1;
+          boxSty.top = Math.max(0, Math.min(boxMaxY, boxSty.top));
+        }
       }
-      characterState.yVel += this.toPixelsPerFrame(characterState.yAcc, bs[1]);
+
+      const platformState = this.characterIsCollidingWithPlatform(
+        characterState
+      );
+      if (platformState !== undefined && platformState !== null) {
+        // If the velocity is positive, the character is falling downwards.
+        // In that case, move the character to the top of the platform.
+        if (characterState.yVel > 0) {
+          sty.top = minY + platformState.sty.top - sty.height - 1;
+        }
+        // Otherwise, the character is moving upwards (from a jump).
+        // In that case, the move the character to the bottom of the platform.
+        else {
+          sty.top = minY + platformState.sty.top + platformState.sty.height;
+        }
+        characterState.yVel = 0;
+      } else {
+        sty.top = Math.max(minY, Math.min(maxY, sty.top));
+        characterState.yVel += this.toPixelsPerFrame(
+          characterState.yAcc,
+          bs[1]
+        );
+      }
     }
     // If the character is jumping, set the velocity to be the jumping velocity.
     else if (jump) {
@@ -1509,22 +1625,45 @@ class Level extends Component {
       characterState.yVel = 0;
     }
 
-    characterState.sty = sty;
     characterState.isMoving = false;
-
-    if (boxState !== undefined) {
-      boxState.sty = boxSty;
-      this.updateItemState(boxState.container, boxState.id, boxState);
-    }
 
     // Finally, set the state of the character. Afterwards,
     // update the character's location.
+
+    if (boxState !== undefined) {
+      this.updateItemState(boxState.container, boxState.id, boxState);
+    }
     this.setState(
       {
         characterState: characterState,
       },
       this.nearestCharacterLocation
     );
+  };
+
+  /**
+   * Determine whether the charcter is colliding with any platform
+   * within its container. Note that this is different code than
+   * this.itemIsCollidingWithPlatform because of how the Character's location
+   * is calculated. Note that this requries a temporary characterState because
+   * these changes have not yet been finalized.
+   *
+   * @param {object} tempCharacterState The temporary characterState.
+   *
+   * @returns {object} the platformState that the character is colliding with.
+   */
+  characterIsCollidingWithPlatform = (tempCharacterState) => {
+    const containerState = this.getContainerStateById(
+      tempCharacterState.container
+    );
+    for (let i = 0; i < containerState.platformStates.length; i++) {
+      const platformState = containerState.platformStates[i];
+      if (
+        this.characterIsCollidingWithItem(tempCharacterState, platformState)
+      ) {
+        return platformState;
+      }
+    }
   };
 
   /**
@@ -1704,6 +1843,22 @@ class Level extends Component {
     const characterState = this.state.characterState;
     const sty = characterState.sty;
 
+    // Make a temporary characterState to test if it would be colliding with a platform
+    // as it falls.
+    const tempCharacterState = Object.assign({}, characterState);
+    const tempsty = Object.assign({}, tempCharacterState.sty);
+    tempCharacterState.sty = tempsty;
+    tempsty.top += 1; //
+
+    // If the character and platform would collide, return false. Otherwise, calculate
+    // whether or not the character is hitting the ground.
+    const platformState = this.characterIsCollidingWithPlatform(
+      tempCharacterState
+    );
+    if (platformState !== undefined && platformState !== null) {
+      return false;
+    }
+
     // For spacing
     const border = this.getBorder();
     const containerPixelLocation = this.getContainerPixelLocation(
@@ -1714,8 +1869,6 @@ class Level extends Component {
 
     // Only the max is needed, which is the floor.
     const max = containerPixelLocation[1] + height - sty.height - border;
-
-    // todo: platforms
     return sty.top < max;
   };
 
@@ -1731,7 +1884,7 @@ class Level extends Component {
    */
   updateItemSty = (container, item) => {
     const dimensions = item.dimensions;
-    const location = item.props.location;
+    const location = item.props.selfState.location;
     const bs = this.state.blockSize;
 
     const newsty = {
@@ -1894,7 +2047,9 @@ class Level extends Component {
       return;
     }
 
+    // Make the style mutable.
     const sty = Object.assign({}, itemState.sty);
+    itemState.sty = sty;
     const bs = this.state.blockSize;
 
     // Precalculate spacing used for the minimum and maximum bounds.
@@ -1907,9 +2062,17 @@ class Level extends Component {
 
     // Move the position based on velocity; move the velocity based on acceleration.
     sty.top += itemState.yVel;
-    sty.top = Math.min(maxY, sty.top);
-    itemState.yVel += this.toPixelsPerFrame(itemState.yAcc, bs[1]);
-    itemState.sty = sty;
+
+    // If the item is colliding with a platform on the y axis, set its y-axis to
+    // the top of the the platform.
+    const platformState = this.itemIsCollidingWithPlatform(itemState);
+    if (platformState !== undefined && platformState !== null) {
+      sty.top = platformState.sty.top - sty.height;
+      itemState.yVel = 0;
+    } else {
+      sty.top = Math.min(maxY, sty.top);
+      itemState.yVel += this.toPixelsPerFrame(itemState.yAcc, bs[1]);
+    }
 
     // Lever only location: if the item is a lever, modify the "lever" part of the lever.
     if (itemState.itemType === 'lever') {
@@ -1944,33 +2107,40 @@ class Level extends Component {
 
   /**
    * Checks if a noninteractable item is colliding with the character.
+   * Note that this requries a temporary characterState because
+   * these changes have not yet been finalized.
+   *
+   * @param {object} tempCharacterState The temporary characterState.
    *
    * @param {object} itemState The item to check collision with.
    *
    * @returns {boolean} Whether or not the character is colliding with the item.
    */
-  characterIsCollidingWithItem = (itemState) => {
+  characterIsCollidingWithItem = (tempCharacterState, itemState) => {
     // Prepare the states.
-    const characterState = this.state.characterState;
     const itemSty = itemState.sty;
     const containerPixelLocation = this.getContainerPixelLocation(
-      characterState.container
+      tempCharacterState.container
     );
 
-    // For readability
+    // For readability. Note that this is not passed into
+    // this.itemsAreColliding() because special calculations
+    // are required for the character, which is not located within
+    // a specfic container.
     const {
       top: cTop,
       height: cHeight,
       left: cLeft,
       width: cWidth,
-    } = characterState.sty;
+    } = tempCharacterState.sty;
 
-    const iTop = itemSty.top + containerPixelLocation[1];
+    const border = this.getBorder();
+    const iTop = itemSty.top + containerPixelLocation[1] + border;
     const iHeight = itemSty.height;
-    const iLeft = itemSty.left + containerPixelLocation[0];
+    const iLeft = itemSty.left + containerPixelLocation[0] + border;
     const iWidth = itemSty.width;
 
-    // If the items are intersecting, on both the x and y axis, return true;
+    // If the items are intersecting, on both the x and y axis, return true.
     const horizontalCollision =
       cLeft + cWidth > iLeft && cLeft < iLeft + iWidth;
     const verticalCollision = cTop + cHeight > iTop && cTop < iTop + iHeight;
@@ -1978,31 +2148,108 @@ class Level extends Component {
   };
 
   /**
-   * Determines whether or not the given box is colliding with
-   * the the given plate.
+   * Determines whether or not two items are colliding.
    *
-   * @param {object} boxState The state of the box to check.
-   * @param {object} plateState The state of the plate to check.
+   * @param {object} itemState1 The state of the first item to check.
+   * @param {object} itemState2 The state of the second item to check.
    */
-  boxIsCollidingWithPlate = (boxState, plateState) => {
+  itemsAreColliding = (itemState1, itemState2) => {
+    // Prepare items from the itemState1.
     const {
-      top: bTop,
-      height: bHeight,
-      left: bLeft,
-      width: bWidth,
-    } = boxState.sty;
+      top: top1,
+      height: height1,
+      left: left1,
+      width: width1,
+    } = itemState1.sty;
 
+    // Prepare items from itemState2.
     const {
-      top: pTop,
-      height: pHeight,
-      left: pLeft,
-      width: pWidth,
-    } = plateState.sty;
+      top: top2,
+      height: height2,
+      left: left2,
+      width: width2,
+    } = itemState2.sty;
 
+    // If the items are intersecting, on both the x and y axis, return true.
     const horizontalCollision =
-      bLeft + bWidth > pLeft && bLeft < pLeft + pWidth;
-    const verticalCollisions = bTop + bHeight > pTop && bTop < pTop + pHeight;
+      left1 + width1 > left2 && left1 < left2 + width2;
+    const verticalCollisions = top1 + height1 > top2 && top1 < top2 + height2;
     return horizontalCollision && verticalCollisions;
+  };
+
+  //------------------\\
+  // Platform Methods \\
+  //------------------\\
+  /**
+   * Update the style of the Platform. Like Openings, this method is called
+   * from Platform, passed through Container, and passed up to here.
+   *
+   * @param {Container} container The Container that holds the Platform.
+   * @param {Plaform} platform The Platform to update the style of.
+   */
+  updatePlatformSty = (container, platform) => {
+    const { dimensions, location } = platform.props.selfState;
+    const bs = this.state.blockSize;
+
+    const border = this.getBorder();
+    const newsty = {
+      width: dimensions[0] * bs[0],
+      height: dimensions[1] * bs[1],
+      left: location[0] * bs[0],
+      top: location[1] * bs[1],
+      borderRadius: border / 2,
+      borderWidth: border / 2,
+    };
+
+    this.updatePlatformState(container.props.id, platform.props.id, {
+      sty: newsty,
+    });
+  };
+
+  /**
+   * Update the item state.
+   *
+   * @param {number} containerid The id of the container that has the item.
+   * @param {number} platformid The id of the platform to update.
+   * @param {object} newstate The state to update the platform with.
+   */
+  updatePlatformState = (containerid, platformid, newstate) => {
+    // Get a mutatable copy of the containerState.
+    const containerState = Object.assign(
+      {},
+      this.getContainerStateById(containerid)
+    );
+
+    // Cycle through the platformStates until one with a matching id is found.
+    for (let i = 0; i < containerState.platformStates.length; i++) {
+      const platformState = containerState.platformStates[i];
+      if (platformState.id === platformid) {
+        containerState.platformStates[i] = Object.assign(
+          platformState,
+          newstate
+        );
+        this.updateContainerState(containerid, containerState);
+      }
+    }
+  };
+
+  /**
+   * Determine whether the given item is colliding with any platforms
+   * within its container.
+   *
+   * @param {object} itemState The itemState to check.
+   *
+   * @returns {object} the platformState that the item is colliding with, if any.
+   */
+  itemIsCollidingWithPlatform = (itemState) => {
+    const containerState = this.getContainerStateById(itemState.container);
+
+    // Cycle through the platformStates.
+    for (let i = 0; i < containerState.platformStates.length; i++) {
+      const platformState = containerState.platformStates[i];
+      if (this.itemsAreColliding(itemState, platformState))
+        return platformState;
+    }
   };
 
   //---------------\\

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Item from './Item.js';
 import Opening from './Opening.js';
+import Platform from './Platform.js';
 
 /**
  * Container component. This Container holds all components
@@ -226,7 +227,6 @@ class Container extends Component {
         key={item.id}
         updateSty={this.updateItemSty}
         selfState={this.getItemStateById(item.id)}
-        getParentId={this.getParentId}
         {...item}
         />
       );
@@ -258,12 +258,60 @@ class Container extends Component {
     }
   }
 
+  ///**
+  // * Gets this id. This is passed to Item.
+  // * @returns {number} The id of the Container.
+  // */
+  //getParentId = () => {
+  //  return this.props.id;
+  //}
+
+  //------------------\\
+  // Platform Methods \\
+  //------------------\\
   /**
-   * Gets this id. This is passed to Item.
-   * @returns {number} The id of the Container.
+   * This method is passing the Container and the Platform to
+   * Level, which updates the style of the Platform.
+   * 
+   * @param {Platform} platform The platform to update the style of.
    */
-  getParentId = () => {
-    return this.props.id;
+  updatePlatformSty = (platform) => {
+    this.props.updatePlatformSty(this, platform);
+  }
+
+  /**
+   * Generates the platforms.
+   * 
+   * @returns {Array} An Array of Platforms attached to this Container.
+   */
+  generatePlatforms = () => {
+    // Use higher order function array.map.
+    return this.props.platforms.map((platform) => {
+      return (
+        <Platform 
+        key={platform.id}
+        color={this.props.color}
+        updateSty={this.updatePlatformSty}
+        selfState={this.getPlatformStateById(platform.id)}
+        {...platform}
+        />
+      )
+    })
+  }
+  
+  /**
+   * Get the platformState with the given id.
+   * 
+   * @param {number} id The id of the platform to search for.
+   * 
+   * @returns {object} The platformState with the given id.
+   */
+  getPlatformStateById = (id) => {
+    // Cycle through the platformStates until the matching id is found.
+    for (let i = 0; i < this.props.selfState.platformStates.length; i++) {
+      const platformState = this.props.selfState.platformStates[i];
+      if (platformState.id === id) return platformState;
+    }
   }
 
   /**
@@ -277,8 +325,9 @@ class Container extends Component {
         className={this.cn}
         style={this.props.selfState.sty}
         onMouseDown={this.attach}
-        onMouseOut={this.detach}
+        onMouseLeave={this.detach}
       >
+        {this.generatePlatforms()}
         {this.generateOpenings()}
         {this.generateItems()}
       </div>
