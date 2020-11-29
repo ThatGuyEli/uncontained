@@ -356,46 +356,7 @@ class Level extends Component {
     this.state.containerStates.forEach((containerState) => {
       containerState.itemStates.forEach((itemState) => {
         this.moveItem(itemState);
-        if (
-          itemState.container === this.state.characterState.container &&
-          !this.itemIsInteractable(itemState)
-        ) {
-          const activated = this.characterIsCollidingWithItem(itemState);
-          switch (itemState.itemType) {
-            case 'plate':
-              const newsty = Object.assign({}, itemState.sty);
-              const bs = this.state.blockSize;
-
-              // This modifies the height and width of the plate based on if it
-              // should be pressed down or up.
-              if (activated && newsty.height !== 0.2 * bs[1]) {
-                newsty.height = 0.2 * bs[1];
-                newsty.top += 0.2 * bs[1];
-              } else if (!activated && newsty.height === 0.2 * bs[1]) {
-                newsty.top -= 0.2 * bs[1];
-                newsty.height = 0.4 * bs[1];
-              }
-
-              // Only make this call if the state is not in sync.
-              if (itemState.activated !== activated) {
-                this.updateItemState(itemState.container, itemState.id, {
-                  sty: newsty,
-                  activated: activated,
-                });
-              }
-              break;
-            case 'collectible':
-              // If the collectible is activated, set it to activated permanently.
-              if (activated) {
-                this.updateItemState(itemState.container, itemState.id, {
-                  activated: activated,
-                });
-              }
-              break;
-            default:
-              break;
-          }
-        }
+        this.activateUninteractable(containerState, itemState);
       });
     });
 
@@ -406,6 +367,66 @@ class Level extends Component {
       this.highlightInteractable(interactable, isOpening);
     }
     this.unhighlightAll(interactable);
+  };
+
+  /**
+   * Activate an uninteractable item.
+   *
+   * @param {object} containerState The containerState that the itemState is in.
+   * @param {object} itemState The itemState to activate.
+   */
+  activateUninteractable = (containerState, itemState) => {
+    if (
+      itemState.container === this.state.characterState.container &&
+      !this.itemIsInteractable(itemState)
+    ) {
+      const activated = this.characterIsCollidingWithItem(itemState);
+      switch (itemState.itemType) {
+        case 'plate':
+          const newsty = Object.assign({}, itemState.sty);
+          const bs = this.state.blockSize;
+
+          // Cycle through the container states and look for a boxState.
+          let boxIsColliding;
+          for (let i = 0; i < containerState.itemStates.length; i++) {
+            const otherItemState = containerState.itemStates[i];
+            if (otherItemState.itemType === 'box')
+              boxIsColliding = this.boxIsCollidingWithPlate(
+                otherItemState,
+                itemState
+              );
+          }
+
+          // This modifies the height and width of the plate based on if it
+          // should be pressed down or up.
+          if ((activated || boxIsColliding) && newsty.height !== 0.2 * bs[1]) {
+            newsty.height = 0.2 * bs[1];
+            newsty.top += 0.2 * bs[1];
+          } else if (!activated && newsty.height === 0.2 * bs[1]) {
+            newsty.top -= 0.2 * bs[1];
+            newsty.height = 0.4 * bs[1];
+          }
+
+          // Only make this call if the state is not in sync.
+          if (itemState.activated !== (activated || boxIsColliding)) {
+            this.updateItemState(itemState.container, itemState.id, {
+              sty: newsty,
+              activated: activated || boxIsColliding,
+            });
+          }
+          break;
+        case 'collectible':
+          // If the collectible is activated, set it to activated permanently.
+          if (activated) {
+            this.updateItemState(itemState.container, itemState.id, {
+              activated: activated,
+            });
+          }
+          break;
+        default:
+          break;
+      }
+    }
   };
 
   /**
@@ -1954,6 +1975,34 @@ class Level extends Component {
       cLeft + cWidth > iLeft && cLeft < iLeft + iWidth;
     const verticalCollision = cTop + cHeight > iTop && cTop < iTop + iHeight;
     return horizontalCollision && verticalCollision;
+  };
+
+  /**
+   * Determines whether or not the given box is colliding with
+   * the the given plate.
+   *
+   * @param {object} boxState The state of the box to check.
+   * @param {object} plateState The state of the plate to check.
+   */
+  boxIsCollidingWithPlate = (boxState, plateState) => {
+    const {
+      top: bTop,
+      height: bHeight,
+      left: bLeft,
+      width: bWidth,
+    } = boxState.sty;
+
+    const {
+      top: pTop,
+      height: pHeight,
+      left: pLeft,
+      width: pWidth,
+    } = plateState.sty;
+
+    const horizontalCollision =
+      bLeft + bWidth > pLeft && bLeft < pLeft + pWidth;
+    const verticalCollisions = bTop + bHeight > pTop && bTop < pTop + pHeight;
+    return horizontalCollision && verticalCollisions;
   };
 
   //---------------\\

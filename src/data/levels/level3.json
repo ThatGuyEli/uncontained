@@ -167,6 +167,11 @@
           "itemType": "plate",
           "color": "purple",
           "location": [5, 7]
+        },
+        {
+          "id": 2,
+          "itemType": "box",
+          "location": [10, 5]
         }
       ]
     },
