@@ -159,6 +159,9 @@ class Level extends Component {
       const containerState = {
         // ID for identification.
         id: container.id,
+        // Color for color identification.
+        color: container.color,
+
         // Whether or not the component should track the mouse
         // and act accordingly.
         attached: false,
@@ -193,6 +196,21 @@ class Level extends Component {
         // A list of all of the states of the platforms that the container holds.
         platformStates: [],
       };
+      // Red, purple, and green specific property: isActivated.
+      // This determines whether or not red, purple, and green should
+      // do certain things.
+      // Red: doors are locked until isActivated
+      // Purple/green: automatically moves positively when isActivated,
+      // automatically moves negatively when isActivated.
+      switch (container.color) {
+        case 'red':
+        case 'purple':
+        case 'green':
+          containerState.isActivated = false;
+          break;
+        default:
+          break;
+      }
 
       // Add locations to the sideArr.
       const isHorizontal = container.movement === 'x';
@@ -231,10 +249,19 @@ class Level extends Component {
           yVel: 0,
           yAcc: 1,
         };
-        // lever-only styles
-        if (item.itemType === 'lever') {
-          itemState.lever = {};
-          itemState.base = {};
+        // specific styles
+        switch (item.itemType) {
+          case 'lever':
+            itemState.lever = {};
+            itemState.base = {};
+          // Note that there is no break above this line, because
+          // both levers and plates should have a color.
+          // eslint-disable-next-line
+          case 'plate':
+            itemState.color = item.color;
+            break;
+          default:
+            break;
         }
         containerState.itemStates.push(itemState);
       });
@@ -430,6 +457,8 @@ class Level extends Component {
               sty: newsty,
               activated: activated || boxIsColliding,
             });
+            // Toggle when the activation changes.
+            this.toggleContainerActivation(itemState.color);
           }
           break;
         case 'collectible':
@@ -534,7 +563,11 @@ class Level extends Component {
       adjacentContainer.openingStates.forEach((openingState) => {
         // Only continue if the openings are on opposite sides. This ensures
         // that minimum calculations are done on each opening is not on.
-        if (interactable.border !== this.oppositeSide(openingState.border))
+        // Additionally, return if the color is red and it is not activated.
+        if (
+          interactable.border !== this.oppositeSide(openingState.border) ||
+          (adjacentContainer.color === 'red' && !adjacentContainer.isActivated)
+        )
           return;
 
         // Prepare for interaction.
@@ -640,6 +673,7 @@ class Level extends Component {
           lever: itemLever,
           activated: itemState.activated,
         });
+        this.toggleContainerActivation(itemState.color);
         break;
       case 'box':
         this.updateItemState(itemState.container, itemState.id, {
@@ -648,6 +682,23 @@ class Level extends Component {
         break;
       default:
         break;
+    }
+  };
+
+  /**
+   * Toggles isActivated in each container with that color.
+   *
+   * @param {string} color The color of the containers to activate. Can only be red, purple, or green.
+   */
+  toggleContainerActivation = (color) => {
+    for (let i = 0; i < this.state.containerStates.length; i++) {
+      const containerState = this.state.containerStates[i];
+      // If the container is of the correct color
+      if (containerState.color === color) {
+        this.updateContainerState(containerState.id, {
+          isActivated: !containerState.isActivated,
+        });
+      }
     }
   };
 
@@ -1547,7 +1598,6 @@ class Level extends Component {
     // The following code relates to the y axis.
     // If the character is in the air, make sure that they are not jumping
     // above the maximum or falling below the floor.
-    //console.log(characterState.yVel, this.characterIsInAir());
     if (this.characterIsInAir()) {
       const minY = containerPixelLocation[1] + border;
       const maxY =

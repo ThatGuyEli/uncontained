@@ -116,15 +116,15 @@ containers have pointer-events: none
 .box {
   background-color: var(--nord7);
   border: var(--nord3) solid;
-  z-index: 100; 
-  /* 
-  An arbitrary number to ensure that boxes are never hidden behind
-  the character or are "underneath" a plate.
-  */
 }
 
 .plate {
   border-style: solid;
+  z-index: 100; 
+  /* 
+  An arbitrary number to ensure that plates are never hidden behind
+  the character or a box.
+  */
 }
 
 .switch {
