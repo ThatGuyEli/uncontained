@@ -1461,8 +1461,7 @@ class Level extends Component {
           boxState = Object.assign({}, itemState);
           boxSty = Object.assign({}, boxState.sty);
           boxState.sty = boxSty;
-        }
-        else {
+        } else {
           this.interactItem(itemState);
         }
       }
@@ -1747,7 +1746,7 @@ class Level extends Component {
       //  location[0] + dimensions[0] / 2,
       //  location[1] + dimensions[1] / 2,
       //];
-      if (this.objectIsInRange(itemState.location, 2, 2)) {
+      if (this.objectIsInRange(itemState.location, 1, 1)) {
         return itemState;
       }
     }

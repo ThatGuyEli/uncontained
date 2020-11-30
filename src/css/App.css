@@ -47,7 +47,14 @@ large as possible.
   background-color: var(--nord7);
 }
 
+/*
+pointer-events: none prevent this nasty bug where mousing
+over components within the Containers would result in
+the Container moving to odd places. All components within
+containers have pointer-events: none
+*/
 .Character {
+  pointer-events: none;
   box-sizing: border-box;
   background-color: var(--nord11);
   position: absolute;
@@ -82,11 +89,13 @@ large as possible.
 }
 
 .Opening {
+  pointer-events: none;
   background-color: var(--nord1);
   position: absolute;
 }
 
 .Item {
+  pointer-events: none;
   position: absolute;
   box-sizing: border-box;
 }
@@ -127,6 +136,7 @@ large as possible.
 }
 
 .Platform {
+  pointer-events: none;
   position: absolute;
   box-sizing: border-box;
   border-style: solid;

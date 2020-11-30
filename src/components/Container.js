@@ -325,7 +325,7 @@ class Container extends Component {
         className={this.cn}
         style={this.props.selfState.sty}
         onMouseDown={this.attach}
-        onMouseLeave={this.detach}
+        onMouseOut={this.detach}
       >
         {this.generatePlatforms()}
         {this.generateOpenings()}
