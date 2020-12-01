@@ -52,7 +52,7 @@ class Container extends Component {
    * from Level.
    */
   update = () => {
-    const { dimensions, location, id } = this.props;
+    const { dimensions, location, id } = this.props.selfState;
     this.props.updateSty(id, dimensions, location);
   };
 
@@ -68,7 +68,7 @@ class Container extends Component {
     if (!this.props.selfState.attached && this.isMovable()) {
       // Utilize rewriteBlocks callback in order to update the state
       // after the blocks are rewritten.
-      this.props.rewriteBlocks(this, false, () => {
+      this.props.rewriteBlocks(this.props.selfState, false, () => {
         this.props.updateSelfState(this.props.id, {
           attached: true,
           mouseOffset:
@@ -90,7 +90,7 @@ class Container extends Component {
   detach = () => {
     if (this.props.selfState.attached && this.isMovable()) {
       this.snap();
-      this.props.rewriteBlocks(this, true);
+      this.props.rewriteBlocks(this.props.selfState, true);
     }
   };
 
@@ -109,10 +109,6 @@ class Container extends Component {
       this.props.selfState,
       isHorizontal ? sty.left : sty.top
     );
-
-    // Set the new location, either x or y, depending on isHorizontal.
-    const index = isHorizontal ? 0 : 1;
-    this.props.location[index] = nearestBlock.newLocation;
 
     // Similarly, determine which part of newsty to modify and modify it.
     const newsty = Object.assign({}, sty);

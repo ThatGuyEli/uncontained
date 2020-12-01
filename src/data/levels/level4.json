@@ -86,6 +86,26 @@
         }
       ],
       "items": []
+    },
+    {
+      "id": 4,
+      "color": "blue",
+      "dimensions": [10,10],
+      "location": [30, 10],
+      "movement": "y",
+      "platforms": [],
+      "openings": [],
+      "items": []
+    },
+    {
+      "id": 5,
+      "color": "blue",
+      "dimensions": [10,10],
+      "location": [0, 20],
+      "movement": "y",
+      "platforms": [],
+      "openings": [],
+      "items": []
     }
   ]
 }

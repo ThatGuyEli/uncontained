@@ -1116,36 +1116,51 @@ class Level extends Component {
     // is called, it will help
     // in case this method is called elsewhere.
     if (
-      containerState.color === 'purple' ||
-      containerState.color === 'orange'
+      (containerState.color === 'purple' ||
+        containerState.color === 'orange') &&
+      this.containerCanAutoMove(containerState)
     ) {
+      this.rewriteBlocks(containerState, false);
       const newloc = Object.assign([], containerState.location);
-      //console.log(newloc);
       const isHorizontal = containerState.movement === 'x';
       const index = isHorizontal ? 0 : 1;
 
       // If the container is activated, move it positively.
-      const plusOrMinus = containerState.isActivated ? 1 : -1;
+      let plusOrMinus = containerState.isActivated ? 1 : -1;
 
       // Move the container by one block in its specified direction.
       newloc[index] += plusOrMinus;
+      // Prevent the container from going out of bounds.
+      newloc[index] = Math.max(
+        0,
+        Math.min(
+          this.levelFile.dimensions[index] - containerState.dimensions[index],
+          newloc[index]
+        )
+      );
+
+      // If the location is the same as before (ie a bound has been hit)
+      // Set plusOrMinus to 0 so that the style doesn't change.
+      if (containerState.location[index] === newloc[index]) plusOrMinus = 0;
 
       // Check to make sure the container can automatically move,
       // then set the state if it can.
-      if (this.containerCanAutoMove(containerState)) {
-        //todo
-        console.log(newloc);
-        this.updateContainerState(containerState.id, {
-          location: newloc,
-        });
-      }
+      const newsty = Object.assign({}, containerState.sty);
+      const bs = this.state.blockSize;
+      const topOrLeft = isHorizontal ? 'left' : 'top';
+      newsty[topOrLeft] += plusOrMinus * bs[index];
+      this.updateContainerState(containerState.id, {
+        sty: newsty,
+        location: newloc,
+      });
+      this.rewriteBlocks(containerState, true);
     }
   };
 
   /**
    * Check if the container can automatically move. This code is very similar
    * to containerCanMove, but is different because it checks for the container's
-   * color and uses containerState and isActivated as opposed to container and
+   * color and uses isActivated as opposed to and
    * isMovingPos, respectively. However, the logic is the same, so check
    * containerCanMove for the logic explanations.
    *
@@ -1164,7 +1179,7 @@ class Level extends Component {
       const index = isHorizontal ? 0 : 1;
       const antiIndex = isHorizontal ? 1 : 0;
 
-      const adjacentLocation = pos
+      let adjacentLocation = pos
         ? Math.min(
             location[index] + dimensions[index],
             this.levelFile.dimensions[index] - 1
@@ -1187,12 +1202,12 @@ class Level extends Component {
    * Either write {true} or {false} blocks to {this.blocks}.
    * based on the parameter {isSetting}.
    *
-   * @param {Object} container  the Container to rewrite blocks for
+   * @param {Object} containerState  the state of the container to rewrite blocks for
    * @param {Boolean} isSetting whether or not the Container is being attached or detached
    * @param {Function} callback the function that will be called back after this function finishes
    */
-  rewriteBlocks = (container, isSetting, callback) => {
-    const { location, dimensions } = container.props;
+  rewriteBlocks = (containerState, isSetting, callback) => {
+    const { location, dimensions } = containerState;
     // Overwrite old x and y with 0s.
     const newBlocks = Object.assign({}, this.state.blocks);
 
