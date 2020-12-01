@@ -42,12 +42,12 @@ class Item extends Component {
   }
 
   /**
-   * When the component mounts, update the style after 10ms
+   * When the component mounts, update the style after 1ms
    * to allow the Container to render. Additionally, add the
    * event listener to update this component's style on resize.
    */
   componentDidMount() {
-    window.setTimeout(this.updateSty, 10);
+    window.setTimeout(this.updateSty, 1);
     window.addEventListener('resize', this.updateSty);
   }
 

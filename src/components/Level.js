@@ -162,9 +162,15 @@ class Level extends Component {
         // Color for color identification.
         color: container.color,
 
+        // The movement of the character
+        movement: container.movement,
+
         // Whether or not the component should track the mouse
         // and act accordingly.
         attached: false,
+
+        // The location of the container, because it changes frequently.
+        location: container.location,
 
         // Add the dimensions to the state, not because it changes, but
         // because it is easier to access this way from certain methods.
@@ -196,16 +202,16 @@ class Level extends Component {
         // A list of all of the states of the platforms that the container holds.
         platformStates: [],
       };
-      // Red, purple, and green specific property: isActivated.
-      // This determines whether or not red, purple, and green should
+      // Red, purple, and orange specific property: isActivated.
+      // This determines whether or not red, purple, and orange should
       // do certain things.
       // Red: doors are locked until isActivated
-      // Purple/green: automatically moves positively when isActivated,
+      // Purple/orange: automatically moves positively when isActivated,
       // automatically moves negatively when isActivated.
       switch (container.color) {
         case 'red':
         case 'purple':
-        case 'green':
+        case 'orange':
           containerState.isActivated = false;
           break;
         default:
@@ -392,9 +398,11 @@ class Level extends Component {
       this.moveCharacter
     );
 
-    // For each item item in each container, move it if it is falling (or on the box's case,
+    // For each item in each container, move it if it is falling (or on the box's case,
     // if it is being pushed on). Additionally, activate any uninteractable items.
+    // Also automatically move the container if it is an automove container.
     this.state.containerStates.forEach((containerState) => {
+      this.autoMoveContainer(containerState);
       containerState.itemStates.forEach((itemState) => {
         this.moveItem(itemState);
         this.activateUninteractable(containerState, itemState);
@@ -548,7 +556,7 @@ class Level extends Component {
     const index = borderIsHorizontal ? 0 : 1;
     const antiIndex = borderIsHorizontal ? 1 : 0;
     // The location of the original location.
-    const mainLoc = this.getContainerLocationByState(containerState);
+    const mainLoc = containerState.location;
 
     // Get all adjacent containers on the side that the opening is on.
     const adjacentContainers = this.getAdjacentContainers(
@@ -571,8 +579,7 @@ class Level extends Component {
           return;
 
         // Prepare for interaction.
-        const otherLoc = this.getContainerLocationByState(adjacentContainer);
-        const otherDim = adjacentContainer.dimensions;
+        const { location: otherLoc, dimensions: otherDim } = adjacentContainer;
         // If the absolute locations are equal, interact with the opening.
         if (
           interactable.location + mainLoc[antiIndex] ===
@@ -688,7 +695,7 @@ class Level extends Component {
   /**
    * Toggles isActivated in each container with that color.
    *
-   * @param {string} color The color of the containers to activate. Can only be red, purple, or green.
+   * @param {string} color The color of the containers to activate. Can only be red, purple, or orange.
    */
   toggleContainerActivation = (color) => {
     for (let i = 0; i < this.state.containerStates.length; i++) {
@@ -968,7 +975,8 @@ class Level extends Component {
 
   /**
    * Move the container based on its current position and the mouse's
-   * location. This method is passed down to Container.
+   * location. This method is passed down to Container. Note that this is
+   * the mouse version of move container.
    *
    * @param {container} container the container to move
    * @param {MouseEvent} e the mouse event to move the container based on
@@ -977,18 +985,17 @@ class Level extends Component {
     // If the character is in the container,
     // or if the game is paused,
     // don't move.
-    if (this.paused || this.characterIsIn(container)) return;
-
     const containerState = this.getContainerStateById(container.props.id);
+    if (this.paused || this.characterIsIn(containerState)) return;
+
     const newsty = Object.assign({}, containerState.sty);
 
     // Depending on if the movement is x or y, move the container
     // the difference as the mouse moves.
     const border = this.getBorder();
-    const mo = containerState.mouseOffset;
-    const location = container.props.location;
+    const { mouseOffset: mo, location } = containerState;
 
-    const isHorizontal = container.props.movement === 'x';
+    const isHorizontal = containerState.movement === 'x';
     const { marginTop: y, height, marginLeft: x, width } = this.state.sty;
 
     // Calculate the min/max based on whether or not the container's
@@ -1019,28 +1026,26 @@ class Level extends Component {
     );
 
     // Check whether or not the container can actually move.
-    const ccm = this.containerCanMove(container);
+    const ccm = this.containerCanMove(containerState);
 
     // If it can actually move, set the calculated location
     // to the newsty and set the location to the nearest
     // block.
+    const newloc = Object.assign([], location);
     if (ccm) {
       const index = isHorizontal ? 0 : 1;
       newsty[isHorizontal ? 'left' : 'top'] = newpx;
-      location[index] = this.nearestContainerLocation(
-        container,
+      newloc[index] = this.nearestContainerLocation(
+        containerState,
         newpx
       ).newLocation;
     }
-
-    // Set the style of the container to the calculated newsty.
-    // Set the movement to false, because the calculations are
-    // completed.
-    containerState.sty = newsty;
-    containerState.isMoving = false;
-
-    // Redraw the component.
-    this.forceUpdate();
+    // Finally, set the state.
+    this.updateContainerState(containerState.id, {
+      sty: newsty,
+      isMoving: false,
+      location: newloc,
+    });
   };
 
   // ** This comment was used for debugging purposes and for a theoretical approach
@@ -1054,14 +1059,14 @@ class Level extends Component {
   /**
    * Determine if the container can move.
    *
-   * @param {Container} container The container to move.
+   * @param {object} containerState The containerState to move.
    *
    * @returns {boolean} Whether or not the container can move.
    */
-  containerCanMove = (container) => {
-    const { location, dimensions } = container.props;
-    const isHorizontal = container.props.movement === 'x';
-    const pos = container.props.selfState.isMovingPos;
+  containerCanMove = (containerState) => {
+    const { location, dimensions } = containerState;
+    const isHorizontal = containerState.movement === 'x';
+    const pos = containerState.isMovingPos;
     const index = isHorizontal ? 0 : 1;
     const antiIndex = isHorizontal ? 1 : 0;
 
@@ -1094,6 +1099,88 @@ class Level extends Component {
     }
     // Otherwise, none of the blocks are occupied, so return true.
     return true;
+  };
+
+  /**
+   * Automatically move the container. This is used for orange and purple
+   * containers.
+   * Note that this uses the containerState and not the container itself, because
+   * it is not required.
+   *
+   * @param {object} containerState The state of the container to automatically move.
+   *
+   */
+  autoMoveContainer = (containerState) => {
+    // Check to make sure that the container is orange/purple.
+    // Even though this check is also called before this method
+    // is called, it will help
+    // in case this method is called elsewhere.
+    if (
+      containerState.color === 'purple' ||
+      containerState.color === 'orange'
+    ) {
+      const newloc = Object.assign([], containerState.location);
+      //console.log(newloc);
+      const isHorizontal = containerState.movement === 'x';
+      const index = isHorizontal ? 0 : 1;
+
+      // If the container is activated, move it positively.
+      const plusOrMinus = containerState.isActivated ? 1 : -1;
+
+      // Move the container by one block in its specified direction.
+      newloc[index] += plusOrMinus;
+
+      // Check to make sure the container can automatically move,
+      // then set the state if it can.
+      if (this.containerCanAutoMove(containerState)) {
+        //todo
+        console.log(newloc);
+        this.updateContainerState(containerState.id, {
+          location: newloc,
+        });
+      }
+    }
+  };
+
+  /**
+   * Check if the container can automatically move. This code is very similar
+   * to containerCanMove, but is different because it checks for the container's
+   * color and uses containerState and isActivated as opposed to container and
+   * isMovingPos, respectively. However, the logic is the same, so check
+   * containerCanMove for the logic explanations.
+   *
+   * @param {object} containerState The state of the container to check.
+   *
+   * @returns {boolean} Whether or not this container can automatically move.
+   */
+  containerCanAutoMove = (containerState) => {
+    if (
+      containerState.color === 'purple' ||
+      containerState.color === 'orange'
+    ) {
+      const { dimensions, location } = containerState;
+      const isHorizontal = containerState.movement === 'x';
+      const pos = containerState.isActivated;
+      const index = isHorizontal ? 0 : 1;
+      const antiIndex = isHorizontal ? 1 : 0;
+
+      const adjacentLocation = pos
+        ? Math.min(
+            location[index] + dimensions[index],
+            this.levelFile.dimensions[index] - 1
+          )
+        : Math.max(location[index] - 1, 0);
+
+      for (let i = 0; i < dimensions[antiIndex]; i++) {
+        const x = isHorizontal ? adjacentLocation : location[0] + i;
+        const y = isHorizontal ? location[1] + i : adjacentLocation;
+        if (this.state.blocks[x][y]) {
+          return false;
+        }
+      }
+      return true;
+    } else return false;
+    // The container is not purple or orange, so it cannot automove. Return false.
   };
 
   /**
@@ -1132,13 +1219,12 @@ class Level extends Component {
    * Note: this method only returns information for the axis
    * that the container moves along.
    *
-   * @param {Container} container Container to find the nearest location of.
+   * @param {object} containerState The state of the container to find the nearest location of.
    * @param {number} oldPixelLocation The previous pixel location
    */
-  nearestContainerLocation = (container, oldPixelLocation) => {
-    const isHorizontal = container.props.movement === 'x';
-    const dimensions = container.props.dimensions;
-    const { sideArr, isMovingPos: pos } = container.props.selfState;
+  nearestContainerLocation = (containerState, oldPixelLocation) => {
+    const isHorizontal = containerState.movement === 'x';
+    const { sideArr, isMovingPos: pos, dimensions } = containerState;
 
     // Get spacing so the border and whitespace isn't used
     // in the calculations.
@@ -1252,26 +1338,6 @@ class Level extends Component {
   };
 
   /**
-   * Get the location of the container based on its container state.
-   *
-   * @param {object} containerState The containerState to calculate the location from.
-   *
-   * @returns {Array} An array of length two of the location, in the format [x,y].
-   */
-  getContainerLocationByState = (containerState) => {
-    // Get the pixel locations of the container and the level box.
-    const { top, left } = containerState.sty;
-    const { marginTop, marginLeft } = this.state.sty;
-    const bs = this.state.blockSize;
-
-    // Calculate and return the location.
-    return [
-      Math.round((left - marginLeft) / bs[0]),
-      Math.round((top - marginTop) / bs[1]),
-    ];
-  };
-
-  /**
    * Generates an array of containerStates adjacent to the given containerState
    * on the given side. For example, if a container is touching two containers
    * on its right side, this method will return an array of those two containerStates.
@@ -1288,15 +1354,13 @@ class Level extends Component {
     const antiIndex = sideIsHorizontal ? 1 : 0;
 
     // Get the location and dimensions of the main container.
-    const mainLoc = this.getContainerLocationByState(containerState);
-    const mainDim = containerState.dimensions;
+    const { location: mainLoc, dimensions: mainDim } = containerState;
 
     // Filter the containerStates based on whether or not they are adjacent,
     // then return it.
     return this.state.containerStates.filter((otherContainerState) => {
       // Get the location and dimensions of the other container.
-      const otherLoc = this.getContainerLocationByState(otherContainerState);
-      const otherDim = otherContainerState.dimensions;
+      const { location: otherLoc, dimensions: otherDim } = otherContainerState;
 
       // adjTopOrLeft and adjRightOrBottom determine if the containers'
       // important axis (remember, using index ensures that x and y work)
@@ -1874,12 +1938,12 @@ class Level extends Component {
   /**
    * Checks whether or not the character is in the given container.
    *
-   * @param {Container} container the container to check
+   * @param {object} containerState the container to check
    *
    * @returns {boolean} Whether or not the character is in the given container.
    */
-  characterIsIn = (container) => {
-    return this.state.characterState.container === container.props.id;
+  characterIsIn = (containerState) => {
+    return this.state.characterState.container === containerState.id;
   };
 
   /**

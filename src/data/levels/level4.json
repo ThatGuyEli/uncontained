@@ -38,6 +38,12 @@
           "itemType": "plate",
           "color": "red",
           "location": [5, 8]
+        },
+        {
+          "id": 4,
+          "itemType": "lever",
+          "color": "purple",
+          "location": [15, 8]
         }
       ]
     },
@@ -63,6 +69,23 @@
           "location": [5, 7]
         }
       ]
+    },
+    {
+      "id": 3,
+      "color": "purple",
+      "dimensions": [20, 10],
+      "location": [0, 10],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        {
+          "id": 1,
+          "border": "top",
+          "location": 1,
+          "width": 5
+        }
+      ],
+      "items": []
     }
   ]
 }

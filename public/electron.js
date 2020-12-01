@@ -1,3 +1,6 @@
+// A majority of this code was taken from Electron's boilerplate guide, on their website.
+// https://www.electronjs.org
+
 // Modules to control application life and create native browser window
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
@@ -15,6 +18,10 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
+    // Note: when Electron is running in development, it will throw a warning.
+    // This has to do with the Content-Security-Policy, which requires certain
+    // code to comply with the developer's specified policy. However, there is
+    // no policy because all code is locally run. No remove code is loaded.
   });
 
   // and load the index.html of the app.

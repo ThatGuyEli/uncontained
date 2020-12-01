@@ -22,13 +22,13 @@ class Container extends Component {
   }
 
   /**
-   * When the component mounts, update the style after 10ms
+   * When the component mounts, update the style after 1ms
    * to allow the Level to render. Additionally, add the
    * event listeners to update this component's style on resize,
    * move on mouse move, attach on mouse down, and detach on mouse up.
    */
   componentDidMount() {
-    window.setTimeout(this.update, 10);
+    window.setTimeout(this.update, 1);
     window.addEventListener('resize', this.update);
     window.addEventListener('mousemove', this.move);
     window.addEventListener('mouseup', this.detach);
@@ -96,7 +96,7 @@ class Container extends Component {
 
   /**
    * Snap the container to its bounds. This method is called from
-   * this.detach() or this.automove().
+   * this.detach().
    */
   snap = () => {
     // Create a boolean on whether or not the movement
@@ -106,7 +106,7 @@ class Container extends Component {
 
     // Get the nearest block from Level.js, passing in either left or top.
     const nearestBlock = this.props.nearestLocation(
-      this,
+      this.props.selfState,
       isHorizontal ? sty.left : sty.top
     );
 
@@ -136,7 +136,7 @@ class Container extends Component {
       this.props.selfState.attached &&
       !this.props.selfState.isMoving &&
       this.isMovable() &&
-      !this.props.characterIsIn(this)
+      !this.props.characterIsIn(this.props.selfState)
     ) {
       this.props.updateSelfState(this.props.id, { isMoving: true });
       this.props.move(this, e);
@@ -169,7 +169,7 @@ class Container extends Component {
   /**
    * This method is passing the Container and the Item to Level,
    * which updates the style of the Item.
-   * 
+   *
    * @param {Opening} opening The Opening to update the style of.
    */
   updateOpeningSty = (opening) => {
@@ -178,7 +178,7 @@ class Container extends Component {
 
   /**
    * Generate the opening within this Container.
-   * 
+   *
    * @returns {Array} An Array of Openings attached to this Container.
    */
   generateOpenings = () => {
@@ -197,9 +197,9 @@ class Container extends Component {
 
   /**
    * Get the openingState with the given id.
-   * 
+   *
    * @param {number} id The id of the opening to search for.
-   * 
+   *
    * @returns {object} The openingState with the given id.
    */
   getOpeningStateById = (id) => {
@@ -216,38 +216,38 @@ class Container extends Component {
   //--------------\\
   /**
    * Generate the items within this Container.
-   * 
+   *
    * @returns {Array} An Array of Items attached to this Container.
    */
   generateItems = () => {
     // Use higher order function array.map.
     return this.props.items.map((item) => {
       return (
-        <Item 
-        key={item.id}
-        updateSty={this.updateItemSty}
-        selfState={this.getItemStateById(item.id)}
-        {...item}
+        <Item
+          key={item.id}
+          updateSty={this.updateItemSty}
+          selfState={this.getItemStateById(item.id)}
+          {...item}
         />
       );
     });
-  }
+  };
 
   /**
    * This method is passing the Container and the Item to
    * Level, which updates the style of the Item.
-   * 
+   *
    * @param {Item} item The item to update the style of.
    */
   updateItemSty = (item) => {
     this.props.updateItemSty(this, item);
-  }
-  
+  };
+
   /**
    * Get the itemState with the given id.
-   * 
+   *
    * @param {number} id The id of the item to search for.
-   * 
+   *
    * @returns {object} The itemState with the given id.
    */
   getItemStateById = (id) => {
@@ -256,15 +256,7 @@ class Container extends Component {
       const itemState = this.props.selfState.itemStates[i];
       if (itemState.id === id) return itemState;
     }
-  }
-
-  ///**
-  // * Gets this id. This is passed to Item.
-  // * @returns {number} The id of the Container.
-  // */
-  //getParentId = () => {
-  //  return this.props.id;
-  //}
+  };
 
   //------------------\\
   // Platform Methods \\
@@ -272,38 +264,38 @@ class Container extends Component {
   /**
    * This method is passing the Container and the Platform to
    * Level, which updates the style of the Platform.
-   * 
+   *
    * @param {Platform} platform The platform to update the style of.
    */
   updatePlatformSty = (platform) => {
     this.props.updatePlatformSty(this, platform);
-  }
+  };
 
   /**
    * Generates the platforms.
-   * 
+   *
    * @returns {Array} An Array of Platforms attached to this Container.
    */
   generatePlatforms = () => {
     // Use higher order function array.map.
     return this.props.platforms.map((platform) => {
       return (
-        <Platform 
-        key={platform.id}
-        color={this.props.color}
-        updateSty={this.updatePlatformSty}
-        selfState={this.getPlatformStateById(platform.id)}
-        {...platform}
+        <Platform
+          key={platform.id}
+          color={this.props.color}
+          updateSty={this.updatePlatformSty}
+          selfState={this.getPlatformStateById(platform.id)}
+          {...platform}
         />
-      )
-    })
-  }
-  
+      );
+    });
+  };
+
   /**
    * Get the platformState with the given id.
-   * 
+   *
    * @param {number} id The id of the platform to search for.
-   * 
+   *
    * @returns {object} The platformState with the given id.
    */
   getPlatformStateById = (id) => {
@@ -312,7 +304,7 @@ class Container extends Component {
       const platformState = this.props.selfState.platformStates[i];
       if (platformState.id === id) return platformState;
     }
-  }
+  };
 
   /**
    * Rendering method.
