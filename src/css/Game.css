@@ -42,12 +42,6 @@ within the game itself, based on the window size.
   */
 }
 
-html,
-body {
-  margin: 0px;
-  background-color: var(--nord3);
-}
-
 /* 
 The width, height, and margin are calculated
 so that the <div> will always be centered, 

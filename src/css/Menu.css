@@ -25,19 +25,69 @@
   --border: calc((1vh + 1vw) / 2);
 }
 
-html, body {
-  width: 90%;
-  margin: 1% 5%;
-  height: 100%;
+html,
+body {
+  margin: 0px;
   overflow: hidden;
+  background-color: var(--nord3);
 }
 
-.title {
+.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.title-bar {
+  box-sizing: border-box;
   background-color: var(--nord5);
   border: solid var(--nord1) var(--border);
   border-radius: var(--border);
-  padding: 4vh;
 
+  text-align: center;
+
+  position: absolute;
+  top: 5vh;
+  left: 5vw;
+  width: 90vw;
+  height: 15vh;
+}
+
+.title-text {
+  color: var(--nord0);
+
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 10vh;
+}
+
+.btn-container {
+  position: absolute;
+  top: 25vh;
+  left: 5vw;
+  width: 90vw;
+  bottom: 5vh;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.MenuButton {
+  box-sizing: border-box;
+  border-width: var(--border);
+  border-style: solid;
+  border-radius: var(--border);
+  height: 15vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.MenuText {
+  cursor: pointer;
+  text-decoration: none;
   text-align: center;
   color: var(--nord0);
   font-family: monospace;
