@@ -4,7 +4,7 @@ import { Route, BrowserRouter as Router } from 'react-router-dom';
 
 // Component Imports
 import Level from './components/game/Level.js';
-import MainMenu from './components/menus/MainMenu.js';
+//import MainMenu from './components/menus/MainMenu.js';
 
 /**
  * The component that holds all of the other components,
@@ -19,10 +19,10 @@ class App extends Component {
    */
   render() {
     //return <Level id='4' />;
+    //<Route path='/level' exact component={MainMenu} />
     return (
       <Router>
-        <Route path='/' exact component={MainMenu} />
-        <Route path='/level' exact render={() => <Level id='4' />} />
+        <Route path='/' exact render={() => <Level id='4' />} />
       </Router>
     );
   }

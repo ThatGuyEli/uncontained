@@ -1,0 +1,46 @@
+:root {
+  --nord0: #2e3440;
+  --nord1: #3b4252;
+  --nord2: #434c5e;
+  --nord3: #4c566a;
+  --nord4: #d8dee9;
+  --nord5: #e5e9f0;
+  --nord6: #eceff4;
+  --nord7: #8fbcbb;
+  --nord8: #88c0d0;
+  --nord9: #81a1c1;
+  --nord10: #5e81ac;
+  --nord11: #bf616a;
+  --nord12: #d08770;
+  --nord13: #ebcb8b;
+  --nord14: #a3be8c;
+  --nord15: #b48ead;
+  --brown: #987654;
+  --gold: #bf720d;
+  --gray: #525352;
+  --nord12-mod: #e49b85;
+  --dark-red: #800500;
+  --dark-purple: rgb(161, 67, 161);
+  --dark-orange: #c06803;
+  --border: calc((1vh + 1vw) / 2);
+}
+
+html, body {
+  width: 90%;
+  margin: 1% 5%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.title {
+  background-color: var(--nord5);
+  border: solid var(--nord1) var(--border);
+  border-radius: var(--border);
+  padding: 4vh;
+
+  text-align: center;
+  color: var(--nord0);
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 5vh;
+}
