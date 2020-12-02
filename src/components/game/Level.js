@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Container from './Container.js';
 import Character from './Character.js';
+import '../../css/Game.css';
 
 // Note: although I would have liked to break this
 // into multiple smaller files, React.js recommends
@@ -39,8 +40,8 @@ class Level extends Component {
     // Level is the object imported from the requested level,
     // which is passed through props. This JSON file includes
     // all of the data needed to load the level.
-    this.levelFile = require(`../data/levels/level${props.id}.json`);
-    this.keys = require('../data/keybinds.json');
+    this.levelFile = require(`../../data/levels/level${props.id}.json`);
+    this.keys = require('../../data/keybinds.json');
     this.actions = {
       left: false,
       right: false,
@@ -151,6 +152,10 @@ class Level extends Component {
       // each individual container's state, which includes
       // styling and other information.
       containerStates: [],
+
+      // Whether or not a container is moving. This is used when the container
+      // automatically moves.
+      containerIsMoving: false,
     };
 
     // Populate the container states with default state.
@@ -1116,6 +1121,7 @@ class Level extends Component {
     // is called, it will help
     // in case this method is called elsewhere.
     if (
+      !this.state.containerIsMoving &&
       (containerState.color === 'purple' ||
         containerState.color === 'orange') &&
       this.containerCanAutoMove(containerState)
@@ -1343,6 +1349,9 @@ class Level extends Component {
           updateItemSty={this.updateItemSty}
           updatePlatformSty={this.updatePlatformSty}
           characterIsIn={this.characterIsIn}
+          toggleIsMoving={() => {
+            this.setState({ containerIsMoving: !this.state.containerIsMoving });
+          }}
           {...container}
           // Instead of using data={container}, this component
           // uses the spread operator to add clarity when using

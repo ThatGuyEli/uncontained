@@ -42,7 +42,7 @@
         {
           "id": 4,
           "itemType": "lever",
-          "color": "purple",
+          "color": "orange",
           "location": [15, 8]
         }
       ]
@@ -72,7 +72,7 @@
     },
     {
       "id": 3,
-      "color": "purple",
+      "color": "orange",
       "dimensions": [20, 10],
       "location": [0, 10],
       "movement": "x",

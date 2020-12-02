@@ -1,7 +1,10 @@
 // Imports
 import React, { Component } from 'react';
-import './css/App.css';
-import Level from './components/Level.js';
+import { Route, BrowserRouter as Router } from 'react-router-dom';
+
+// Component Imports
+import Level from './components/game/Level.js';
+import MainMenu from './components/menus/MainMenu.js';
 
 /**
  * The component that holds all of the other components,
@@ -11,12 +14,16 @@ import Level from './components/Level.js';
 class App extends Component {
   /**
    * Rendering method.
-   * 
+   *
    * @returns JSX that represents the game.
    */
   render() {
+    //return <Level id='4' />;
     return (
-      <Level id='4' />
+      <Router>
+        <Route path='/' exact component={MainMenu} />
+        <Route path='/level' exact render={() => <Level id='4' />} />
+      </Router>
     );
   }
 }

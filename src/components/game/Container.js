@@ -68,6 +68,7 @@ class Container extends Component {
     if (!this.props.selfState.attached && this.isMovable()) {
       // Utilize rewriteBlocks callback in order to update the state
       // after the blocks are rewritten.
+      this.props.toggleIsMoving();
       this.props.rewriteBlocks(this.props.selfState, false, () => {
         this.props.updateSelfState(this.props.id, {
           attached: true,
@@ -89,6 +90,7 @@ class Container extends Component {
    */
   detach = () => {
     if (this.props.selfState.attached && this.isMovable()) {
+      this.props.toggleIsMoving();
       this.snap();
       this.props.rewriteBlocks(this.props.selfState, true);
     }
@@ -112,8 +114,8 @@ class Container extends Component {
 
     // Similarly, determine which part of newsty to modify and modify it.
     const newsty = Object.assign({}, sty);
-    const location = isHorizontal ? 'left' : 'top';
-    newsty[location] = nearestBlock.newPixelLocation;
+    const pxLoc = isHorizontal ? 'left' : 'top';
+    newsty[pxLoc] = nearestBlock.newPixelLocation;
 
     // Finally, update the state.
     this.props.updateSelfState(this.props.id, {
