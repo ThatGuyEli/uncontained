@@ -1,9 +1,13 @@
-import React from 'react'
+import React from 'react';
+
+// Necessary utility
+import * as Utils from './Utils.js';
 
 export default function LevelSelect() {
   return (
     <div>
-      <h1>level select</h1>
+      <h1>hello</h1>
+      {Utils.generateLevelButtons()}
     </div>
-  )
+  );
 }

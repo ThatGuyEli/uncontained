@@ -1176,8 +1176,9 @@ class Level extends Component {
    */
   containerCanAutoMove = (containerState) => {
     if (
-      containerState.color === 'purple' ||
-      containerState.color === 'orange'
+      !this.characterIsIn(containerState) &&
+      (containerState.color === 'purple' ||
+      containerState.color === 'orange')
     ) {
       const { dimensions, location } = containerState;
       const isHorizontal = containerState.movement === 'x';
