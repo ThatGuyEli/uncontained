@@ -3,44 +3,6 @@ This CSS file contains most of the styling of the game components.
 The only styling that is not included is sizing; this is calculated
 within the game itself, based on the window size.
 */
-:root {
-  --nord0: #2e3440;
-  --nord1: #3b4252;
-  --nord2: #434c5e;
-  --nord3: #4c566a;
-  --nord4: #d8dee9;
-  --nord5: #e5e9f0;
-  --nord6: #eceff4;
-  --nord7: #8fbcbb;
-  --nord8: #88c0d0;
-  --nord9: #81a1c1;
-  --nord10: #5e81ac;
-  --nord11: #bf616a;
-  --nord12: #d08770;
-  --nord13: #ebcb8b;
-  --nord14: #a3be8c;
-  --nord15: #b48ead;
-  --brown: #987654;
-  --gold: #bf720d;
-  --gray: #525352;
-  --nord12-mod: #e49b85;
-  --dark-red: #800500;
-  --dark-purple: rgb(161, 67, 161);
-  --dark-orange: #c06803;
-}
-
-* {
-  user-select: none;
-  -webkit-user-select: none;
-  /*
-  Although these have the same effect in other browsers,
-  this game is only intended to be used in the native
-  Electron.js Chromium browser.
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  */
-}
 
 /* 
 The width, height, and margin are calculated
@@ -73,31 +35,6 @@ containers have pointer-events: none
   box-sizing: border-box;
   border-style: solid;
   position: absolute;
-}
-
-.gray {
-  background-color: var(--nord5);
-  border-color: var(--nord3);
-}
-
-.blue {
-  background-color: var(--nord9);
-  border-color: var(--nord10);
-}
-
-.red {
-  background-color: var(--nord11);
-  border-color: var(--dark-red);
-}
-
-.purple {
-  background-color: var(--nord15);
-  border-color: var(--dark-purple);
-}
-
-.orange {
-  background-color: var(--nord12-mod);
-  border-color: var(--dark-orange);
 }
 
 .Opening {
