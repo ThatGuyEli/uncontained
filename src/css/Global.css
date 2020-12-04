@@ -49,19 +49,17 @@ body {
   background-color: var(--nord3);
 }
 
-.gray,
-.blue,
-.red,
-.purple,
-.orange {
+.standard-border {
+  border-width: var(--border);
+  border-style: solid;
+  border-radius: var(--border);
+}
+
+.div-hover {
   transition: filter 0.5s;
 }
 
-.gray:hover,
-.blue:hover,
-.red:hover,
-.purple:hover,
-.orange:hover {
+.div-hover:hover {
   filter: brightness(0.9);
 }
 

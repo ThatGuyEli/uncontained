@@ -1,4 +1,4 @@
-import { Route, Link } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 import Level from '../game/Level.js';
 
 // Imports from preload.js
@@ -31,13 +31,26 @@ export function generateLevelPages() {
   });
 }
 
-export function generateLevelButtons () {
+export function generateLevelButtons(setSelectedLevel) {
   const levels = getLevelFiles();
   return levels.map((level) => {
-    return (
-      <Link key={level.name} to={`/levels/level${level.id}`}>
-        <div >{level.name}</div>
+    const { name, id } = level;
+    /*
+      <Link
+        key={name}
+        to={`/levels/level${id}`}
+        className='link-text'
+      >
       </Link>
+    */
+    return (
+      <div
+        key={id}
+        className='link-text level-button blue standard-border div-hover'
+        onClick={() => setSelectedLevel(level)}
+      >
+        <span>{name}</span>
+      </div>
     );
   });
 }
