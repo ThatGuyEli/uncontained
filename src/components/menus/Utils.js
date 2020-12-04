@@ -31,14 +31,14 @@ export function generateLevelPages() {
   });
 }
 
-export function generateLevelButtons(setSelectedLevel) {
+export function generateLevelButtons(color, setSelectedLevel) {
   const levels = getLevelFiles();
   return levels.map((level) => {
     const { name, id } = level;
     return (
       <div
         key={id}
-        className='center-children link-text level-button blue standard-border div-hover'
+        className={`center-children link-text level-button ${color} standard-border div-hover`}
         onClick={() => setSelectedLevel(level)}
       >
         <span>{name}</span>

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+//import { Link } from 'react-router-dom';
 
-// Necessary utility
+// Component imports
 import * as Utils from './Utils.js';
-import BackButton from './BackButton.js';
+import BackToMain from './BackToMain.js';
 import Subtitle from './Subtitle.js';
 import DifficultyBar from './DifficultyBar.js';
 import ContentButton from './ContentButton.js';
@@ -21,7 +21,7 @@ export default function LevelSelect({ preloadLevelId }) {
       {/* Level Selector */}
       <div className='list-button-container orange standard-border'>
         {/* The state mutator is passed so that onClick these buttons switch the selected level. */}
-        {Utils.generateLevelButtons(setSelectedLevel)}
+        {Utils.generateLevelButtons('blue', setSelectedLevel)}
       </div>
 
       <div className='content orange standard-border'>
@@ -38,12 +38,21 @@ export default function LevelSelect({ preloadLevelId }) {
         </div>
 
         <div className='content-buttons'>
-          <ContentButton url='/leaderboard' color='purple' text='Leaderboard' />
-          <ContentButton url={`/levels/level${selectedLevel.id}`} color='blue' text='Play' />          
+          <ContentButton
+            url='/leaderboard'
+            selectedLevel={selectedLevel}
+            color='purple'
+            text='Leaderboard'
+          />
+          <ContentButton
+            url={`/levels/level${selectedLevel.id}`}
+            color='blue'
+            text='Play'
+          />
         </div>
       </div>
 
-      <BackButton url='/' />
+      <BackToMain />
     </div>
   );
 }

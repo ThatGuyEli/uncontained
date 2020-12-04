@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export default function BackButton({ url }) {
+export default function BackToMain() {
   return (
-    <Link to={url} className='back-text link-text'>
+    <Link to='/' className='back-text link-text'>
       <div className='back-container orange standard-border div-hover'>
         <span className='center'>Back</span>
       </div>

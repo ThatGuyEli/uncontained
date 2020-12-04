@@ -25,10 +25,18 @@ class App extends Component {
   render() {
     return (
       <Router>
-        <Route exact path='/'             component={MainMenu} />
-        <Route exact path='/level-select' render={() => <LevelSelect preloadLevelId='1' />} />
-        <Route exact path='/how-to-play'  component={HowToPlay} />
-        <Route exact path='/leaderboard'  component={Leaderboard} />
+        <Route exact path='/' component={MainMenu} />
+        <Route
+          exact
+          path='/level-select'
+          render={() => <LevelSelect preloadLevelId='1' />}
+        />
+        <Route exact path='/how-to-play' component={HowToPlay} />
+        <Route
+          exact
+          path='/leaderboard'
+          render={() => <Leaderboard preloadLevelId='1' />}
+        />
         {Utils.generateLevelPages()}
       </Router>
     );
