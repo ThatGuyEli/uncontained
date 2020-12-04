@@ -1,6 +1,8 @@
 {
   "id": 2,
   "name": "Snake",
+  "difficulty": 10,
+  "description": "snake",
   "dimensions": [40, 30],
   "character": {
     "startContainer": 1,

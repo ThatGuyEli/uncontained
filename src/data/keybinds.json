@@ -2,7 +2,11 @@
   "a": "left",
   "d": "right",
   "w": "jump",
+  "ArrowLeft": "left",
+  "ArrowRight": "right",
+  "ArrowUp": "jump",
   " ": "jump",
   "e": "interact",
+  "z": "interact",
   "Escape": "pause"
 }

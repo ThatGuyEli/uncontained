@@ -1,6 +1,8 @@
 {
   "id": 1,
   "name": "Released",
+  "difficulty": 5,
+  "description": "In the heart of a dark, mysterious compound, Un awakens to find himself placed in a group of containers. He doesn't know how or why he got there, but he knows he needs to get out.",
   "dimensions": [40, 30],
   "character": {
     "startContainer": 1,

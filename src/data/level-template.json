@@ -1,0 +1,41 @@
+{
+  "id": 0,
+  "name": "name",
+  "dimensions": [0, 0],
+  "character": {
+    "startContainer": 0,
+    "startLocation": [0, 0]
+  },
+  "containers": [
+    {
+      "id": 0,
+      "color": "gray blue red purple orange",
+      "dimensions": [0, 0],
+      "location": [0, 0],
+      "movement": "x y",
+      "platforms": [
+        {
+          "id": 0,
+          "dimensions": [0, 0],
+          "location": [0, 0]
+        }
+      ],
+      "openings": [
+        {
+          "id": 0,
+          "border": "top left right bottom",
+          "location": 0,
+          "width": 0
+        }
+      ],
+      "items": [
+        {
+          "id": 0,
+          "itemType": "plate box collectible exit lever",
+          "location": [0, 0],
+          "color": "gray blue red purple orange"
+        }
+      ]
+    }
+  ]
+}

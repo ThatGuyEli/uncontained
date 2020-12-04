@@ -35,18 +35,10 @@ export function generateLevelButtons(setSelectedLevel) {
   const levels = getLevelFiles();
   return levels.map((level) => {
     const { name, id } = level;
-    /*
-      <Link
-        key={name}
-        to={`/levels/level${id}`}
-        className='link-text'
-      >
-      </Link>
-    */
     return (
       <div
         key={id}
-        className='link-text level-button blue standard-border div-hover'
+        className='center-children link-text level-button blue standard-border div-hover'
         onClick={() => setSelectedLevel(level)}
       >
         <span>{name}</span>

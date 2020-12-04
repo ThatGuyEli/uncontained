@@ -22,7 +22,7 @@ export default function MainMenu() {
     return (
       <Link to={to} className='main-menu-text link-text'>
         <div
-          className={`main-menu-button ${color} standard-border div-hover`}
+          className={`main-menu-button ${color} standard-border div-hover center-children`}
           onClick={onClick}
         >
           {text}
