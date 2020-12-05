@@ -92,7 +92,7 @@
   height: 10vh;
   margin: 1.25vh 0.625vw 0vh;
 
-  font-size: 2.5vh;
+  font-size: calc(1vw + 1vh);
 }
 
 .subtitle-bar {
@@ -109,7 +109,7 @@
 
   font-family: monospace;
   font-weight: bold;
-  font-size: 7vh;
+  font-size: 6vh;
 }
 
 .content {
@@ -156,13 +156,13 @@
 
   font-family: monospace;
   font-weight: bold;
-  font-size: 3vh;
+  font-size: calc(1vw + 1vh);
 
   position: absolute;
   top: 15vh;
   left: 2.5vw;
   height: 7.5vh;
-  width: 17.5vw;
+  width: 16.125vw;
 }
 
 .level-description {
@@ -201,4 +201,40 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+}
+
+
+.score-table {
+  box-sizing: border-box;
+  position: absolute;
+  top: 15vh;
+  left: 2.5vw;
+  right: 2.5vw;
+  bottom: 2.5vh;
+
+  border-collapse: separate;
+  border-spacing: 0px;
+
+  font-family: monospace;
+  font-weight: bold;
+
+}
+
+.score-table-header {
+  padding: 1vh 0vw;
+  width: 50%;
+  font-size: 4vh;
+  border-bottom: var(--dark-purple) solid calc(var(--border) / 2);
+}
+
+.score-table-text {
+  padding: 0.5vh 0vw;
+
+  text-align: center;
+  font-size: 2.5vh;
+}
+
+.score-table-row:hover {
+  background-color: var(--nord3);
+  color: var(--nord5);
 }

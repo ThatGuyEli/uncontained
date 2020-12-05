@@ -2,7 +2,7 @@
   "id": 2,
   "name": "Snake",
   "difficulty": 10,
-  "description": "snake",
+  "description": "After escaping the first set of containers, Un found himself to be surrounded by even more. This time, however, he was going to have to make many twists and turns.",
   "dimensions": [40, 30],
   "character": {
     "startContainer": 1,
