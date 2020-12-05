@@ -238,3 +238,43 @@
   background-color: var(--nord3);
   color: var(--nord5);
 }
+
+.pause {
+  box-sizing: border-box;
+  position: absolute;
+  font-family: monospace;
+  font-weight: bold;
+  color: var(--nord0);
+  height: 50vh;
+  width: 25vw;
+}
+
+.pause-title {
+  box-sizing: border-box;
+  font-size: 4vh;
+
+  position: absolute;
+  top: 1vh;
+  left: 1vw;
+  right: 1vw;
+  height: 10vh;
+}
+
+.pause-button {
+  font-size: 2vh;
+  height: 7vh;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.pause-buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  position: absolute;
+  top: 12vh;
+  left: 1vw;
+  right: 1vw;
+  bottom: 1vh;
+}

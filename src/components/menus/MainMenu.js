@@ -18,7 +18,7 @@ export default function MainMenu() {
    *
    * @returns JSX that represents a button for the main menu.
    */
-  function MainMenuButton(to, color, text, onClick) {
+  function MainMenuButton({ to, color, text, onClick }) {
     return (
       <Link to={to} className='main-menu-text link-text'>
         <div
@@ -38,10 +38,15 @@ export default function MainMenu() {
       </div>
 
       <div className='btn-container'>
-        {MainMenuButton('/level-select', 'blue', 'Level Select')}
-        {MainMenuButton('/how-to-play', 'red', 'How to Play')}
-        {MainMenuButton('/leaderboard', 'purple', 'Leaderboard')}
-        {MainMenuButton('/', 'orange', 'Exit Game', window.close)}
+        <MainMenuButton to='/level-select' color='blue' text='Level Select' />
+        <MainMenuButton to='/how-to-play' color='red' text='How to Play' />
+        <MainMenuButton to='/leaderboard' color='purple' text='Leaderboard' />
+        <MainMenuButton
+          to='/'
+          color='orange'
+          text='Exit Game'
+          onClick={window.close}
+        />
       </div>
     </>
   );

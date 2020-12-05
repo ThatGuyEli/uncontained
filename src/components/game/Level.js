@@ -3,6 +3,8 @@ import Container from './Container.js';
 import Character from './Character.js';
 import '../../css/Game.css';
 
+import PauseMenu from '../menus/PauseMenu.js';
+
 // Note: although I would have liked to break this
 // into multiple smaller files, React.js recommends
 // state to be as high in the component structure as
@@ -48,9 +50,6 @@ class Level extends Component {
       jump: false,
     };
 
-    // Whether or not the game is paused.
-    this.paused = false;
-
     // Cycle through the blocks and populate it with booleans.
     // true = container is in that block
     // false = container is not in that block
@@ -95,6 +94,12 @@ class Level extends Component {
     // they are not needed at the higher levels of the game
     // (such as the menu or title screen).
     this.state = {
+      // Whether or not the game is paused. This was originally not in the
+      // state because it did not need to rerender; however, with the introduction
+      // of the pause menu, rerenders are required (to render/unrender the
+      // pause menu).
+      paused: false,
+
       sty: {},
 
       // blockSize is the specific pixel:block ratio.
@@ -305,7 +310,6 @@ class Level extends Component {
     this.updateSty();
     document.onkeydown = this.handleKey;
     document.onkeyup = this.handleKey;
-    document.onkeypress = this.handleKeyPress;
     window.addEventListener('resize', this.updateSty);
     window.addEventListener('resize', this.pauseForResize);
   }
@@ -340,25 +344,18 @@ class Level extends Component {
       if (e.type === 'keydown') {
         // If the action is to pause, pause instead.
         if (action === 'pause') this.togglePause();
+        else if (action === 'interact')
+          this.interact(this.getInteractableNearCharacter());
         else this.actions[action] = true;
       }
       // Otherwise, set the respective action to false.
-      else if (e.type === 'keyup' && action !== 'pause') {
+      else if (
+        e.type === 'keyup' &&
+        action !== 'pause' &&
+        action !== 'interact'
+      ) {
         this.actions[action] = false;
       }
-    }
-  };
-
-  /**
-   * Handle interactions with a keypress, which should only
-   * trigger an interaction once, as opposed to a keydown
-   * which continuously calls.
-   *
-   * @param {KeyboardEvent} e The keyboard event to handle.
-   */
-  handleKeyPress = (e) => {
-    if (e.key in this.keys && this.keys[e.key] === 'interact') {
-      this.interact(this.getInteractableNearCharacter());
     }
   };
 
@@ -367,21 +364,20 @@ class Level extends Component {
    * timer. On unpause, start the timer again.
    */
   togglePause = () => {
-    this.paused = !this.paused;
-    if (this.paused) {
-      clearInterval(this.timer);
-    } else {
-      this.timer = setInterval(this.timerFunc, 1000 / 60);
-    }
-    // todo: add pause menu
-    // todo: pause interval that moves the character
+    this.setState({ paused: !this.state.paused }, () => {
+      if (this.state.paused) {
+        clearInterval(this.timer);
+      } else {
+        this.timer = setInterval(this.timerFunc, 1000 / 60);
+      }
+    });
   };
 
   /**
    * Pause the game and stop the timer.
    */
   pauseForResize = () => {
-    this.paused = true;
+    this.setState({ paused: true });
     clearInterval(this.timer);
   };
 
@@ -533,7 +529,11 @@ class Level extends Component {
    */
   interact = (interactable) => {
     // Prevent errors and interacting with objects while the game is paused.
-    if (this.paused || interactable === undefined || interactable === null)
+    if (
+      this.state.paused ||
+      interactable === undefined ||
+      interactable === null
+    )
       return;
 
     const isOpening = !interactable.hasOwnProperty('itemType');
@@ -740,12 +740,12 @@ class Level extends Component {
 
   /**
    * General accessor. This is used in Container, which cannot
-   * normally access this.paused.
+   * normally access this.state.paused.
    *
    * @returns {boolean} Whether or not the game is paused.
    */
   gameIsPaused = () => {
-    return this.paused;
+    return this.state.paused;
   };
 
   //---------------\\
@@ -991,7 +991,7 @@ class Level extends Component {
     // or if the game is paused,
     // don't move.
     const containerState = this.getContainerStateById(container.props.id);
-    if (this.paused || this.characterIsIn(containerState)) return;
+    if (this.state.paused || this.characterIsIn(containerState)) return;
 
     const newsty = Object.assign({}, containerState.sty);
 
@@ -1177,8 +1177,7 @@ class Level extends Component {
   containerCanAutoMove = (containerState) => {
     if (
       !this.characterIsIn(containerState) &&
-      (containerState.color === 'purple' ||
-      containerState.color === 'orange')
+      (containerState.color === 'purple' || containerState.color === 'orange')
     ) {
       const { dimensions, location } = containerState;
       const isHorizontal = containerState.movement === 'x';
@@ -2405,7 +2404,7 @@ class Level extends Component {
     // character so that the character naturally is on top
     // of the Containers. Additionally, the Character needs
     // a reference, because it always is in a container.
-    return (
+    let level = (
       <div className='Level' style={this.state.sty}>
         {this.generateContainers()}
         <Character
@@ -2414,6 +2413,14 @@ class Level extends Component {
         />
       </div>
     );
+    if (this.state.paused) {
+      return (
+        <>
+          {level}
+          <PauseMenu unpause={this.togglePause} />
+        </>
+      );
+    } else return level;
   }
 }
 

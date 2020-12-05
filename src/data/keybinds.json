@@ -7,6 +7,6 @@
   "ArrowUp": "jump",
   " ": "jump",
   "e": "interact",
-  "z": "interact",
+  "ArrowDown": "interact",
   "Escape": "pause"
 }
