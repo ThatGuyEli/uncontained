@@ -17,10 +17,11 @@ export function getLevelFiles() {
   fs.readdirSync('.').forEach((fileName) => {
     if (
       fileName.startsWith('linux') ||
-      fileName.startsWith('win') ||
-      fileName.startsWith('mac')
+      fileName.startsWith('win')
     )
       dirPath = path.join(fileName, 'resources');
+    else if (fileName.startsWith('mac'))
+      dirPath = path.join(fileName, 'uncontained.app', 'Contents', 'Resources');
   });
 
   // Finally, add 'data' and 'levels' to the path.
