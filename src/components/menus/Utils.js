@@ -10,7 +10,7 @@ export function getLevelFiles() {
   const levelFiles = [];
 
   // Get the path of the levels using appPath.
-  const dirPath = path.join(window.appPath.appPath, 'src', 'data', 'levels');
+  const dirPath = path.join(window.appPath.appPath, 'data', 'levels');
   const fileNames = fs.readdirSync(dirPath);
   fileNames.forEach((fileName) => {
     const levelFile = require(`../../data/levels/${fileName}`);

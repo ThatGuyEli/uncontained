@@ -10,7 +10,29 @@ contextBridge.exposeInMainWorld('path', require('path'));
 // string to the parameter. It requires an object, and so I have opted for
 // redundancy as opposed to complication (why name it anything else?).
 const argv = window.process.argv;
-contextBridge.exposeInMainWorld('appPath', { appPath: argv[argv.length - 1]});
+
+const path = require('path');
+//const fs = require('fs');
+//const pathArr = window.process.argv[0].split(path.sep);
+//const appPathArr = pathArr.slice(0, pathArr.indexOf('uncontained'));
+//const test = path.join(...appPathArr);
+//console.log(__dirname)
+//console.log(test);
+////console.log(require('fs').readdir(require('path').join(...appPathArr)));
+//
+//console.log(argv, __dirname, fs.readdirSync(path.join(__dirname, '..')));
+
+const appPathRaw = process.argv[6];
+let appPath = appPathRaw.slice(appPathRaw.indexOf('=') + 1, appPathRaw.length);
+if (path.basename(appPath) === 'uncontained') {
+  appPath = path.join(appPath, 'src');
+}
+else {
+  appPath = path.dirname(appPath);
+}
+console.log(appPath);
+contextBridge.exposeInMainWorld('appPath', { appPath: appPath });
+
 /*
 Sample use:
 window.fs.readFile(window.path.join('src', 'css', 'App.css'), (err, data) => {
