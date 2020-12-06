@@ -20,6 +20,12 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
+
+      // Pass the app path to window.process.argv. This will allow preload.js
+      // to access it, and that script will expose it to the rest of the app.
+      additionalArguments: [
+        app.getAppPath()
+      ]
     },
     // Note: when Electron is running in development, it will throw a warning.
     // This has to do with the Content-Security-Policy, which requires certain
