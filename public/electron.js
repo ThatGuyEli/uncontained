@@ -2,7 +2,8 @@
 // https://www.electronjs.org
 
 // Modules to control application life and create native browser window
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
+const fs = require('fs');
 const path = require('path');
 const isDev = require('electron-is-dev');
 
@@ -67,3 +68,19 @@ app.on('window-all-closed', function () {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+// Create an event so that the user can receive the userData path.
+ipcMain.on('request-userdata-dir', (event, arg) => {
+  event.reply('send-userdata-dir', app.getPath('userData'));
+});
+
+// When the game first launches, make sure that the 'leaderboard' directory
+// exists within their userData. If it does not, then create it.
+const leaderboardDir = path.join(app.getPath('userData'), 'leaderboard');
+fs.readdir(leaderboardDir, (err, files) => {
+  if (err.code === 'ENOENT') {
+    fs.mkdir(leaderboardDir, { recursive: true }, (err) => {
+      if (err) throw err;
+    })
+  }
+})

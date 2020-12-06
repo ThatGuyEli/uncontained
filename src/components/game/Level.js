@@ -4,6 +4,7 @@ import Character from './Character.js';
 import '../../css/Game.css';
 
 import PauseMenu from '../menus/PauseMenu.js';
+import * as Utils from '../menus/Utils.js';
 
 // Note: although I would have liked to break this
 // into multiple smaller files, React.js recommends
@@ -246,7 +247,6 @@ class Level extends Component {
           location: opening.location,
           width: opening.width,
           sty: {},
-          // todo: add "isUnlocked" and calculate for red container
         };
         containerState.openingStates.push(openingState);
       });
@@ -670,6 +670,7 @@ class Level extends Component {
       // If the character is interacting with an exit, finish the level.
       case 'exit':
         console.log('exit');
+        Utils.addLeaderboardEntry(this.levelFile.id, 'EEE', 1776);
         //todo: end level
         break;
 
@@ -2158,7 +2159,6 @@ class Level extends Component {
     // Only the max is needed, which is the floor.
     const max = height - sty.height - 2 * border + 1;
 
-    // todo: platforms
     return sty.top < max;
   };
 

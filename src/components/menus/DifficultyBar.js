@@ -8,10 +8,11 @@ export default function DifficultyBar({ difficulty }) {
 
   return (
     <>
-      <div className='difficulty-text center-children gray standard-border'>Difficulty:</div>
+      <div className='difficulty-text center-children gray standard-border'>
+        Difficulty:
+      </div>
       <div className='difficulty-outer gray standard-border'>
-        <div className='difficulty-inner' style={style}>
-        </div>
+        <div className='difficulty-inner' style={style}></div>
       </div>
     </>
   );
