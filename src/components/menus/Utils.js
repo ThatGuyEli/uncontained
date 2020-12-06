@@ -9,23 +9,8 @@ export function getLevelFiles() {
   // levels are needed to have a functioning level select menu.
   const levelFiles = [];
 
-  // By default, let the path be src. Then, look through the working directory.
-  // If there is a directory that starts with linux, win, or mac, that means that
-  // this is the packaged form of the app. In this case, replace 'src' with
-  // that directory and the 'resources' directory within it.
-  let dirPath = 'src';
-  fs.readdirSync('.').forEach((fileName) => {
-    if (
-      fileName.startsWith('linux') ||
-      fileName.startsWith('win')
-    )
-      dirPath = path.join(fileName, 'resources');
-    else if (fileName.startsWith('mac'))
-      dirPath = path.join(fileName, 'uncontained.app', 'Contents', 'Resources');
-  });
-
-  // Finally, add 'data' and 'levels' to the path.
-  dirPath = path.join(dirPath, 'data', 'levels');
+  // Get the path of the levels using appPath.
+  const dirPath = path.join(window.appPath.appPath, 'src', 'data', 'levels');
   const fileNames = fs.readdirSync(dirPath);
   fileNames.forEach((fileName) => {
     const levelFile = require(`../../data/levels/${fileName}`);

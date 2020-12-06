@@ -14,6 +14,9 @@ function createWindow() {
     minWidth: 1200,
     minHeight: 800,
     webPreferences: {
+      // These are for security; otherwise, this application has full access
+      // to node.js's features. We might not want that, because node.js has
+      // full access to the filesystem and other vital parts of the system.
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
@@ -21,10 +24,11 @@ function createWindow() {
     // Note: when Electron is running in development, it will throw a warning.
     // This has to do with the Content-Security-Policy, which requires certain
     // code to comply with the developer's specified policy. However, there is
-    // no policy because all code is locally run. No remove code is loaded.
+    // no policy because all code is locally run. No remote code is loaded.
   });
 
   // and load the index.html of the app.
+  // Pass the app path as a query.
   mainWindow.loadURL(
     isDev
       ? 'http://localhost:3000'
