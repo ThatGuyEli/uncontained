@@ -40,6 +40,9 @@ components.
   -moz-user-select: none;
   -ms-user-select: none;
   */
+  color: var(--nord0);
+  font-family: monospace;
+  font-weight: bold;
 }
 
 html,

@@ -3,7 +3,6 @@ import React, { Component } from 'react';
 import { Route, HashRouter as Router } from 'react-router-dom';
 
 // Component Imports
-//import Level from './components/game/Level.js';
 import MainMenu from './components/menus/MainMenu.js';
 import LevelSelect from './components/menus/LevelSelect.js';
 import HowToPlay from './components/menus/HowToPlay.js';
@@ -40,7 +39,6 @@ class App extends Component {
         {Utils.generateLevelPages()}
       </Router>
     );
-    // The /level Route is temporary
   }
 }
 

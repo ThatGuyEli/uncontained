@@ -4,7 +4,7 @@ import Character from './Character.js';
 import '../../css/Game.css';
 
 import PauseMenu from '../menus/PauseMenu.js';
-import * as Utils from '../menus/Utils.js';
+import HUD from '../menus/HUD.js';
 
 // Note: although I would have liked to break this
 // into multiple smaller files, React.js recommends
@@ -162,6 +162,12 @@ class Level extends Component {
       // Whether or not a container is moving. This is used when the container
       // automatically moves.
       containerIsMoving: false,
+
+      // The score starts at 10000, then decreases by 1 per frame. This means that
+      // a score of 0 will occur after 10000 frames. At 60fps, this is 166 2/3 seconds,
+      // or ~2.7 minutes. This is ample time to complete the level with a usable leaderboard
+      // score.
+      score: 10000,
     };
 
     // Populate the container states with default state.
@@ -417,6 +423,12 @@ class Level extends Component {
       this.highlightInteractable(interactable, isOpening);
     }
     this.unhighlightAll(interactable);
+
+    // Decrement the score.
+    if (this.state.score > 0)
+      this.setState({
+        score: this.state.score - 1,
+      });
   };
 
   /**
@@ -472,7 +484,11 @@ class Level extends Component {
           break;
         case 'collectible':
           // If the collectible is activated, set it to activated permanently.
-          if (activated) {
+          // Also, increment the score by 1000.
+          if (activated && !itemState.activated) {
+            this.setState({
+              score: this.state.score + 1000,
+            });
             this.updateItemState(itemState.container, itemState.id, {
               activated: activated,
             });
@@ -669,9 +685,8 @@ class Level extends Component {
     switch (itemState.itemType) {
       // If the character is interacting with an exit, finish the level.
       case 'exit':
-        console.log('exit');
-        Utils.addLeaderboardEntry(this.levelFile.id, 'EEE', 1776);
-        //todo: end level
+        console.log('exit score: ', this.state.score);
+        //Utils.addLeaderboardEntry(this.levelFile.id, 'EEE', 1776);
         break;
 
       // If the character is interacting with a lever, switch lever.
@@ -2405,13 +2420,16 @@ class Level extends Component {
     // of the Containers. Additionally, the Character needs
     // a reference, because it always is in a container.
     let level = (
-      <div className='Level' style={this.state.sty}>
-        {this.generateContainers()}
-        <Character
-          selfState={this.state.characterState}
-          updateSty={this.updateCharacterSty}
-        />
-      </div>
+      <>
+        <HUD togglePause={this.togglePause} score={this.state.score} />
+        <div className='Level' style={this.state.sty}>
+          {this.generateContainers()}
+          <Character
+            selfState={this.state.characterState}
+            updateSty={this.updateCharacterSty}
+          />
+        </div>
+      </>
     );
     if (this.state.paused) {
       return (

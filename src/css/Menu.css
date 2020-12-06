@@ -27,7 +27,6 @@
 }
 
 .title-text {
-  color: var(--nord0);
 
   font-family: monospace;
   font-weight: bold;
@@ -55,7 +54,6 @@
 .link-text {
   cursor: pointer;
   text-decoration: none;
-  color: var(--nord0);
   font-family: monospace;
   font-weight: bold;
 }
@@ -105,9 +103,7 @@
 }
 
 .subtitle-text {
-  color: var(--nord0);
 
-  font-family: monospace;
   font-weight: bold;
   font-size: 6vh;
 }
@@ -123,10 +119,7 @@
 
 .content-title {
   box-sizing: border-box;
-  color: var(--nord0);
 
-  font-family: monospace;
-  font-weight: bold;
   font-size: 4vh;
 
   position: absolute;
@@ -152,10 +145,7 @@
 
 .difficulty-text {
   box-sizing: border-box;
-  color: var(--nord0);
 
-  font-family: monospace;
-  font-weight: bold;
   font-size: calc(1vw + 1vh);
 
   position: absolute;
@@ -167,10 +157,7 @@
 
 .level-description {
   box-sizing: border-box;
-  color: var(--nord0);
 
-  font-family: monospace;
-  font-weight: bold;
   font-size: 2vh;
 
   text-align: center;
@@ -215,9 +202,6 @@
   border-collapse: separate;
   border-spacing: 0px;
 
-  font-family: monospace;
-  font-weight: bold;
-
 }
 
 .score-table-header {
@@ -236,15 +220,11 @@
 
 .score-table-row:hover {
   background-color: var(--nord3);
-  color: var(--nord5);
 }
 
 .pause {
   box-sizing: border-box;
   position: absolute;
-  font-family: monospace;
-  font-weight: bold;
-  color: var(--nord0);
   height: 50vh;
   width: 25vw;
 }
@@ -277,4 +257,27 @@
   left: 1vw;
   right: 1vw;
   bottom: 1vh;
+}
+
+.hud {
+  position: absolute;
+  z-index: 100;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  
+  box-sizing: border-box;
+  height: 10vh;
+  width: 27.5vw;
+  opacity: 0.8;
+  transition: opacity 0.5s;
+}
+
+.hud:hover {
+  opacity: 1;
+}
+
+.hud-text {
+  font-size: 2vh;
+  width: 10vw;
 }
