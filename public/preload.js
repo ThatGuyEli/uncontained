@@ -42,7 +42,7 @@ contextBridge.exposeInMainWorld('api', {
   response: (channel, func) => {
     let validChannels = ['send-userdata-dir'];
     if (validChannels.includes(channel)) {
-      ipcRenderer.on(channel, (event, ...args) => func(...args));
+      ipcRenderer.once(channel, (event, ...args) => func(...args));
     }
   }
 })

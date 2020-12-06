@@ -78,7 +78,7 @@ ipcMain.on('request-userdata-dir', (event, arg) => {
 // exists within their userData. If it does not, then create it.
 const leaderboardDir = path.join(app.getPath('userData'), 'leaderboard');
 fs.readdir(leaderboardDir, (err, files) => {
-  if (err.code === 'ENOENT') {
+  if (err && err.code === 'ENOENT') {
     fs.mkdir(leaderboardDir, { recursive: true }, (err) => {
       if (err) throw err;
     })

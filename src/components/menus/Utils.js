@@ -82,9 +82,9 @@ export function addLeaderboardEntry(levelid, initials, score) {
       initials: initials,
       score: score,
     };
-    let newData;
     // Try to read the file.
     fs.readFile(leaderboardPath, 'utf-8', (err, data) => {
+      let newData;
       if (err) {
         // The file does not exist. Create a file.
         // No leaderboard, first id.
@@ -102,6 +102,28 @@ export function addLeaderboardEntry(levelid, initials, score) {
         if (err) throw err;
       });
     });
+  });
+  api.request('request-userdata-dir');
+}
+
+export function readLeaderboardEntries(levelid, setLeaderboard) {
+  const { fs, path, api } = window;
+  api.response('send-userdata-dir', (data) => {
+    const leaderboardPath = path.join(
+      data,
+      'leaderboard',
+      `leaderboard${levelid}.json`
+    );
+    // Try to read the file.
+    fs.readFile(leaderboardPath, 'utf-8', (err, data) => {
+      if (err) {
+        // The file does not exist. Return [].
+        setLeaderboard([]);
+      }
+      else {
+        setLeaderboard(JSON.parse(data));
+      }
+    })
   });
   api.request('request-userdata-dir');
 }

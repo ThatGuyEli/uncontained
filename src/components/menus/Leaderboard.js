@@ -23,15 +23,14 @@ export default function Leaderboard({ preloadLevelId }) {
     }
   }, [history.location]);
 
-  const [leaderboard, setLeaderboard] = useState(
-    require(`../../data/leaderboard/leaderboard${selectedLevel.id}.json`)
-  );
+  const [leaderboard, setLeaderboard] = useState([]);
+  //if (leaderboard.length === 0) {
+  //  Utils.readLeaderboardEntries(selectedLevel.id, setLeaderboard);
+  //}
 
   // When the selected level changes, update the leaderboard.
   useEffect(() => {
-    setLeaderboard(
-      require(`../../data/leaderboard/leaderboard${selectedLevel.id}.json`)
-    );
+    Utils.readLeaderboardEntries(selectedLevel.id, setLeaderboard);
   }, [selectedLevel]);
 
   return (
