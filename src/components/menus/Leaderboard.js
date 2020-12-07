@@ -34,7 +34,7 @@ export default function Leaderboard({ preloadLevelId }) {
   }, [selectedLevel]);
 
   return (
-    <div>
+    <>
       <Subtitle text='Leaderboard' className='purple standard-border' />
 
       {/* Level Selector */}
@@ -53,6 +53,6 @@ export default function Leaderboard({ preloadLevelId }) {
       </div>
 
       <BackToMain />
-    </div>
+    </>
   );
 }

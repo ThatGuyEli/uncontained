@@ -5,6 +5,7 @@ import '../../css/Game.css';
 
 import PauseMenu from '../menus/PauseMenu.js';
 import HUD from '../menus/HUD.js';
+import LevelCompleteMenu from '../menus/LevelCompleteMenu.js';
 
 // Note: although I would have liked to break this
 // into multiple smaller files, React.js recommends
@@ -168,6 +169,9 @@ class Level extends Component {
       // or ~2.7 minutes. This is ample time to complete the level with a usable leaderboard
       // score.
       score: 10000,
+
+      // Whether or not the level is complete.
+      complete: false,
     };
 
     // Populate the container states with default state.
@@ -367,9 +371,11 @@ class Level extends Component {
 
   /**
    * Toggle whether or not the game is paused. On pause, pause the
-   * timer. On unpause, start the timer again.
+   * timer. On unpause, start the timer again. If the game is complete
+   * (the character interacted with the door), don't do anything.
    */
   togglePause = () => {
+    if (this.state.complete) return;
     this.setState({ paused: !this.state.paused }, () => {
       if (this.state.paused) {
         clearInterval(this.timer);
@@ -686,6 +692,10 @@ class Level extends Component {
       // If the character is interacting with an exit, finish the level.
       case 'exit':
         console.log('exit score: ', this.state.score);
+        this.togglePause();
+        this.setState({
+          complete: true,
+        });
         //Utils.addLeaderboardEntry(this.levelFile.id, 'EEE', 1776);
         break;
 
@@ -2431,7 +2441,17 @@ class Level extends Component {
         </div>
       </>
     );
-    if (this.state.paused) {
+    if (this.state.complete) {
+      return (
+        <>
+          {level}
+          <LevelCompleteMenu
+            score={this.state.score}
+            level={this.levelFile}
+          />
+        </>
+      );
+    } else if (this.state.paused) {
       return (
         <>
           {level}

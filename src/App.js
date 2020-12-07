@@ -7,6 +7,7 @@ import MainMenu from './components/menus/MainMenu.js';
 import LevelSelect from './components/menus/LevelSelect.js';
 import HowToPlay from './components/menus/HowToPlay.js';
 import Leaderboard from './components/menus/Leaderboard.js';
+import PostLevel from './components/menus/PostLevel.js';
 import * as Utils from './components/menus/Utils.js';
 import './css/Global.css';
 
@@ -35,6 +36,13 @@ class App extends Component {
           exact
           path='/leaderboard'
           render={() => <Leaderboard preloadLevelId='1' />}
+        />
+        <Route
+          exact
+          path='/post-level'
+          /* Although this isn't possible, this is to prevent any possible errors
+          from stray links that lead to here. */
+          render={() => <PostLevel preloadLevelId='1' />}
         />
         {Utils.generateLevelPages()}
       </Router>

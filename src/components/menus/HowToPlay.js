@@ -10,7 +10,7 @@ export default function HowToPlay() {
   //  require(`../../data/levels/level${preloadLevelId}.json`)
   //);
   return (
-    <div>
+    <>
       <Subtitle text='How to Play' className='red standard-border'/>
 
       {/* Level Selector */}
@@ -24,6 +24,6 @@ export default function HowToPlay() {
       </div>
 
       <BackToMain />
-    </div>
+    </>
   )
 }

@@ -15,7 +15,7 @@ export default function LevelSelect({ preloadLevelId }) {
   );
 
   return (
-    <div>
+    <>
       <Subtitle text='Level Select' className='blue standard-border' />
 
       {/* Level Selector */}
@@ -53,6 +53,6 @@ export default function LevelSelect({ preloadLevelId }) {
       </div>
 
       <BackToMain />
-    </div>
+    </>
   );
 }

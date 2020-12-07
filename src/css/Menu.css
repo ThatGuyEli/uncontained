@@ -219,7 +219,7 @@
 }
 
 .score-table-row:hover {
-  background-color: var(--nord3);
+  background-color: var(--nord13);
 }
 
 .pause {
@@ -280,4 +280,81 @@
 .hud-text {
   font-size: 2vh;
   width: 10vw;
+}
+
+.level-complete-menu {
+  box-sizing: border-box;
+  height: 30vh;
+  width: 30vw;
+  padding: 2vh 2vw;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.level-complete-text {
+  box-sizing: border-box;
+  font-size: 3vh;
+  height: 10vh;
+}
+
+.post-level-container {
+  box-sizing: border-box;
+  position: absolute;
+  top: 17.5vh;
+  left: 5vw;
+  right: 5vw;
+  bottom: 5vh;
+  padding: 2.5vh 2.5vw;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.post-level-col {
+  width: 40.5vw;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.post-level-score {
+  box-sizing: border-box;
+  font-size: 5vh;
+  height: 15vh;
+}
+
+.post-level-entry {
+  box-sizing: border-box;
+  height: 30vw;
+  padding: 1vh 1vw;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#initials {
+  font-size: 10vh;
+  text-align: center;
+}
+
+.post-level-entry-title, .post-level-entry-save {
+  font-size: 5vh;
+  box-sizing: border-box;
+  height: 12.5vh;
+}
+
+.post-level-container {
+  font-size: 5vh;
+  box-sizing: border-box;
+}
+
+.post-level-button {
+  height: 10vh;
+  width: 100%;
+  box-sizing: border-box;
 }
