@@ -85,7 +85,7 @@
   flex-direction: column;
 }
 
-.level-button {
+.button {
   box-sizing: border-box;
   height: 10vh;
   margin: 1.25vh 0.625vw 0vh;
@@ -127,6 +127,19 @@
   left: 2.5vw;
   right: 2.5vw;
   height: 10vh;
+}
+
+.content-body {
+  box-sizing: border-box;
+
+  position: absolute;
+  top: 15vh;
+  left: 2.5vw;
+  right: 2.5vw;
+  bottom: 2.5vh;
+  padding: 1vh 1vw;
+
+  overflow-x: hidden;
 }
 
 .difficulty-outer {
@@ -374,4 +387,15 @@
   height: 10vh;
   width: 100%;
   box-sizing: border-box;
+}
+
+.help-subheader {
+  font-size: 3vh;
+}
+
+.help-text {
+  font-size: 2vh;
+  margin-top: 1vh;
+  margin-bottom: 4vh;
+  text-align: center;
 }

@@ -1,0 +1,26 @@
+{
+  "id": 1,
+  "name": "Character",
+  "sections": [
+    {
+      "id": 1,
+      "subheading": "Movement",
+      "text": "Un can jump move left and right. He is bound by gravity and can land on platforms and the ground. He cannot move outside of the container unless he interacts with a valid opening."
+    },
+    {
+      "id": 2,
+      "subheading": "Lives",
+      "text": "Un has three lives. Whenever Un collides with a spike, he loses one life. When he has zero lives left, and collides with a spike, the player loses the level, and has to restart. When Un loses a life, he jumps because he has been hurt."
+    },
+    {
+      "id": 3,
+      "subheading": "Items",
+      "text": "Un can interact with items. Some of them, such as collectibles and plates, are automatically interacted with. Others are highlighted in green when Un is in range. The player can then press the interact key (see Controls) to interact with a green-highlighted item."
+    },
+    {
+      "id": 4,
+      "subheading": "Openings",
+      "text": "Un can also interact with openings. When Un is in range, the opening is highlighted. If the opening is unlocked and connected to another opening, the highlight will be green. Otherwise, it will be highlighted yellow. See Containers for more information."
+    }
+  ]
+}

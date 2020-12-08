@@ -45,6 +45,18 @@ components.
   font-weight: bold;
 }
 
+::-webkit-scrollbar {
+  width: 1vw;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--nord0);
+}
+/*
+::-webkit-scrollbar-button {
+  background-color: var(--);
+}*/
+
 html,
 body {
   margin: 0px;

@@ -37,7 +37,7 @@ export default function Leaderboard({ preloadLevelId }) {
       {/* Level Selector */}
       <div className='list-button-container orange standard-border'>
         {/* The state mutator is passed so that onClick these buttons switch the selected level. */}
-        {Utils.generateLevelButtons('purple', setSelectedLevel)}
+        {Utils.generateButtons('levels', 'purple', setSelectedLevel)}
       </div>
 
       <div className='content orange standard-border'>

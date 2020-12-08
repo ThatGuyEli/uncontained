@@ -21,7 +21,7 @@ export default function LevelSelect({ preloadLevelId }) {
       {/* Level Selector */}
       <div className='list-button-container orange standard-border'>
         {/* The state mutator is passed so that onClick these buttons switch the selected level. */}
-        {Utils.generateLevelButtons('blue', setSelectedLevel)}
+        {Utils.generateButtons('levels', 'blue', setSelectedLevel)}
       </div>
 
       <div className='content orange standard-border'>

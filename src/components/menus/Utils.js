@@ -5,27 +5,29 @@ import Level from '../game/Level.js';
 const { fs, path, appPath } = window;
 
 /**
- * Reads all files in the levels directory.
+ * Reads all JSON files in the given directory.
+ * 
+ * @param {string} dir The directory to read.
  *
  * @returns {Array} An array of levels.
  */
-export function getLevelFiles() {
-  // Synchronous loading is used because data is small and
-  // levels are needed to have a functioning level select menu.
-  const levelFiles = [];
+export function getFiles(dir) {
+  const files = [];
 
   // Get the path of the levels using appPath. Remember, from the preload,
   // that window.appPath is an object that holds a string appPath.
-  const dirPath = path.join(appPath.appPath, 'data', 'levels');
+  const dirPath = path.join(appPath.appPath, 'data', dir);
+
+  // Synchronous loading is used because data is small and
+  // files are needed to have a functioning menu.
   const fileNames = fs.readdirSync(dirPath);
-  /**
-   * Add each level to the read levels.
-   */
+
+  //Add each level to the read JSON files.
   fileNames.forEach((fileName) => {
-    const levelFile = require(`../../data/levels/${fileName}`);
-    levelFiles.push(levelFile);
+    const file = require(`../../data/${dir}/${fileName}`);
+    files.push(file);
   });
-  return levelFiles;
+  return files;
 }
 
 /**
@@ -34,7 +36,7 @@ export function getLevelFiles() {
  * @returns {Array} An array of Routes, from react-router-dom.
  */
 export function generateLevelPages() {
-  const levels = getLevelFiles();
+  const levels = getFiles('levels');
   return levels.map((level) => {
     return (
       <Route
@@ -48,21 +50,22 @@ export function generateLevelPages() {
 }
 
 /**
- * Generates the level buttons, each of which has the ability to update the
+ * Generates the buttons of a given file, each of which has the ability to update the
  * state of the level.
  *
+ * @param {string} dir The directory to read.
  * @param {string} color The color to set the button to.
- * @param {function} setSelectedLevel The function that updates the state.
+ * @param {function} setSelected The function that updates the state.
  */
-export function generateLevelButtons(color, setSelectedLevel) {
-  const levels = getLevelFiles();
-  return levels.map((level) => {
-    const { name, id } = level;
+export function generateButtons(dir, color, setSelected) {
+  const files = getFiles(dir);
+  return files.map((file) => {
+    const { name, id } = file;
     return (
       <div
         key={id}
-        className={`center-children link-text level-button ${color} standard-border div-hover`}
-        onClick={() => setSelectedLevel(level)}
+        className={`center-children link-text button ${color} standard-border div-hover`}
+        onClick={() => setSelected(file)}
       >
         {name}
       </div>
