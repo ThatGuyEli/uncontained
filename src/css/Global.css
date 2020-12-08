@@ -46,7 +46,7 @@ components.
 }
 
 ::-webkit-scrollbar {
-  width: 1vw;
+  width: 0.75vw;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -71,7 +71,7 @@ body {
 }
 
 .div-hover {
-  transition: filter 0.5s;
+  transition: filter 0.25s;
 }
 
 .div-hover:hover {

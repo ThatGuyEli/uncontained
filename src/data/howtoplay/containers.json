@@ -4,8 +4,28 @@
   "sections": [
     {
       "id": 1,
-      "subheading": "blue",
-      "text": "blue text"
+      "subheading": "General",
+      "text": "Containers hold all objects in the game, and no objects can be outside of a container. Only the Character can move between Containers. Containers have movement on only one axis. This movement may or may not be conditional, depending on the color of the Container. Additionally, Containers cannot occupy the same space as other Containers. "
+    },
+    {
+      "id": 2,
+      "subheading": "Movement",
+      "text": "Containers can move on only one axis, vertically or horizontally. The player can move Containers either by clicking and dragging (for blue and red Containers) or activating a plate or switch (for purple and orange Containers). Containers cannot move on the other axis, out of bounds, or into space occupied by other Containers. Finally, the Container cannot move if the Character is currently within them."
+    },
+    {
+      "id": 3,
+      "subheading": "Colors",
+      "text": "Containers have five different colors, each with their own conditions. Gray Containers are immovable. Blue Containers can be moved by clicking and dragging. Red Containers are similar in movement, but their openings are locked until activated by a plate or switch. Orange and purple Containers are identical in functionality. They are unmovable except after activating a plate or switch, when they move automatically."
+    },
+    {
+      "id": 4,
+      "subheading": "Openings",
+      "text": "Containers can have openings that connect Containers to other Containers. Only the Character can pass through these openings, and only when the openings are of the same width and lined up. If an opening is invalid, it will highlight yellow. It will highlight green if it is valid."
+    },
+    {
+      "id": 5,
+      "subheading": "Platforms",
+      "text": "Platforms are walls and scaffolding for the player. The player cannot pass through platforms, and can jump on top of them."
     }
   ]
 }

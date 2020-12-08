@@ -1,0 +1,21 @@
+{
+  "id": 4,
+  "name": "Levels",
+  "sections": [
+    {
+      "id": 1,
+      "subheading": "Objective",
+      "text": "The objective of a level is to get the Character to the exit. While this seems simple at first, the levels get progressively harder, as signified by the difficulty meter on each level's selection page."
+    },
+    {
+      "id": 2,
+      "subheading": "Character",
+      "text": "The Character, named Un, is a playable character that needs to get to the exit. More about the Character can be found on the respective help page."
+    },
+    {
+      "id": 3,
+      "subheading": "Containers",
+      "text": "Containers hold all objects. More about the Containers can be found on the respective help page."
+    }
+  ]
+}

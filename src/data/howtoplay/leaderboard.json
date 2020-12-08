@@ -1,0 +1,16 @@
+{
+  "id": 8,
+  "name": "Leaderboard",
+  "sections": [
+    {
+      "id": 1,
+      "subheading": "General",
+      "text": "Each level has a local leaderboard. Whenever a player completes a level, they are prompted to save their score to that local leaderboard, using three initials (or any combination of 3 characters). This is stored in your local user data files. On Windows, that is %APPDATA%/uncontained. On Mac, that is ~/Library/Application Support/uncontained. On Linux, that is ~/.config/uncontained."
+    },
+    {
+      "id": 2,
+      "subheading": "Scoring",
+      "text": "At the start of a level, the player starts with 10,000 points. Every second, the player loses 60 points. Collecting a coin grants 1,000 points, and the score cannot go below 0."
+    }
+  ]
+}

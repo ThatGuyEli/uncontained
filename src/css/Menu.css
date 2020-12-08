@@ -74,23 +74,20 @@
 .list-button-container {
   box-sizing: border-box;
   overflow-x: hidden;
-  overflow-y: auto;
   position: absolute;
   top: 17.5vh;
   left: 5vw;
   bottom: 17.5vh;
   width: 15vw;
-
-  display: flex;
-  flex-direction: column;
+  padding: 1.25vh 0.625vw;
 }
 
 .button {
   box-sizing: border-box;
   height: 10vh;
-  margin: 1.25vh 0.625vw 0vh;
+  margin-bottom: 1.25vh;
 
-  font-size: calc(1vw + 1vh);
+  font-size: calc(0.75vw + 0.75vh);
 }
 
 .subtitle-bar {

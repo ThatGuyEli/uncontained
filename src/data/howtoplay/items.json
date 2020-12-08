@@ -1,0 +1,41 @@
+{
+  "id": 5,
+  "name": "Items",
+  "sections": [
+    {
+      "id": 1,
+      "subheading": "General",
+      "text": "Items are anything within the Container that is not a platform, Character, or opening. They are bound by gravity and fall onto the nearest platform or ground. The Character can manually interact with some, and interact with others on collision."
+    },
+    {
+      "id": 2,
+      "subheading": "Collectibles",
+      "text": "Collectibles are coins that float in containers. Collecting a coin grants 1,000 points, which is added to the score immediately. This means that if the player takes to long, their score can still tick down to 0."
+    },
+    {
+      "id": 3,
+      "subheading": "Spikes",
+      "text": "Spikes are dangerous objects that damage the player. If the Character contacts a spike, it reduces the amount of lives the Character has. If the Character contacts spikes with zero lives left, the player loses the level, and has to restart."
+    },
+    {
+      "id": 4,
+      "subheading": "Boxes",
+      "text": "Boxes are manually interactable items. When the Character interacts with one, he picks it up and carries it with him. When the Character reinteracts with it, he puts it down. Boxes can interact with plates."
+    },
+    {
+      "id": 5,
+      "subheading": "Plates",
+      "text": "Plates are color-coded activation items. When the Character or a box is on top of the plate, it activates Containers with that color."
+    },
+    {
+      "id": 6,
+      "subheading": "Levers",
+      "text": "Levers are color-coded manual activation items. When the Character interacts with it, it activates Containers with that color."
+    },
+    {
+      "id": 7,
+      "subheading": "Exit",
+      "text": "The exit is the objective of the game. As the character interacts with it, the level completes."
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": 3,
+  "name": "Controls",
+  "sections": [
+    {
+      "id": 1,
+      "subheading": "Character Control",
+      "text": "The Character can be controlled through two different sets of keys: WAD and the Arrow keys. The E key and Down Arrow key are for interacting with highlighted objects. A and D move left and right respectively, as do the Left and Right Arrow keys. W, the Up Arrow key, and the spacebar all trigger jumps."
+    },
+    {
+      "id": 2,
+      "subheading": "Container Control",
+      "text": "Blue and red Containers can be moved via left clicking and dragging. Gray, orange, and purple Containers cannot be moved via the mouse, but orange and purple Containers move conditionally. See the Containers help page for more information."
+    },
+    {
+      "id": 3,
+      "subheading": "Navigation",
+      "text": "The player can navigate through the pages through left clicking on respective buttons. Additionally, at any point in time, pressing Escape will exit the game, except in levels. In levels, pressing escape will bring up the pause menu, where one can navigate to other menus or exit the game."
+    }
+  ]
+}
