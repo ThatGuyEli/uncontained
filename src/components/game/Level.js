@@ -6,6 +6,7 @@ import '../../css/Game.css';
 import PauseMenu from '../menus/PauseMenu.js';
 import HUD from '../menus/HUD.js';
 import LevelCompleteMenu from '../menus/LevelCompleteMenu.js';
+import LevelFailedMenu from '../menus/LevelFailedMenu.js';
 
 // Note: although I would have liked to break this
 // into multiple smaller files, React.js recommends
@@ -45,11 +46,21 @@ class Level extends Component {
     // which is passed through props. This JSON file includes
     // all of the data needed to load the level.
     this.levelFile = require(`../../data/levels/level${props.id}.json`);
+
+    // Load the controls.
     this.keys = require('../../data/keybinds.json');
+
+    // Actions handle how keys work. Because the Chromium browser
+    // polls keypresses at an inconsistent rate, we must instead
+    // rely on initial activation. This initial activation toggles
+    // the action, and the game clock reads from this action object,
+    // not the key presses.
     this.actions = {
       left: false,
       right: false,
       jump: false,
+      jumpOnce: false,
+      // This is activated by losing a life, and is disabled after taking effect.
     };
 
     // Cycle through the blocks and populate it with booleans.
@@ -170,8 +181,13 @@ class Level extends Component {
       // score.
       score: 10000,
 
-      // Whether or not the level is complete.
+      // Whether or not the level is complete. Note that complete does not
+      // indicate success; a combination of this and how many lives the character
+      // has determines whether or not the user was successful in the level.
       complete: false,
+
+      // How many lives the user has.
+      lives: 3,
     };
 
     // Populate the container states with default state.
@@ -444,12 +460,13 @@ class Level extends Component {
    * @param {object} itemState The itemState to activate.
    */
   activateUninteractable = (containerState, itemState) => {
+    const characterState = this.state.characterState;
     if (
-      itemState.container === this.state.characterState.container &&
+      itemState.container === characterState.container &&
       !this.itemIsInteractable(itemState)
     ) {
       const activated = this.characterIsCollidingWithItem(
-        this.state.characterState,
+        characterState,
         itemState
       );
       switch (itemState.itemType) {
@@ -495,6 +512,33 @@ class Level extends Component {
             this.setState({
               score: this.state.score + 1000,
             });
+            this.updateItemState(itemState.container, itemState.id, {
+              activated: activated,
+            });
+          }
+          break;
+
+        case 'spike':
+          // If the state is not in sync, update it and act accordingly.
+          // This prevents multiple lives from being taken in one collision.
+          if (activated !== itemState.activated) {
+            // If activated is true, then subtract a life and simulate a jump.
+            if (activated) {
+              this.actions.jumpOnce = true;
+              const newLives = this.state.lives - 1;
+              // If the lives is < 0, tell the user they lose and have to restart.
+              if (newLives < 0) {
+                this.togglePause();
+                this.setState({ complete: true });
+              }
+              // Otherwise, set the state.
+              else {
+                this.setState({
+                  lives: newLives,
+                });
+              }
+            }
+            // Regardless, resync whether or not the container is activated.
             this.updateItemState(itemState.container, itemState.id, {
               activated: activated,
             });
@@ -691,12 +735,10 @@ class Level extends Component {
     switch (itemState.itemType) {
       // If the character is interacting with an exit, finish the level.
       case 'exit':
-        console.log('exit score: ', this.state.score);
         this.togglePause();
         this.setState({
           complete: true,
         });
-        //Utils.addLeaderboardEntry(this.levelFile.id, 'EEE', 1776);
         break;
 
       // If the character is interacting with a lever, switch lever.
@@ -1595,7 +1637,7 @@ class Level extends Component {
    * is called every frame.
    */
   moveCharacter = () => {
-    const { left, right, jump } = this.actions;
+    const { left, right, jump, jumpOnce } = this.actions;
 
     // To prevent unnecessary operations, return if the
     // character is not falling and is not pressing any controls.
@@ -1712,7 +1754,7 @@ class Level extends Component {
     // The following code relates to the y axis.
     // If the character is in the air, make sure that they are not jumping
     // above the maximum or falling below the floor.
-    if (this.characterIsInAir()) {
+    if (this.characterIsInAir() && !this.actions.jumpOnce) {
       const minY = containerPixelLocation[1] + border;
       const maxY =
         containerPixelLocation[1] +
@@ -1774,7 +1816,7 @@ class Level extends Component {
       }
     }
     // If the character is jumping, set the velocity to be the jumping velocity.
-    else if (jump) {
+    else if (jump || jumpOnce) {
       characterState.yVel = this.toPixelsPerFrame(
         characterState.yJumpVel,
         bs[1]
@@ -1782,6 +1824,7 @@ class Level extends Component {
 
       sty.top += characterState.yVel;
       if (boxState !== undefined) boxSty.top += characterState.yVel;
+      this.actions.jumpOnce = false;
     }
     // Finally, if it is not falling/jumping, it is still. Set the velocity to 0.
     else {
@@ -2111,6 +2154,14 @@ class Level extends Component {
 
         newsty.height *= 0.5;
         break;
+
+      // For spikes, we want to use the triangle-by-border CSS trick.
+      case 'spike':
+        newsty.borderLeftWidth = this.state.blockSize[0] / 2;
+        newsty.borderRightWidth = this.state.blockSize[0] / 2;
+        newsty.borderBottomWidth = this.state.blockSize[1];
+        break;
+
       default:
         break;
     }
@@ -2431,7 +2482,11 @@ class Level extends Component {
     // a reference, because it always is in a container.
     let level = (
       <>
-        <HUD togglePause={this.togglePause} score={this.state.score} />
+        <HUD
+          togglePause={this.togglePause}
+          score={this.state.score}
+          lives={this.state.lives}
+        />
         <div className='Level' style={this.state.sty}>
           {this.generateContainers()}
           <Character
@@ -2442,15 +2497,24 @@ class Level extends Component {
       </>
     );
     if (this.state.complete) {
-      return (
-        <>
-          {level}
-          <LevelCompleteMenu
-            score={this.state.score}
-            level={this.levelFile}
-          />
-        </>
-      );
+      if (this.state.lives === 0) {
+        return (
+          <>
+            {level}
+            <LevelFailedMenu />
+          </>
+        )
+      } else {
+        return (
+          <>
+            {level}
+            <LevelCompleteMenu
+              score={this.state.score}
+              level={this.levelFile}
+            />
+          </>
+        );
+      }
     } else if (this.state.paused) {
       return (
         <>

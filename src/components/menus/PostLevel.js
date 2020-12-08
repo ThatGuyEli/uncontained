@@ -19,6 +19,13 @@ export default function PostLevel({ preloadLevelId }) {
     }
   }, [history.location]);
 
+  // Re-add the escape-to-close, because the game overrode it.
+  useEffect(() => {
+    document.onkeydown = (e) => {
+      if (e.key === 'Escape') window.close();
+    }
+  }, []);
+
   // For input form
   const [initials, setInitials] = useState('');
 

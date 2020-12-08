@@ -24,9 +24,6 @@ export default function Leaderboard({ preloadLevelId }) {
   }, [history.location]);
 
   const [leaderboard, setLeaderboard] = useState([]);
-  //if (leaderboard.length === 0) {
-  //  Utils.readLeaderboardEntries(selectedLevel.id, setLeaderboard);
-  //}
 
   // When the selected level changes, update the leaderboard.
   useEffect(() => {

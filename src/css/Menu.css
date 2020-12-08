@@ -268,7 +268,7 @@
   
   box-sizing: border-box;
   height: 10vh;
-  width: 27.5vw;
+  width: 40vw;
   opacity: 0.8;
   transition: opacity 0.5s;
 }
@@ -294,6 +294,23 @@
 }
 
 .level-complete-text {
+  box-sizing: border-box;
+  font-size: 3vh;
+  height: 10vh;
+}
+
+.level-failed-menu {
+  box-sizing: border-box;
+  height: 40vh;
+  width: 30vw;
+  padding: 2vh 2vw;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.level-failed-text {
   box-sizing: border-box;
   font-size: 3vh;
   height: 10vh;

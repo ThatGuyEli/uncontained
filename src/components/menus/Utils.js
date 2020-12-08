@@ -115,15 +115,17 @@ export function readLeaderboardEntries(levelid, setLeaderboard) {
       `leaderboard${levelid}.json`
     );
     // Try to read the file.
-    fs.readFile(leaderboardPath, 'utf-8', (err, data) => {
-      if (err) {
-        // The file does not exist. Return [].
-        setLeaderboard([]);
-      }
-      else {
-        setLeaderboard(JSON.parse(data));
-      }
-    })
+    try {
+      // Synchronous because asynchronous would lead to problems with the selected
+      // file being out of sync if the user accessed the leaderboard from a level
+      // or post level menu. Because these files are intended to be small (local
+      // leaderboards), this will not make a significant impact on performance.
+      const file = fs.readFileSync(leaderboardPath, 'utf-8');
+      setLeaderboard(JSON.parse(file));
+    } catch (err) {
+      // The file does not exist. Set the leaderboard to [].
+      setLeaderboard([]);
+    }
   });
   api.request('request-userdata-dir');
 }

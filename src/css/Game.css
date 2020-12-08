@@ -84,6 +84,14 @@ containers have pointer-events: none
   background-color: var(--nord3);
 }
 
+.spike {
+  height: 0;
+  width: 0;
+  border-left: solid transparent;
+  border-right: solid transparent;
+  border-bottom: solid var(--nord3);
+}
+
 .Platform {
   pointer-events: none;
   position: absolute;

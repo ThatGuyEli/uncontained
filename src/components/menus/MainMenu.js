@@ -31,6 +31,8 @@ export default function MainMenu() {
     );
   }
   
+  // Close the game whenever Escape is pressed. Note that this does
+  // not work in the game, because Escape is mapped to pause there.
   useEffect(() => {
     document.onkeydown = (e) => {
       if (e.key === 'Escape') window.close();
