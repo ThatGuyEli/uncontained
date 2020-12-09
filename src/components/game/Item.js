@@ -76,7 +76,7 @@ class Item extends Component {
   render() {
     if (this.props.itemType === 'lever') {
       const selfState = this.props.selfState;
-      const leverSty = Object.assign({}, selfState.sty, selfState.lever);
+      const leverSty = Object.assign({}, selfState.sty, selfState.lever, { backgroundColor: ''});
       const baseSty = Object.assign({}, selfState.sty, selfState.base);
       //console.log(leverSty, baseSty);
       return (

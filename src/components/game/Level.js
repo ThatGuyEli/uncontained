@@ -2039,16 +2039,68 @@ class Level extends Component {
   highlightInteractable = (interactable, isOpening) => {
     // Prevent errors.
     if (interactable !== null && interactable !== undefined) {
-      // Copy the style, then update it.
-      const newsty = Object.assign({}, interactable.sty);
-      newsty.backgroundColor = '#ebcb8b'; // yellow
-      const containerid = this.getContainerStateById(
+      const green = '#a3be8c';
+      const yellow = '#ebcb8b';
+      const red = '#bf616a';
+      // By default, it will highlight green.
+      let color = green;
+
+      const containerState = this.getContainerStateById(
         this.state.characterState.container
-      ).id;
+      );
+
+      // If the interactable is an opening, do some checks.
+      // This is the same logic as interactOpening, but this time,
+      // don't do anything but change the highlight color.
+      // The logic is explained at this.interactOpening().
       if (isOpening) {
-        this.updateOpeningState(containerid, interactable.id, { sty: newsty });
+        color = yellow;
+        const borderIsHorizontal =
+          interactable.border === 'left' || interactable.border === 'right';
+        const antiIndex = borderIsHorizontal ? 1 : 0;
+        const mainLoc = containerState.location;
+
+        const adjacentContainers = this.getAdjacentContainers(
+          containerState,
+          interactable.border
+        );
+
+        adjacentContainers.forEach((adjacentContainer) => {
+          adjacentContainer.openingStates.forEach((openingState) => {
+            // Check validity per interaction.
+            const { location: otherLoc, color: otherColor } = adjacentContainer;
+
+            // Whether or not the borders are lined up.
+            const linedUp =
+              interactable.location + mainLoc[antiIndex] ===
+              openingState.location + otherLoc[antiIndex];
+
+            // If the container is lined up, set the highlight to green unless
+            // the color is red and it is not activated.
+            // Otherwise, set the highlight to yellow, because it is not lined up.
+            if (linedUp) {
+              if (otherColor === 'red' && !adjacentContainer.isActivated) {
+                color = red;
+              } else {
+                color = green;
+              }
+            }
+          });
+        });
+      }
+
+      // Copy the style, then update it.
+      const newsty = Object.assign({}, interactable.sty, {
+        backgroundColor: color,
+      });
+      if (isOpening) {
+        this.updateOpeningState(containerState.id, interactable.id, {
+          sty: newsty,
+        });
       } else {
-        this.updateItemState(containerid, interactable.id, { sty: newsty });
+        this.updateItemState(containerState.id, interactable.id, {
+          sty: newsty,
+        });
       }
     }
   };
@@ -2269,7 +2321,6 @@ class Level extends Component {
    * @param {object} initItemState The item to move.
    */
   moveItem = (initItemState) => {
-
     // NOTE: Although many other methods do not need a full copy of an item
     // state, it is necessary for this method to pass the modified state
     // *before* changes are made, so that methods can check the validation
@@ -2282,7 +2333,10 @@ class Level extends Component {
     // If the item is not in the air, and its velocity is not 0,
     // set its velocity to 0.
     const inAir = this.itemIsInAir(itemState);
-    if ((itemState.itemType === 'box' && itemState.activated) || (!inAir && itemState.yVel !== 0)) {
+    if (
+      (itemState.itemType === 'box' && itemState.activated) ||
+      (!inAir && itemState.yVel !== 0)
+    ) {
       itemState.yVel = 0;
       this.nearestItemLocation(itemState);
       this.updateItemState(itemState.container, itemState.id, {

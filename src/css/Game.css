@@ -47,6 +47,12 @@ containers have pointer-events: none
   pointer-events: none;
   position: absolute;
   box-sizing: border-box;
+  z-index: 50;
+  /*
+  An arbitrary number to ensure that items are never hidden behind
+  the character. Does not apply to exits, which should be behind
+  the character.
+  */
 }
 
 .exit {
@@ -54,6 +60,7 @@ containers have pointer-events: none
   border-top: var(--nord3) solid;
   border-right: var(--nord3) solid;
   border-left: var(--nord3) solid;
+  z-index: auto;
 }
 
 .collectible {
