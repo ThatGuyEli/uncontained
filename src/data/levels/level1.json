@@ -16,16 +16,8 @@
       "location": [0, 0],
       "movement": "x",
       "platforms": [],
-      "openings": [
-        {
-          "id": 1,
-          "border": "bottom",
-          "location": 1,
-          "width": 5
-        }
-      ],
-      "items": [
-      ]
+      "openings": [{ "id": 1, "border": "bottom", "location": 1, "width": 5 }],
+      "items": []
     },
     {
       "id": 2,
@@ -34,21 +26,8 @@
       "location": [20, 0],
       "movement": "y",
       "platforms": [],
-      "openings": [
-        {
-          "id": 1,
-          "border": "bottom",
-          "location": 1,
-          "width": 5
-        }
-      ],
-      "items": [
-        {
-          "id": 1,
-          "itemType": "collectible",
-          "location": [5, 5]
-        }
-      ]
+      "openings": [{ "id": 1, "border": "bottom", "location": 1, "width": 5 }],
+      "items": [{ "id": 1, "itemType": "collectible", "location": [5, 5] }]
     },
     {
       "id": 3,
@@ -58,36 +37,13 @@
       "movement": "x",
       "platforms": [],
       "openings": [
-        {
-          "id": 1,
-          "border": "top",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 2,
-          "border": "top",
-          "location": 21,
-          "width": 5
-        },
-        {
-          "id": 3,
-          "border": "bottom",
-          "location": 1,
-          "width": 5
-        }
+        { "id": 1, "border": "top", "location": 1, "width": 5 },
+        { "id": 2, "border": "top", "location": 21, "width": 5 },
+        { "id": 3, "border": "bottom", "location": 1, "width": 5 }
       ],
       "items": [
-        {
-          "id": 1,
-          "itemType": "spike",
-          "location": [10, 5]
-        },
-        {
-          "id": 2,
-          "itemType": "spike",
-          "location": [15, 5]
-        }
+        { "id": 1, "itemType": "spike", "location": [10, 5] },
+        { "id": 2, "itemType": "spike", "location": [15, 5] }
       ]
     },
     {
@@ -97,26 +53,10 @@
       "location": [0, 20],
       "movement": "x",
       "platforms": [],
-      "openings": [
-        {
-          "id": 1,
-          "border": "top",
-          "location": 1,
-          "width": 5
-        }
-      ],
+      "openings": [{ "id": 1, "border": "top", "location": 1, "width": 5 }],
       "items": [
-        {
-          "id": 1,
-          "itemType": "exit",
-          "location": [35, 7]
-        },
-        {
-          "id": 2,
-          "itemType": "lever",
-          "color": "red",
-          "location": [20, 8]
-        }
+        { "id": 1, "itemType": "exit", "location": [35, 7] },
+        { "id": 2, "itemType": "lever", "color": "red", "location": [20, 8] }
       ]
     }
   ]

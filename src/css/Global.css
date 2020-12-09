@@ -72,6 +72,7 @@ body {
 
 .div-hover {
   transition: filter 0.25s;
+  cursor: pointer;
 }
 
 .div-hover:hover {

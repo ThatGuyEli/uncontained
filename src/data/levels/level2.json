@@ -16,14 +16,7 @@
       "location": [0, 0],
       "movement": "x",
       "platforms": [],
-      "openings": [
-        {
-          "id": 1,
-          "border": "bottom",
-          "location": 1,
-          "width": 5
-        }
-      ],
+      "openings": [{ "id": 1, "border": "bottom", "location": 1, "width": 5 }],
       "items": []
     },
     {
@@ -34,30 +27,10 @@
       "movement": "x",
       "platforms": [],
       "openings": [
-        {
-          "id": 1,
-          "border": "top",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 2,
-          "border": "top",
-          "location": 11,
-          "width": 5
-        },
-        {
-          "id": 3,
-          "border": "bottom",
-          "location": 11,
-          "width": 5
-        },
-        {
-          "id": 4,
-          "border": "left",
-          "location": 4,
-          "width": 5
-        }
+        { "id": 1, "border": "top", "location": 1, "width": 5 },
+        { "id": 2, "border": "top", "location": 11, "width": 5 },
+        { "id": 3, "border": "bottom", "location": 11, "width": 5 },
+        { "id": 4, "border": "left", "location": 4, "width": 5 }
       ],
       "items": []
     },
@@ -69,18 +42,8 @@
       "movement": "x",
       "platforms": [],
       "openings": [
-        {
-          "id": 1,
-          "border": "bottom",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 2,
-          "border": "bottom",
-          "location": 11,
-          "width": 5
-        }
+        { "id": 1, "border": "bottom", "location": 1, "width": 5 },
+        { "id": 2, "border": "bottom", "location": 11, "width": 5 }
       ],
       "items": []
     },
@@ -91,21 +54,8 @@
       "location": [10, 20],
       "movement": "x",
       "platforms": [],
-      "openings": [
-        {
-          "id": 1,
-          "border": "right",
-          "location": 4,
-          "width": 5
-        }
-      ],
-      "items": [
-        {
-          "id": 1,
-          "itemType": "exit",
-          "location": [5, 7]
-        }
-      ]
+      "openings": [{ "id": 1, "border": "right", "location": 4, "width": 5 }],
+      "items": [{ "id": 1, "itemType": "exit", "location": [5, 7] }]
     },
     {
       "id": 5,
@@ -115,18 +65,8 @@
       "movement": "y",
       "platforms": [],
       "openings": [
-        {
-          "id": 1,
-          "border": "top",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 2,
-          "border": "left",
-          "location": 4,
-          "width": 5
-        }
+        { "id": 1, "border": "top", "location": 1, "width": 5 },
+        { "id": 2, "border": "left", "location": 4, "width": 5 }
       ],
       "items": []
     },
@@ -137,21 +77,8 @@
       "location": [0, 20],
       "movement": "y",
       "platforms": [],
-      "openings": [
-        {
-          "id": 1,
-          "border": "right",
-          "location": 4,
-          "width": 5
-        }
-      ],
-      "items": [
-        {
-          "id": 1,
-          "itemType": "collectible",
-          "location": [5, 5]
-        }
-      ]
+      "openings": [{ "id": 1, "border": "right", "location": 4, "width": 5 }],
+      "items": [{ "id": 1, "itemType": "collectible", "location": [5, 5] }]
     }
   ]
 }

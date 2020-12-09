@@ -17,24 +17,9 @@
       "movement": "x",
       "platforms": [],
       "openings": [
-        {
-          "id": 1,
-          "border": "bottom",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 2,
-          "border": "left",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 3,
-          "border": "bottom",
-          "location": 24,
-          "width": 5
-        }
+        { "id": 1, "border": "bottom", "location": 1, "width": 5 },
+        { "id": 2, "border": "left", "location": 1, "width": 5 },
+        { "id": 3, "border": "bottom", "location": 24, "width": 5 }
       ],
       "items": []
     },
@@ -46,30 +31,10 @@
       "movement": "y",
       "platforms": [],
       "openings": [
-        {
-          "id": 1,
-          "border": "top",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 2,
-          "border": "right",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 3,
-          "border": "right",
-          "location": 14,
-          "width": 5
-        },
-        {
-          "id": 4,
-          "border": "bottom",
-          "location": 1,
-          "width": 5
-        }
+        { "id": 1, "border": "top", "location": 1, "width": 5 },
+        { "id": 2, "border": "right", "location": 1, "width": 5 },
+        { "id": 3, "border": "right", "location": 14, "width": 5 },
+        { "id": 4, "border": "bottom", "location": 1, "width": 5 }
       ],
       "items": []
     },
@@ -81,24 +46,9 @@
       "movement": "x",
       "platforms": [],
       "openings": [
-        {
-          "id": 1,
-          "border": "top",
-          "location": 1,
-          "width": 5
-        },
-        {
-          "id": 2,
-          "border": "left",
-          "location": 4,
-          "width": 5
-        },
-        {
-          "id": 3,
-          "border": "top",
-          "location": 24,
-          "width": 5
-        }
+        { "id": 1, "border": "top", "location": 1, "width": 5 },
+        { "id": 2, "border": "left", "location": 4, "width": 5 },
+        { "id": 3, "border": "top", "location": 24, "width": 5 }
       ],
       "items": []
     },
@@ -110,18 +60,8 @@
       "movement": "y",
       "platforms": [],
       "openings": [
-        {
-          "id": 1,
-          "border": "bottom",
-          "location": 4,
-          "width": 5
-        },
-        {
-          "id": 2,
-          "border": "top",
-          "location": 4,
-          "width": 5
-        }
+        { "id": 1, "border": "bottom", "location": 4, "width": 5 },
+        { "id": 2, "border": "top", "location": 4, "width": 5 }
       ],
       "items": []
     },
@@ -133,25 +73,11 @@
       "movement": "x",
       "platforms": [],
       "openings": [
-        {
-          "id": 1,
-          "border": "bottom",
-          "location": 4,
-          "width": 5
-        }
+        { "id": 1, "border": "bottom", "location": 4, "width": 5 }
       ],
       "items": [
-        {
-          "id": 1,
-          "itemType": "collectible",
-          "location": [5, 5]
-        },
-        {
-          "id": 2,
-          "itemType": "lever",
-          "color": "red",
-          "location": [2, 8]
-        }
+        { "id": 1, "itemType": "collectible", "location": [5, 5] },
+        { "id": 2, "itemType": "lever", "color": "red", "location": [2, 8] }
       ]
     },
     {
@@ -162,19 +88,10 @@
       "movement": "x",
       "platforms": [],
       "openings": [
-        {
-          "id": 1,
-          "border": "bottom",
-          "location": 4,
-          "width": 5
-        }
+        { "id": 1, "border": "bottom", "location": 4, "width": 5 }
       ],
       "items": [
-        {
-          "id": 1,
-          "itemType": "exit",
-          "location": [1, 7]
-        }
+        { "id": 1, "itemType": "exit", "location": [1, 7] }
       ]
     }
   ]

@@ -9,12 +9,12 @@ export default function LevelFailedMenu() {
       </div>
       <div
         onClick={() => window.location.reload(true)}
-        className='level-failed-text blue standard-border center-children'
+        className='level-failed-text blue standard-border center-children div-hover'
       >
         Restart
       </div>
       <Link to='/' className='link-text'>
-        <div className='level-failed-text purple standard-border center-children'>
+        <div className='level-failed-text purple standard-border center-children div-hover'>
           Main Menu
         </div>
       </Link>

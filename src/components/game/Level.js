@@ -524,8 +524,11 @@ class Level extends Component {
           if (activated !== itemState.activated) {
             // If activated is true, then subtract a life and simulate a jump.
             if (activated) {
+              // If the character has been hurt recently (jumpOnce is true),
+              // Don't subtract lives.
+              const newLives =
+                this.state.lives - (this.actions.jumpOnce ? 0 : 1);
               this.actions.jumpOnce = true;
-              const newLives = this.state.lives - 1;
               // If the lives is < 0, tell the user they lose and have to restart.
               if (newLives < 0) {
                 this.togglePause();
@@ -2253,10 +2256,16 @@ class Level extends Component {
       return;
     }
 
-    // If the item is not in the air, set its velocity to 0.
-    if (!this.itemIsInAir(itemState)) {
+    // If the item is not in the air, and its velocity is not 0, 
+    // set its velocity to 0.
+    const inAir = this.itemIsInAir(itemState);
+    if (!inAir && itemState.yVel !== 0) {
       itemState.yVel = 0;
       this.updateItemState(itemState.container, itemState.id, itemState);
+      return
+    }
+
+    if (!inAir) {
       return;
     }
 
@@ -2503,7 +2512,7 @@ class Level extends Component {
             {level}
             <LevelFailedMenu />
           </>
-        )
+        );
       } else {
         return (
           <>
