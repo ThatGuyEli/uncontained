@@ -1,7 +1,7 @@
 {
   "id": 6,
   "name": "Transport",
-  "difficulty": 15,
+  "difficulty": 30,
   "description": "Un saw yet another color. He prepared to begin thinking very hard about his escape, when he realized: orange Containers function the same as purple Containers. With his newfound knowledge, he continued forth.",
   "dimensions": [40, 30],
   "character": {
@@ -85,22 +85,11 @@
       "movement": "y",
       "platforms": [],
       "openings": [
-        { "id": 1, "border": "right", "location": 4, "width": 5 },
-        { "id": 2, "border": "left", "location": 4, "width": 5 }
+        { "id": 1, "border": "right", "location": 4, "width": 5 }
       ],
       "items": [
         { "id": 1, "itemType": "exit", "location": [5, 7] }
       ]
-    },
-    {
-      "id": 7,
-      "color": "blue",
-      "dimensions": [10, 10],
-      "location": [0, 20],
-      "movement": "x",
-      "platforms": [],
-      "openings": [],
-      "items": []
     }
   ]
 }
