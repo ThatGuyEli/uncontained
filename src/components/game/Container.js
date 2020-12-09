@@ -73,7 +73,7 @@ class Container extends Component {
         this.props.updateSelfState(this.props.id, {
           attached: true,
           mouseOffset:
-            this.props.movement === 'x'
+            this.props.selfState.isHorizontal
               ? e.nativeEvent.offsetX
               : e.nativeEvent.offsetY,
         });
@@ -103,7 +103,7 @@ class Container extends Component {
   snap = () => {
     // Create a boolean on whether or not the movement
     // is horizontal, and a reference to sty.
-    const isHorizontal = this.props.movement === 'x';
+    const isHorizontal = this.props.selfState.isHorizontal;
     const sty = this.props.selfState.sty;
 
     // Get the nearest block from Level.js, passing in either left or top.

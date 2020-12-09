@@ -2,7 +2,7 @@
   "id": 4,
   "name": "Lockdown",
   "difficulty": 50,
-  "description": "Un accidentally triggered an alarm and activated many security measures to keep him from escaping. He know, however, that he was nimble enough to get around it.",
+  "description": "Un accidentally triggered an alarm and activated many security measures to keep him from escaping. He knew, however, that he was nimble enough to get around it.",
   "dimensions": [40, 30],
   "character": {
     "startContainer": 1,

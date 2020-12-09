@@ -192,6 +192,7 @@ class Level extends Component {
 
     // Populate the container states with default state.
     this.levelFile.containers.forEach((container) => {
+      const isHorizontal = container.movement === 'x';
       // Create the default container state.
       const containerState = {
         // ID for identification.
@@ -199,8 +200,14 @@ class Level extends Component {
         // Color for color identification.
         color: container.color,
 
-        // The movement of the character
-        movement: container.movement,
+        // Whether or not the container moves horizontally
+        isHorizontal: isHorizontal,
+
+        // The index and opposite index of the movement axis.
+        // For example, if the container movement was 'x', then
+        // the index would be 0, because location[0] is the x.
+        index: isHorizontal ? 0 : 1,
+        antiIndex: isHorizontal ? 1 : 0,
 
         // Whether or not the component should track the mouse
         // and act accordingly.
@@ -256,9 +263,8 @@ class Level extends Component {
       }
 
       // Add locations to the sideArr.
-      const isHorizontal = container.movement === 'x';
       const { location, dimensions } = container;
-      const antiIndex = isHorizontal ? 1 : 0;
+      const antiIndex = containerState.antiIndex;
 
       for (let i = 0; i < dimensions[antiIndex]; i++) {
         containerState.sideArr.push(location[antiIndex] + i);
@@ -569,8 +575,9 @@ class Level extends Component {
     for (let i = 0; i < containerState.itemStates.length; i++) {
       const itemState = containerState.itemStates[i];
       if (this.itemIsInteractable(itemState) && itemState !== interactable) {
-        const newsty = Object.assign({}, itemState.sty);
-        newsty.backgroundColor = ''; // default
+        const newsty = Object.assign({}, itemState.sty, {
+          backgroundColor: '', // default
+        });
         this.updateItemState(containerState.id, itemState.id, {
           sty: newsty,
         });
@@ -582,8 +589,9 @@ class Level extends Component {
     for (let i = 0; i < containerState.openingStates.length; i++) {
       const openingState = containerState.openingStates[i];
       if (openingState !== interactable) {
-        const newsty = Object.assign({}, openingState.sty);
-        newsty.backgroundColor = ''; // default
+        const newsty = Object.assign({}, openingState.sty, {
+          backgroundColor: '', // default
+        });
         this.updateOpeningState(containerState.id, openingState.id, {
           sty: newsty,
         });
@@ -732,10 +740,10 @@ class Level extends Component {
    */
   interactItem = (interactable) => {
     // Flip the activated boolean, then act based on that.
-    const itemState = Object.assign({}, interactable);
-    itemState.activated = !itemState.activated;
+    const { lever, sty, container, id, color, itemType } = interactable;
+    const activated = !interactable.activated;
 
-    switch (itemState.itemType) {
+    switch (itemType) {
       // If the character is interacting with an exit, finish the level.
       case 'exit':
         this.togglePause();
@@ -746,21 +754,20 @@ class Level extends Component {
 
       // If the character is interacting with a lever, switch lever.
       case 'lever':
-        const itemLever = Object.assign({}, itemState.lever);
-        const plusOrMinus = itemState.activated ? -1 : 1;
-        itemLever.transform = `rotate(${itemState.activated ? 135 : 45}deg)`;
+        const itemLever = Object.assign({}, lever);
+        const plusOrMinus = activated ? -1 : 1;
+        itemLever.transform = `rotate(${activated ? 135 : 45}deg)`;
         itemLever.left =
-          itemState.sty.left -
-          (plusOrMinus * itemState.lever.width) / (2 * Math.SQRT2);
-        this.updateItemState(itemState.container, itemState.id, {
+          sty.left - (plusOrMinus * itemLever.width) / (2 * Math.SQRT2);
+        this.updateItemState(container, id, {
           lever: itemLever,
-          activated: itemState.activated,
+          activated: activated,
         });
-        this.toggleContainerActivation(itemState.color);
+        this.toggleContainerActivation(color);
         break;
       case 'box':
-        this.updateItemState(itemState.container, itemState.id, {
-          activated: itemState.activated,
+        this.updateItemState(container, id, {
+          activated: activated,
         });
         break;
       default:
@@ -830,7 +837,7 @@ class Level extends Component {
    * centered, adhere to a 4:3 aspect ratio, and be as large
    * as possible. The color and border-style is handled by
    * /css/App.css. When the style is updated, this method
-   * calls {@link #updateBlockSize}.
+   * calls this.updateBlockSize().
    */
   updateSty = () => {
     // Note: although Object.assign could be used, it is
@@ -839,7 +846,7 @@ class Level extends Component {
     const { innerWidth, innerHeight } = window;
 
     // set both border radius and size to border.
-    const border = this.getBorder();
+    const border = (innerHeight + innerWidth) / 200;
     newsty.borderRadius = border;
     newsty.borderWidth = border;
 
@@ -850,25 +857,29 @@ class Level extends Component {
     // base the style off of the width
     if (innerWidth < fourThirdsHeight) {
       const threeFourthsWidth = (innerWidth * 3) / 4;
-      newsty.width = innerWidth - doubleBorder;
-      newsty.height = threeFourthsWidth - doubleBorder;
-
       const margin = (innerHeight - threeFourthsWidth) / 2;
-      newsty.marginTop = margin;
-      newsty.marginBottom = margin;
-      newsty.marginLeft = 0;
-      newsty.marginRight = 0;
+
+      Object.assign(newsty, {
+        width: innerWidth - doubleBorder,
+        height: threeFourthsWidth - doubleBorder,
+        marginTop: margin,
+        marginBottom: margin,
+        marginLeft: 0,
+        marginRight: 0,
+      });
     }
     // otherwise, base the style off of the height
     else {
-      newsty.width = fourThirdsHeight - doubleBorder;
-      newsty.height = innerHeight - doubleBorder;
-
       const margin = (innerWidth - fourThirdsHeight) / 2;
-      newsty.marginTop = 0;
-      newsty.marginBottom = 0;
-      newsty.marginLeft = margin;
-      newsty.marginRight = margin;
+
+      Object.assign(newsty, {
+        width: fourThirdsHeight - doubleBorder,
+        height: innerHeight - doubleBorder,
+        marginTop: 0,
+        marginBottom: 0,
+        marginLeft: margin,
+        marginRight: margin,
+      });
     }
 
     // this utilizes the callback parameter of setState.
@@ -901,19 +912,6 @@ class Level extends Component {
   };
 
   /**
-   * Get the pixel size of the border based on the
-   * viewport. This returns the pixel value of the average
-   * of 1% of the {@link window.innerWidth} and 1%
-   * of the {@link window.innerHeight}.
-   *
-   * @returns the pixel size of the border
-   */
-  getBorder = () => {
-    const { innerWidth, innerHeight } = window;
-    return (innerWidth + innerHeight) / 200;
-  };
-
-  /**
    * Convert a unit to pixels per frame, at 60fps.
    *
    * @param {number} unit The unit to multiply.
@@ -940,8 +938,7 @@ class Level extends Component {
   updateContainerSty = (id, dimensions, location) => {
     // Get the x and y of the Level to determine the relative
     // location of the Container.
-    const { marginLeft: x, marginTop: y } = this.state.sty;
-    const border = this.getBorder();
+    const { marginLeft: x, marginTop: y, borderWidth: border } = this.state.sty;
 
     // Get blocksize for readability.
     const bs = this.state.blockSize;
@@ -1045,7 +1042,7 @@ class Level extends Component {
     else if (newLocation > min && newLocation < max) {
       return newLocation;
     } else return oldLocation;
-    // Return oldLocation if the movement is invalid to prevent
+    // Return oldLocation if theselfState.isHorizontal movement is invalid to prevent
     // NaN and underfined errors.
   };
 
@@ -1068,10 +1065,15 @@ class Level extends Component {
 
     // Depending on if the movement is x or y, move the container
     // the difference as the mouse moves.
-    const border = this.getBorder();
-    const { mouseOffset: mo, location } = containerState;
+    const border = this.state.sty.borderWidth;
+    const {
+      id,
+      mouseOffset: mo,
+      location,
+      isHorizontal,
+      index,
+    } = containerState;
 
-    const isHorizontal = containerState.movement === 'x';
     const { marginTop: y, height, marginLeft: x, width } = this.state.sty;
 
     // Calculate the min/max based on whether or not the container's
@@ -1089,7 +1091,9 @@ class Level extends Component {
     }
 
     const offset = isHorizontal ? e.offsetX : e.offsetY;
-    containerState.isMovingPos = offset - mo > 0;
+    this.updateContainerState(id, {
+      isMovingPos: offset - mo > 0,
+    });
 
     // Calculate the new container location, in pixels.
     const newpx = this.getNewContainerPixelLocation(
@@ -1109,7 +1113,6 @@ class Level extends Component {
     // block.
     const newloc = Object.assign([], location);
     if (ccm) {
-      const index = isHorizontal ? 0 : 1;
       newsty[isHorizontal ? 'left' : 'top'] = newpx;
       newloc[index] = this.nearestContainerLocation(
         containerState,
@@ -1117,7 +1120,7 @@ class Level extends Component {
       ).newLocation;
     }
     // Finally, set the state.
-    this.updateContainerState(containerState.id, {
+    this.updateContainerState(id, {
       sty: newsty,
       isMoving: false,
       location: newloc,
@@ -1140,11 +1143,14 @@ class Level extends Component {
    * @returns {boolean} Whether or not the container can move.
    */
   containerCanMove = (containerState) => {
-    const { location, dimensions } = containerState;
-    const isHorizontal = containerState.movement === 'x';
-    const pos = containerState.isMovingPos;
-    const index = isHorizontal ? 0 : 1;
-    const antiIndex = isHorizontal ? 1 : 0;
+    const {
+      location,
+      dimensions,
+      isHorizontal,
+      index,
+      antiIndex,
+      isMovingPos: pos,
+    } = containerState;
 
     // The adjacent location is either the location directly after
     // the end of the dimensions, but since location + dimension is
@@ -1191,19 +1197,26 @@ class Level extends Component {
     // Even though this check is also called before this method
     // is called, it will help
     // in case this method is called elsewhere.
+    const color = containerState.color;
     if (
       !this.state.containerIsMoving &&
-      (containerState.color === 'purple' ||
-        containerState.color === 'orange') &&
+      (color === 'purple' || color === 'orange') &&
       this.containerCanAutoMove(containerState)
     ) {
       this.rewriteBlocks(containerState, false);
-      const newloc = Object.assign([], containerState.location);
-      const isHorizontal = containerState.movement === 'x';
-      const index = isHorizontal ? 0 : 1;
+      const {
+        id,
+        isHorizontal,
+        index,
+        location,
+        dimensions,
+        isActivated,
+        sty,
+      } = containerState;
+      const newloc = Object.assign([], location);
 
       // If the container is activated, move it positively.
-      let plusOrMinus = containerState.isActivated ? 1 : -1;
+      let plusOrMinus = isActivated ? 1 : -1;
 
       // Move the container by one block in its specified direction.
       newloc[index] += plusOrMinus;
@@ -1211,22 +1224,22 @@ class Level extends Component {
       newloc[index] = Math.max(
         0,
         Math.min(
-          this.levelFile.dimensions[index] - containerState.dimensions[index],
+          this.levelFile.dimensions[index] - dimensions[index],
           newloc[index]
         )
       );
 
       // If the location is the same as before (ie a bound has been hit)
       // Set plusOrMinus to 0 so that the style doesn't change.
-      if (containerState.location[index] === newloc[index]) plusOrMinus = 0;
+      if (location[index] === newloc[index]) plusOrMinus = 0;
 
       // Check to make sure the container can automatically move,
       // then set the state if it can.
-      const newsty = Object.assign({}, containerState.sty);
+      const newsty = Object.assign({}, sty);
       const bs = this.state.blockSize;
       const topOrLeft = isHorizontal ? 'left' : 'top';
       newsty[topOrLeft] += plusOrMinus * bs[index];
-      this.updateContainerState(containerState.id, {
+      this.updateContainerState(id, {
         sty: newsty,
         location: newloc,
       });
@@ -1246,15 +1259,19 @@ class Level extends Component {
    * @returns {boolean} Whether or not this container can automatically move.
    */
   containerCanAutoMove = (containerState) => {
+    const color = containerState.color;
     if (
       !this.characterIsIn(containerState) &&
-      (containerState.color === 'purple' || containerState.color === 'orange')
+      (color === 'purple' || color === 'orange')
     ) {
-      const { dimensions, location } = containerState;
-      const isHorizontal = containerState.movement === 'x';
-      const pos = containerState.isActivated;
-      const index = isHorizontal ? 0 : 1;
-      const antiIndex = isHorizontal ? 1 : 0;
+      const {
+        dimensions,
+        location,
+        isHorizontal,
+        isActivated: pos,
+        index,
+        antiIndex,
+      } = containerState;
 
       let adjacentLocation = pos
         ? Math.min(
@@ -1315,18 +1332,22 @@ class Level extends Component {
    * @param {number} oldPixelLocation The previous pixel location
    */
   nearestContainerLocation = (containerState, oldPixelLocation) => {
-    const isHorizontal = containerState.movement === 'x';
-    const { sideArr, isMovingPos: pos, dimensions } = containerState;
+    const {
+      sideArr,
+      isMovingPos: pos,
+      dimensions,
+      isHorizontal,
+      index,
+    } = containerState;
 
     // Get spacing so the border and whitespace isn't used
     // in the calculations.
-    const { marginLeft: x, marginTop: y } = this.state.sty;
-    const spacing = (isHorizontal ? x : y) + this.getBorder();
+    const { marginLeft: x, marginTop: y, borderWidth: border } = this.state.sty;
+    const spacing = (isHorizontal ? x : y) + border;
 
     // Determine whether the x or y blockSize should be used.
     // Note that this shouldn't matter too much but can still
     // prevent the container from snapping to the wrong location.
-    const index = isHorizontal ? 0 : 1;
 
     // oldLocation - spacing to get the difference from
     // the level div
@@ -1504,7 +1525,7 @@ class Level extends Component {
     const { dimensions: cdimensions } = container.props;
     const { location, width: doorWidth } = opening.props;
     const bs = this.state.blockSize;
-    const border = this.getBorder();
+    const border = this.state.sty.borderWidth;
 
     // Use a switch statement to determine the following variables.
     // Note: I would have liked to compress this down, but all of the
@@ -1541,7 +1562,7 @@ class Level extends Component {
         return;
     }
 
-    // Createa a style using this, th/deen update the opening state.
+    // Create a style using this, then update the opening state.
     const newsty = {
       width: width,
       height: height,
@@ -1609,7 +1630,8 @@ class Level extends Component {
   updateCharacterSty = () => {
     const characterState = Object.assign({}, this.state.characterState);
     const bs = this.state.blockSize;
-    const border = this.getBorder();
+    const border = this.state.sty.borderWidth;
+    const halfBorder = border / 2;
     const containerPixelLocation = this.getContainerPixelLocation(
       characterState.container
     );
@@ -1624,8 +1646,8 @@ class Level extends Component {
       height: bs[1] * characterState.size[1],
       left: xpxRel,
       top: ypxRel,
-      borderWidth: border / 2,
-      borderRadius: border / 2,
+      borderWidth: halfBorder,
+      borderRadius: halfBorder,
     };
 
     // Apply the style to the character and set the state.
@@ -1653,7 +1675,7 @@ class Level extends Component {
     const bs = this.state.blockSize;
 
     // Precalculate spacing used to the minimum and maximum bounds.
-    const border = this.getBorder();
+    const border = this.state.sty.borderWidth;
     const containerPixelLocation = this.getContainerPixelLocation(
       characterState.container
     );
@@ -2069,7 +2091,7 @@ class Level extends Component {
     }
 
     // For spacing
-    const border = this.getBorder();
+    const border = this.state.sty.borderWidth;
     const containerPixelLocation = this.getContainerPixelLocation(
       characterState.container
     );
@@ -2102,7 +2124,8 @@ class Level extends Component {
       left: location[0] * bs[0],
       top: location[1] * bs[1],
     };
-    const border = this.getBorder();
+    const border = this.state.sty.borderWidth;
+    const halfBorder = border / 2;
 
     // Apply item-specific styling. Note that this is not the top/left,
     // which has to be done in this.moveItem().
@@ -2110,8 +2133,8 @@ class Level extends Component {
       // If the item is a plate, make its height 1/4 and give it rounded corners.
       case 'plate':
         newsty.height *= 0.4;
-        newsty.borderTopLeftRadius = border / 2;
-        newsty.borderTopRightRadius = border / 2;
+        newsty.borderTopLeftRadius = halfBorder;
+        newsty.borderTopRightRadius = halfBorder;
         newsty.borderWidth = border / 4;
         break;
 
@@ -2125,13 +2148,13 @@ class Level extends Component {
       // If the item is a box, round all the corners. This has a similar shape
       // to the character.
       case 'box':
-        newsty.borderRadius = border / 2;
-        newsty.borderWidth = border / 2;
+        newsty.borderRadius = halfBorder;
+        newsty.borderWidth = halfBorder;
         break;
 
       // The collectible should have a border width equal to the box and character.
       case 'collectible':
-        newsty.borderWidth = border / 2;
+        newsty.borderWidth = halfBorder;
         break;
 
       // The lever has two special <div>s within it, so make specific modifications.
@@ -2160,9 +2183,9 @@ class Level extends Component {
 
       // For spikes, we want to use the triangle-by-border CSS trick.
       case 'spike':
-        newsty.borderLeftWidth = this.state.blockSize[0] / 2;
-        newsty.borderRightWidth = this.state.blockSize[0] / 2;
-        newsty.borderBottomWidth = this.state.blockSize[1];
+        newsty.borderLeftWidth = bs[0] / 2;
+        newsty.borderRightWidth = bs[0] / 2;
+        newsty.borderBottomWidth = bs[1];
         break;
 
       default:
@@ -2232,7 +2255,7 @@ class Level extends Component {
     const sty = itemState.sty;
 
     // For spacing
-    const border = this.getBorder();
+    const border = this.state.sty.borderWidth;
     const height = this.getContainerStateById(itemState.container).sty.height;
 
     // Only the max is needed, which is the floor.
@@ -2246,23 +2269,26 @@ class Level extends Component {
    * @param {object} initItemState The item to move.
    */
   moveItem = (initItemState) => {
+
+    // NOTE: Although many other methods do not need a full copy of an item
+    // state, it is necessary for this method to pass the modified state
+    // *before* changes are made, so that methods can check the validation
+    // of said changes.
+
     const itemState = Object.assign({}, initItemState);
 
     // If the item is an activated box, let the character movement dictate it.
-    if (itemState.itemType === 'box' && itemState.activated) {
-      itemState.yVel = 0;
-      this.nearestItemLocation(itemState);
-      this.updateItemState(itemState.container, itemState.id, itemState);
-      return;
-    }
-
-    // If the item is not in the air, and its velocity is not 0, 
+    // OR
+    // If the item is not in the air, and its velocity is not 0,
     // set its velocity to 0.
     const inAir = this.itemIsInAir(itemState);
-    if (!inAir && itemState.yVel !== 0) {
+    if ((itemState.itemType === 'box' && itemState.activated) || (!inAir && itemState.yVel !== 0)) {
       itemState.yVel = 0;
-      this.updateItemState(itemState.container, itemState.id, itemState);
-      return
+      this.nearestItemLocation(itemState);
+      this.updateItemState(itemState.container, itemState.id, {
+        yVel: 0,
+      });
+      return;
     }
 
     if (!inAir) {
@@ -2275,7 +2301,7 @@ class Level extends Component {
     const bs = this.state.blockSize;
 
     // Precalculate spacing used for the minimum and maximum bounds.
-    const border = this.getBorder();
+    const border = this.state.sty.borderWidth;
     const height = this.getContainerStateById(itemState.container).sty.height;
 
     // Because the items can only move downwards (except for the box), only calculate
@@ -2356,7 +2382,7 @@ class Level extends Component {
       width: cWidth,
     } = tempCharacterState.sty;
 
-    const border = this.getBorder();
+    const border = this.state.sty.borderWidth;
     const iTop = itemSty.top + containerPixelLocation[1] + border;
     const iHeight = itemSty.height;
     const iLeft = itemSty.left + containerPixelLocation[0] + border;
@@ -2413,14 +2439,15 @@ class Level extends Component {
     const { dimensions, location } = platform.props.selfState;
     const bs = this.state.blockSize;
 
-    const border = this.getBorder();
+    const border = this.state.sty.borderWidth;
+    const halfBorder = border / 2;
     const newsty = {
       width: dimensions[0] * bs[0],
       height: dimensions[1] * bs[1],
       left: location[0] * bs[0],
       top: location[1] * bs[1],
-      borderRadius: border / 2,
-      borderWidth: border / 2,
+      borderRadius: halfBorder,
+      borderWidth: halfBorder,
     };
 
     this.updatePlatformState(container.props.id, platform.props.id, {
