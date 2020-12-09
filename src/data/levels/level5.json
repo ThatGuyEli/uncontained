@@ -1,0 +1,85 @@
+{
+  "id": 5,
+  "name": "Remote",
+  "difficulty": 10,
+  "description": "Un has escaped the increased security measures, but now he faces a different challenge: purple Containers. They don't seem to move on their own...",
+  "dimensions": [40, 30],
+  "character": {
+    "startContainer": 1,
+    "startLocation": [5, 5]
+  },
+  "containers": [
+    {
+      "id": 1,
+      "color": "gray",
+      "dimensions": [20, 10],
+      "location": [10, 0],
+      "movement": "x",
+      "platforms": [],
+      "openings": [{ "id": 1, "border": "bottom", "location": 10, "width": 5 }],
+      "items": [
+        { "id": 1, "itemType": "lever", "color": "purple", "location": [1, 5] }
+      ]
+    },
+    {
+      "id": 2,
+      "color": "blue",
+      "dimensions": [20, 10],
+      "location": [10, 20],
+      "movement": "y",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "top", "location": 10, "width": 5 },
+        { "id": 2, "border": "right", "location": 1, "width": 5 },
+        { "id": 3, "border": "left", "location": 1, "width": 5 }
+      ],
+      "items": []
+    },
+    {
+      "id": 3,
+      "color": "blue",
+      "dimensions": [10, 10],
+      "location": [30, 20],
+      "movement": "x",
+      "platforms": [],
+      "openings": [{ "id": 1, "border": "top", "location": 1, "width": 5 }],
+      "items": [
+        { "id": 1, "itemType": "collectible", "location": [5, 5] }
+      ]
+    },
+    {
+      "id": 4,
+      "color": "purple",
+      "dimensions": [10, 10],
+      "location": [0, 0],
+      "movement": "y",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "right", "location": 1, "width": 5 },
+        { "id": 2, "border": "bottom", "location": 1, "width": 5 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [6, 8] },
+        { "id": 2, "itemType": "spike", "location": [7, 8] },
+        { "id": 3, "itemType": "spike", "location": [8, 8] }
+      ]
+    },
+    {
+      "id": 5,
+      "color": "purple",
+      "dimensions": [10, 10],
+      "location": [30, 0],
+      "movement": "y",
+      "platforms": [],
+      "openings": [
+        {"id": 1, "border": "left", "location": 1, "width": 5}
+      ],
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [0, 8] },
+        { "id": 2, "itemType": "spike", "location": [1, 8] },
+        { "id": 3, "itemType": "spike", "location": [2, 8] },
+        { "id": 4, "itemType": "exit", "location": [6, 7] }
+      ]
+    }
+  ]
+}
