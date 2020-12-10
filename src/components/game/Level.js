@@ -540,12 +540,12 @@ class Level extends Component {
                 this.togglePause();
                 this.setState({ complete: true });
               }
-              // Otherwise, set the state.
-              else {
-                this.setState({
-                  lives: newLives,
-                });
-              }
+              // Set the state. This is done regardless to ensure that a person
+              // who completed the level with 0 lives left is still prompted
+              // with the level complete menu.
+              this.setState({
+                lives: newLives,
+              });
             }
             // Regardless, resync whether or not the container is activated.
             this.updateItemState(itemState.container, itemState.id, {
@@ -2587,7 +2587,7 @@ class Level extends Component {
       </>
     );
     if (this.state.complete) {
-      if (this.state.lives === 0) {
+      if (this.state.lives < 0) {
         return (
           <>
             {level}
