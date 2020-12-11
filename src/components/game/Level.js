@@ -480,15 +480,19 @@ class Level extends Component {
           const newsty = Object.assign({}, itemState.sty);
           const bs = this.state.blockSize;
 
-          // Cycle through the container states and look for a boxState.
+          // Cycle through the container state and look for a boxState.
           let boxIsColliding;
           for (let i = 0; i < containerState.itemStates.length; i++) {
             const otherItemState = containerState.itemStates[i];
-            if (otherItemState.itemType === 'box')
+            if (otherItemState.itemType === 'box') {
               boxIsColliding = this.itemsAreColliding(
                 otherItemState,
                 itemState
               );
+              if (boxIsColliding) {
+                break;
+              }
+            }
           }
 
           // This modifies the height and width of the plate based on if it
@@ -1862,6 +1866,7 @@ class Level extends Component {
     // update the character's location.
 
     if (boxState !== undefined) {
+      this.nearestItemLocation(boxState);
       this.updateItemState(boxState.container, boxState.id, boxState);
     }
     this.setState(
@@ -2575,7 +2580,7 @@ class Level extends Component {
         <HUD
           togglePause={this.togglePause}
           score={this.state.score}
-          lives={this.state.lives}
+          lives={Math.max(0, this.state.lives)}
         />
         <div className='Level' style={this.state.sty}>
           {this.generateContainers()}

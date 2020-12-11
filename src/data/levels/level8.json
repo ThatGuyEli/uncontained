@@ -1,0 +1,109 @@
+{
+  "id": 8,
+  "name": "Lock and Key",
+  "description": "Un had a dilemma: there were two plates, but only one box. He looked left and right, but the Container was empty. Of course, he didn't look up.",
+  "difficulty": 30,
+  "dimensions": [40, 30],
+  "character": {
+    "startContainer": 1,
+    "startLocation": [5, 18]
+  },
+  "containers": [
+    {
+      "id": 1,
+      "color": "gray",
+      "dimensions": [10, 20],
+      "location": [30, 0],
+      "movement": "x",
+      "platforms": [
+        { "id": 1, "location": [0, 7], "dimensions": [4, 1] },
+        { "id": 2, "location": [5, 14], "dimensions": [4, 1] }
+      ],
+      "openings": [
+        { "id": 1, "border": "left", "location": 1, "width": 5 },
+        { "id": 2, "border": "bottom", "location": 1, "width": 5 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "box", "location": [2, 6] },
+        { "id": 2, "itemType": "box", "location": [2, 18] },
+        {
+          "id": 3,
+          "itemType": "plate",
+          "color": "orange",
+          "location": [6, 13]
+        },
+        { "id": 4, "itemType": "plate", "color": "red", "location": [7, 18] }
+      ]
+    },
+    {
+      "id": 2,
+      "color": "orange",
+      "dimensions": [30, 10],
+      "location": [0, 20],
+      "movement": "x",
+      "platforms": [
+        { "id": 1, "location": [18, 0], "dimensions": [1, 2] },
+        { "id": 2, "location": [18, 6], "dimensions": [1, 3] }
+      ],
+      "openings": [
+        { "id": 1, "border": "top", "location": 1, "width": 5 },
+        { "id": 2, "border": "top", "location": 11, "width": 5 },
+        { "id": 3, "border": "top", "location": 21, "width": 5 },
+        { "id": 4, "border": "left", "location": 4, "width": 5 }
+      ],
+      "items": [{ "id": 1, "itemType": "spike", "location": [18, 5] }]
+    },
+    {
+      "id": 3,
+      "color": "gray",
+      "dimensions": [10, 20],
+      "location": [20, 0],
+      "movement": "x",
+      "platforms": [
+        { "id": 1, "location": [5, 7], "dimensions": [4, 1] },
+        { "id": 2, "location": [0, 11], "dimensions": [4, 1] },
+        { "id": 3, "location": [5, 16], "dimensions": [4, 1] }
+      ],
+      "openings": [
+        { "id": 1, "border": "right", "location": 1, "width": 5 },
+        { "id": 2, "border": "bottom", "location": 1, "width": 5 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [5, 15] },
+        { "id": 2, "itemType": "spike", "location": [6, 6] }
+      ]
+    },
+    {
+      "id": 4,
+      "color": "red",
+      "dimensions": [10, 20],
+      "location": [10, 0],
+      "movement": "x",
+      "platforms": [
+        { "id": 1, "location": [3, 14], "dimensions": [1, 1] }
+      ],
+      "openings": [{ "id": 1, "border": "bottom", "location": 1, "width": 5 }],
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [3, 13] },
+        {
+          "id": 2,
+          "itemType": "lever",
+          "color": "purple",
+          "location": [7, 18]
+        },
+        { "id": 3, "itemType": "collectible", "location": [5, 6]},
+        { "id": 4, "itemType": "collectible", "location": [6, 6]}
+      ]
+    },
+    {
+      "id": 5,
+      "color": "purple",
+      "dimensions": [10, 10],
+      "location": [0, 0],
+      "movement": "y",
+      "platforms": [],
+      "openings": [{ "id": 1, "border": "right", "location": 4, "width": 5 }],
+      "items": [{ "id": 1, "itemType": "exit", "location": [2, 7] }]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "id": 7,
+  "name": "Pressure",
+  "difficulty": 10,
+  "description": "Un found a plate that seems to do the same thing as levers as long as he stands on it. As soon as he gets off, though, it doesn't stay pressed. There must be some way to keep it down...",
+  "dimensions": [40, 30],
+  "character": {
+    "startContainer": 1,
+    "startLocation": [3, 5]
+  },
+  "containers": [
+    {
+      "id": 1,
+      "color": "gray",
+      "dimensions": [20, 10],
+      "location": [0, 0],
+      "movement": "x",
+      "platforms": [
+        { "id": 1, "location": [5, 5], "dimensions": [2, 1] },
+        { "id": 2, "location": [11, 5], "dimensions": [2, 1] }
+      ],
+      "openings": [{ "id": 1, "border": "bottom", "location": 14, "width": 5 }],
+      "items": [
+        { "id": 1, "itemType": "box", "location": [15, 8] },
+        { "id": 2, "itemType": "spike", "location": [5, 8] },
+        { "id": 3, "itemType": "spike", "location": [6, 8] },
+        { "id": 4, "itemType": "spike", "location": [7, 8] },
+        { "id": 5, "itemType": "spike", "location": [8, 8] },
+        { "id": 6, "itemType": "spike", "location": [9, 8] },
+        { "id": 7, "itemType": "spike", "location": [10, 8] },
+        { "id": 8, "itemType": "spike", "location": [11, 8] },
+        { "id": 9, "itemType": "spike", "location": [12, 8] },
+        { "id": 10, "itemType": "plate", "color": "red", "location": [1, 8] }
+      ]
+    },
+    {
+      "id": 2,
+      "color": "red",
+      "dimensions": [20, 10],
+      "location": [0, 10],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "top", "location": 4, "width": 5 },
+        { "id": 2, "border": "bottom", "location": 14, "width": 5 }
+      ],
+      "items": []
+    },
+    {
+      "id": 3,
+      "color": "blue",
+      "dimensions": [20, 10],
+      "location": [20, 0],
+      "movement": "y",
+      "platforms": [{ "id": 1, "location": [10, 5], "dimensions": [5, 1] }],
+      "openings": [
+        { "id": 1, "border": "top", "location": 4, "width": 5 },
+        { "id": 2, "border": "left", "location": 4, "width": 5 }
+      ],
+      "items": [{ "id": 1, "itemType": "exit", "location": [12, 3] }]
+    },
+    {
+      "id": 4,
+      "color": "blue",
+      "dimensions": [10, 10],
+      "location": [30, 20],
+      "movement": "x",
+      "platforms": [{ "id": 1, "location": [0, 6], "dimensions": [6, 1] }],
+      "openings": [{ "id": 1, "border": "right", "location": 4, "width": 5 }],
+      "items": [
+        { "id": 1, "itemType": "collectible", "location": [1, 3] },
+        { "id": 2, "itemType": "spike", "location": [5, 5] }
+      ]
+    }
+  ]
+}

@@ -70,7 +70,7 @@ containers have pointer-events: none
 }
 
 .box {
-  background-color: var(--nord7);
+  background-color: var(--nord8);
   border: var(--nord3) solid;
 }
 
