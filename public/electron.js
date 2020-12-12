@@ -14,6 +14,7 @@ function createWindow() {
     height: 800,
     minWidth: 1200,
     minHeight: 800,
+    icon: path.join('..', 'icon.png'),
     webPreferences: {
       // These are for security; otherwise, this application has full access
       // to node.js's features. We might not want that, because node.js has
