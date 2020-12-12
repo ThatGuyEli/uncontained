@@ -21,7 +21,7 @@ components.
   --nord15: #b48ead;
   --brown: #987654;
   --gold: #bf720d;
-  --gray: #525352;
+  --gray: #9498a1;
   --nord12-mod: #e49b85;
   --dark-red: #800500;
   --dark-purple: rgb(161, 67, 161);
@@ -82,6 +82,11 @@ body {
 .gray {
   background-color: var(--nord5);
   border-color: var(--nord3);
+}
+
+.gray-container {
+  background-color: var(--nord5);
+  border-color: var(--gray);
 }
 
 .blue {

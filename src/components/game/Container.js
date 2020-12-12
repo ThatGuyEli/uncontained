@@ -18,7 +18,15 @@ class Container extends Component {
    */
   constructor(props) {
     super(props);
-    this.cn = `Container ${this.props.color}`; // className
+    //this.cn = `Container ${this.props.color}`; // className
+    this.cn = 'Container ';
+    // Add -container to gray to have a lighter color gray than the
+    // menu gray.
+    if (this.props.color === 'gray') {
+      this.cn += 'gray-container';
+    } else {
+      this.cn += this.props.color;
+    }
   }
 
   /**

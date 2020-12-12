@@ -1,0 +1,185 @@
+{
+  "id": 9,
+  "name": "Surrounded",
+  "difficulty": 60,
+  "description": "Un was nearing the exit of the compound. The further he got out, however, the more complex the Containers became.",
+  "dimensions": [40, 30],
+  "character": {
+    "startContainer": 1,
+    "startLocation": [5, 3]
+  },
+  "containers": [
+    {
+      "id": 1,
+      "color": "blue",
+      "dimensions": [10, 5],
+      "location": [5, 10],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "right", "location": 1, "width": 3 },
+        { "id": 2, "border": "left", "location": 1, "width": 3 },
+        { "id": 3, "border": "bottom", "location": 6, "width": 3 }
+      ],
+      "items": []
+    },
+    {
+      "id": 2,
+      "color": "purple",
+      "dimensions": [10, 5],
+      "location": [0, 5],
+      "movement": "x",
+      "platforms": [],
+      "openings": [],
+      "items": []
+    },
+    {
+      "id": 3,
+      "color": "gray",
+      "dimensions": [15, 5],
+      "location": [5, 0],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "bottom", "location": 11, "width": 3 },
+        { "id": 2, "border": "left", "location": 1, "width": 3 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "plate", "color": "purple", "location": [3, 3] },
+        { "id": 2, "itemType": "plate", "color": "red", "location": [9, 3] },
+        { "id": 3, "itemType": "box", "location": [6, 3] }
+      ]
+    },
+    {
+      "id": 4,
+      "color": "purple",
+      "dimensions": [5, 15],
+      "location": [15, 5],
+      "movement": "y",
+      "platforms": [{ "id": 1, "location": [1, 9], "dimensions": [2, 1] }],
+      "openings": [
+        { "id": 1, "border": "left", "location": 6, "width": 3 },
+        { "id": 2, "border": "top", "location": 1, "width": 3 },
+        { "id": 3, "border": "left", "location": 11, "width": 3 }
+      ],
+      "items": []
+    },
+    {
+      "id": 5,
+      "color": "blue",
+      "dimensions": [10, 5],
+      "location": [20, 10],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "left", "location": 1, "width": 3 },
+        { "id": 2, "border": "right", "location": 1, "width": 3 }
+      ],
+      "items": []
+    },
+    {
+      "id": 6,
+      "color": "orange",
+      "dimensions": [5, 15],
+      "location": [20, 15],
+      "movement": "y",
+      "platforms": [{ "id": 1, "location": [1, 8], "dimensions": [2, 1] }],
+      "openings": [
+        { "id": 1, "border": "right", "location": 1, "width": 3 },
+        { "id": 2, "border": "left", "location": 11, "width": 3 }
+      ],
+      "items": []
+    },
+    {
+      "id": 7,
+      "color": "blue",
+      "dimensions": [5, 10],
+      "location": [25, 15],
+      "movement": "y",
+      "platforms": [{ "id": 1, "location": [1, 4], "dimensions": [2, 1] }],
+      "openings": [
+        { "id": 1, "border": "left", "location": 1, "width": 3 },
+        { "id": 2, "border": "right", "location": 1, "width": 3 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [0, 8] },
+        { "id": 2, "itemType": "spike", "location": [1, 8] },
+        { "id": 3, "itemType": "spike", "location": [2, 8] },
+        { "id": 4, "itemType": "spike", "location": [3, 8] }
+      ]
+    },
+    {
+      "id": 8,
+      "color": "gray",
+      "dimensions": [10, 5],
+      "location": [30, 0],
+      "movement": "x",
+      "platforms": [],
+      "openings": [{ "id": 1, "border": "left", "location": 1, "width": 3 }],
+      "items": [{ "id": 1, "itemType": "exit", "location": [6, 2] }]
+    },
+    {
+      "id": 9,
+      "color": "orange",
+      "dimensions": [5, 15],
+      "location": [30, 5],
+      "movement": "y",
+      "platforms": [
+        { "id": 1, "location": [0, 10], "dimensions": [4, 1] },
+        { "id": 2, "location": [2, 6], "dimensions": [2, 1] }
+      ],
+      "openings": [{ "id": 1, "border": "left", "location": 6, "width": 3 }],
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [0, 9] },
+        { "id": 2, "itemType": "spike", "location": [1, 9] },
+        { "id": 3, "itemType": "spike", "location": [2, 9] },
+        { "id": 4, "itemType": "spike", "location": [3, 9] },
+        { "id": 5, "itemType": "collectible", "location": [2, 2] },
+        { "id": 6, "itemType": "collectible", "location": [2, 3] },
+        { "id": 7, "itemType": "collectible", "location": [3, 2] },
+        { "id": 8, "itemType": "collectible", "location": [3, 3] }
+      ]
+    },
+    {
+      "id": 10,
+      "color": "red",
+      "dimensions": [5, 15],
+      "location": [0, 15],
+      "movement": "y",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "right", "location": 1, "width": 3 },
+        { "id": 2, "border": "right", "location": 11, "width": 3 }
+      ],
+      "items": []
+    },
+    {
+      "id": 11,
+      "color": "gray",
+      "dimensions": [10, 5],
+      "location": [5, 20],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "left", "location": 1, "width": 3 },
+        { "id": 2, "border": "bottom", "location": 6, "width": 3 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "lever", "color": "orange", "location": [3, 3] }
+      ]
+    },
+    {
+      "id": 12,
+      "color": "red",
+      "dimensions": [5, 5],
+      "location": [5, 25],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "top", "location": 1, "width": 3 },
+        { "id": 2, "border": "right", "location": 1, "width": 3 }
+      ],
+      "items": []
+    }
+  ]
+}
