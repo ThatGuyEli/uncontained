@@ -83,7 +83,7 @@
       "dimensions": [5, 15],
       "location": [20, 15],
       "movement": "y",
-      "platforms": [{ "id": 1, "location": [1, 8], "dimensions": [2, 1] }],
+      "platforms": [{ "id": 1, "location": [1, 9], "dimensions": [2, 1] }],
       "openings": [
         { "id": 1, "border": "right", "location": 1, "width": 3 },
         { "id": 2, "border": "left", "location": 11, "width": 3 }

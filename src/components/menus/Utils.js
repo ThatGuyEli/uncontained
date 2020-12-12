@@ -59,6 +59,10 @@ export function generateLevelPages() {
  */
 export function generateButtons(dir, color, setSelected) {
   const files = getFiles(dir);
+  // Order the files based on ID.
+  files.sort((a, b) => {
+    return a.id - b.id;
+  })
   return files.map((file) => {
     const { name, id } = file;
     return (

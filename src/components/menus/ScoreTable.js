@@ -4,7 +4,7 @@ export default function ScoreTable({ leaderboard }) {
   function generateRows() {
     leaderboard.sort((a, b) => {
       return b.score - a.score;
-    })
+    });
     return leaderboard.map((entry) => {
       return (
         <tr key={entry.id} className='score-table-row'>
@@ -16,14 +16,16 @@ export default function ScoreTable({ leaderboard }) {
   }
 
   return (
-    <table className='score-table purple standard-border'>
-      <tbody>
-        <tr>
-          <th className='score-table-header'>Initials</th>
-          <th className='score-table-header'>Score</th>
-        </tr>
-        {generateRows()}
-      </tbody>
-    </table>
+    <div className='score-wrapper purple standard-border'>
+      <table className='score-table'>
+        <tbody className='score-body'>
+          <tr>
+            <th className='score-table-header'>Initials</th>
+            <th className='score-table-header'>Score</th>
+          </tr>
+          {generateRows()}
+        </tbody>
+      </table>
+    </div>
   );
 }

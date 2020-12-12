@@ -1,0 +1,220 @@
+{
+  "id": 10,
+  "name": "Uncontained",
+  "description": "Un could see it: the final exit. All he had left was the last challenge in front of him. And this was indeed a challenge.",
+  "difficulty": 100,
+  "dimensions": [40, 30],
+  "character": {
+    "startContainer": 1,
+    "startLocation": [2, 3]
+  },
+  "containers": [
+    {
+      "id": 1,
+      "color": "blue",
+      "dimensions": [10, 5],
+      "location": [5, 10],
+      "movement": "x",
+      "platforms": [{ "id": 1, "location": [4, 3], "dimensions": [1, 1] }],
+      "openings": [
+        { "id": 1, "border": "left", "location": 1, "width": 3 },
+        { "id": 2, "border": "right", "location": 1, "width": 3 },
+        { "id": 3, "border": "top", "location": 6, "width": 3 },
+        { "id": 4, "border": "bottom", "location": 1, "width": 3 }
+      ],
+      "items": [{ "id": 1, "itemType": "spike", "location": [4, 2] }]
+    },
+    {
+      "id": 2,
+      "color": "gray",
+      "dimensions": [5, 15],
+      "location": [0, 0],
+      "movement": "x",
+      "platforms": [
+        { "id": 1, "location": [2, 5], "dimensions": [2, 1] }
+      ],
+      "openings": [
+        { "id": 1, "border": "right", "location": 11, "width": 3 },
+        { "id": 2, "border": "right", "location": 1, "width": 3 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "box", "location": [3, 4] },
+        { "id": 2, "itemType": "plate", "color": "red", "location": [2, 4] },
+        { "id": 3, "itemType": "plate", "color": "orange", "location": [1, 13] }
+      ]
+    },
+    {
+      "id": 3,
+      "color": "orange",
+      "dimensions": [5, 15],
+      "location": [15, 0],
+      "movement": "y",
+      "platforms": [{ "id": 1, "location": [1, 10], "dimensions": [2, 1] }],
+      "openings": [
+        { "id": 1, "border": "left", "location": 1, "width": 3 },
+        { "id": 2, "border": "left", "location": 6, "width": 3 },
+        { "id": 3, "border": "left", "location": 11, "width": 3 },
+        { "id": 4, "border": "bottom", "location": 1, "width": 3 }
+      ],
+      "items": []
+    },
+    {
+      "id": 4,
+      "color": "purple",
+      "dimensions": [10, 5],
+      "location": [20, 0],
+      "movement": "x",
+      "platforms": [{ "id": 1, "location": [4, 3], "dimensions": [1, 1] }],
+      "openings": [
+        { "id": 1, "border": "right", "location": 1, "width": 3 },
+        { "id": 2, "border": "left", "location": 1, "width": 3 }
+      ],
+      "items": [{ "id": 1, "itemType": "spike", "location": [4, 2] }]
+    },
+    {
+      "id": 5,
+      "color": "blue",
+      "dimensions": [5, 5],
+      "location": [20, 5],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "right", "location": 1, "width": 3 },
+        { "id": 2, "border": "top", "location": 1, "width": 3 }
+      ],
+      "items": []
+    },
+    {
+      "id": 6,
+      "color": "red",
+      "dimensions": [5, 10],
+      "location": [25, 5],
+      "movement": "y",
+      "platforms": [{ "id": 1, "location": [0, 7], "dimensions": [3, 1] }],
+      "openings": [{ "id": 1, "border": "left", "location": 1, "width": 3 }],
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [0, 6] },
+        { "id": 2, "itemType": "spike", "location": [1, 6] },
+        { "id": 3, "itemType": "spike", "location": [2, 6] },
+        { "id": 4, "itemType": "collectible", "location": [0, 8] },
+        { "id": 5, "itemType": "collectible", "location": [1, 8] },
+        { "id": 6, "itemType": "collectible", "location": [2, 8] }
+      ]
+    },
+    {
+      "id": 7,
+      "color": "blue",
+      "dimensions": [5, 15],
+      "location": [25, 15],
+      "movement": "y",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "left", "location": 11, "width": 3 },
+        { "id": 2, "border": "right", "location": 6, "width": 3 }
+      ],
+      "items": []
+    },
+    {
+      "id": 8,
+      "color": "gray",
+      "dimensions": [5, 10],
+      "location": [35, 0],
+      "movement": "x",
+      "platforms": [],
+      "openings": [{ "id": 1, "border": "bottom", "location": 1, "width": 3 }],
+      "items": [{ "id": 2, "itemType": "exit", "location": [1, 7] }]
+    },
+    {
+      "id": 9,
+      "color": "purple",
+      "dimensions": [10, 5],
+      "location": [30, 25],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "top", "location": 1, "width": 3 },
+        { "id": 2, "border": "top", "location": 6, "width": 3 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "lever", "color": "purple", "location": [4, 3] }
+      ]
+    },
+    {
+      "id": 10,
+      "color": "red",
+      "dimensions": [5, 5],
+      "location": [20, 15],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "right", "location": 1, "width": 3 },
+        { "id": 2, "border": "left", "location": 1, "width": 3 }
+      ],
+      "items": []
+    },
+    {
+      "id": 11,
+      "color": "gray",
+      "dimensions": [5, 10],
+      "location": [5, 15],
+      "movement": "x",
+      "platforms": [{ "id": 1, "location": [2, 7], "dimensions": [2, 1] }],
+      "openings": [
+        { "id": 1, "border": "right", "location": 1, "width": 3 },
+        { "id": 2, "border": "bottom", "location": 1, "width": 3 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [2, 6] },
+        { "id": 2, "itemType": "spike", "location": [3, 6] }
+      ]
+    },
+    {
+      "id": 12,
+      "color": "blue",
+      "dimensions": [5, 5],
+      "location": [10, 5],
+      "movement": "y",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "right", "location": 1, "width": 3 },
+        { "id": 2, "border": "bottom", "location": 1, "width": 3 }
+      ],
+      "items": []
+    },
+    {
+      "id": 13,
+      "color": "gray",
+      "dimensions": [5, 5],
+      "location": [20, 20],
+      "movement": "x",
+      "platforms": [],
+      "openings": [
+        { "id": 1, "border": "bottom", "location": 1, "width": 3 },
+        { "id": 2, "border": "right", "location": 1, "width": 3 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "lever", "color": "orange", "location": [1, 3] }
+      ]
+    },
+    {
+      "id": 14,
+      "color": "orange",
+      "location": [30, 0],
+      "dimensions": [5, 10],
+      "movement": "y",
+      "platforms": [
+        { "id": 1, "location": [2, 6], "dimensions": [2, 1] }
+      ],
+      "openings": [
+        { "id": 1, "border": "left", "location": 1, "width": 3 },
+        { "id": 2, "border": "top", "location": 1, "width": 3 }
+      ],
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [0, 8] },
+        { "id": 2, "itemType": "spike", "location": [1, 8] },
+        { "id": 3, "itemType": "spike", "location": [2, 8] },
+        { "id": 4, "itemType": "spike", "location": [3, 8] }
+      ]
+    }
+  ]
+}

@@ -198,14 +198,18 @@
   justify-content: space-between;
 }
 
-.score-table {
+.score-wrapper {
   box-sizing: border-box;
   position: absolute;
   top: 15vh;
   left: 2.5vw;
   right: 2.5vw;
   bottom: 2.5vh;
+  overflow-y: auto;
+}
 
+.score-table {
+  width: 100%;
   border-collapse: separate;
   border-spacing: 0px;
 }
