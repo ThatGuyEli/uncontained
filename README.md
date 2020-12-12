@@ -50,6 +50,9 @@ More dependencies can be found in `package.json`. None of these dependencies
 need to be manually installed by the user unless they wish to modify the
 game's source code.
 
+The color scheme of this game is the Nord color scheme, with some
+modifications. The Nord color scheme is open source.
+
 ## Installation
 **DISCLAIMER**: This code is not publically available. I have a private
 repository on GitHub, but this is for backup storage only. If the user
