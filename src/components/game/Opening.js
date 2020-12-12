@@ -36,7 +36,7 @@ class Opening extends Component {
   /**
    * Rendering method.
    * 
-   * @returns a <div> that represents an opening in a Container.
+   * @returns a div that represents an opening in a Container.
    */
   render() {
     return <div className='Opening' style={this.props.selfState.sty}></div>;

@@ -6,7 +6,7 @@ const { fs, path, appPath } = window;
 
 /**
  * Reads all JSON files in the given directory.
- * 
+ *
  * @param {string} dir The directory to read.
  *
  * @returns {Array} An array of levels.
@@ -62,7 +62,7 @@ export function generateButtons(dir, color, setSelected) {
   // Order the files based on ID.
   files.sort((a, b) => {
     return a.id - b.id;
-  })
+  });
   return files.map((file) => {
     const { name, id } = file;
     return (
@@ -77,6 +77,19 @@ export function generateButtons(dir, color, setSelected) {
   });
 }
 
+/**
+ * Add a leaderboard entry to the leaderboard file.
+ * Note that this file is not stored within the app,
+ * but in the user's local appdata directory.
+ * 
+ * On Windows: C:\Users\{youruser}\AppData\Roaming\
+ * On Mac: ~/Library/Application Support/
+ * On Linux: ~/.config/
+ * 
+ * @param {number} levelid The ID of the level to add an entry for.
+ * @param {string} initials A three-character string to attach to the entry.
+ * @param {number} score The score of the entry.
+ */
 export function addLeaderboardEntry(levelid, initials, score) {
   const { fs, path, api } = window;
   api.response('send-userdata-dir', (data) => {
@@ -113,6 +126,11 @@ export function addLeaderboardEntry(levelid, initials, score) {
   api.request('request-userdata-dir');
 }
 
+/**
+ * Read the leaderboard entries based on a given level ID.
+ * @param {number} levelid The ID of the level to read entries for.
+ * @param {function} setLeaderboard A function that updates the state of the leaderboard.
+ */
 export function readLeaderboardEntries(levelid, setLeaderboard) {
   const { fs, path, api } = window;
   api.response('send-userdata-dir', (data) => {

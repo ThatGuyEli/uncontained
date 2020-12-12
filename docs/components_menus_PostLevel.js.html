@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/menus/PostLevel.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/menus/PostLevel.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
+
+// Component imports
+import Subtitle from './Subtitle.js';
+import PostLevelButton from './PostLevelButton.js';
+import * as Utils from './Utils.js';
+
+/**
+ * Functional React Component.
+ * The Post Level, which displays after the user has completed a level.
+ *
+ * @param {object} props The properties to pass to the Post Level.
+ *
+ * @returns JSX that represents the Post Level page.
+ */
+export default function PostLevel({ preloadLevelId }) {
+  const history = useHistory();
+
+  // By default, the score is -1 to prevent saving a score multiple
+  // times.
+  const [score, setScore] = useState(-1);
+  const [level, setLevel] = useState(
+    require(`../../data/levels/level${preloadLevelId}.json`)
+  );
+
+  // Similar to Leaderboard, change the levelid based on the history.
+  useEffect(() => {
+    const loc = history.location;
+    if (loc.hasOwnProperty('level') &amp;&amp; loc.hasOwnProperty('score')) {
+      setScore(loc.score);
+      setLevel(loc.level);
+    }
+  }, [history.location]);
+
+  // Re-add the escape-to-close, because the game overrode it.
+  useEffect(() => {
+    document.onkeydown = (e) => {
+      if (e.key === 'Escape') window.close();
+    };
+  }, []);
+
+  // A central state for the initials textbox.
+  const [initials, setInitials] = useState('');
+
+  // Prevent a user from refreshing (the score would be -1) and making entries.
+  // Because a user can never get a real score of -1, this ensures that even a
+  // score of 0 can be entered.
+  const [hasSaved, setHasSaved] = useState(false);
+  useEffect(() => {
+    setHasSaved(score === -1);
+  }, [score]);
+
+  // Simple helper method to save the leaderboard entry.
+  function saveScore() {
+    if (!hasSaved &amp;&amp; initials.length === 3) {
+      setHasSaved(true);
+      Utils.addLeaderboardEntry(level.id, initials, score);
+    }
+  }
+
+  return (
+    &lt;>
+      &lt;Subtitle
+        text={`Completed: ${level.name}`}
+        className='blue standard-border'
+      />
+      &lt;div className='post-level-container orange standard-border'>
+        &lt;div className='post-level-col'>
+          &lt;div className='post-level-score blue standard-border center-children'>
+            Score: {score}
+          &lt;/div>
+
+          {/* A way for the user to enter their initials. */}
+          &lt;div className='post-level-entry gray standard-border'>
+            &lt;div className='post-level-entry-title purple standard-border center-children'>
+              Initials
+            &lt;/div>
+            &lt;input
+              className='gray standard-border'
+              type='text'
+              id='initials'
+              maxLength='3'
+              placeholder='AAA'
+              value={initials}
+              onChange={(e) => {
+                setInitials(e.target.value.toUpperCase());
+              }}
+            />
+            &lt;div
+              className={`post-level-entry-save 
+              ${hasSaved ? 'red' : 'blue'} 
+              standard-border 
+              div-hover 
+              center-children`}
+              onClick={saveScore}
+            >
+              Save
+            &lt;/div>
+          &lt;/div>
+        &lt;/div>
+
+        {/* Various Links */}
+        &lt;div className='post-level-col'>
+          &lt;PostLevelButton
+            url={`/levels/level${level.id}`}
+            color='blue'
+            text='Replay'
+          />
+          &lt;PostLevelButton
+            url='/level-select'
+            color='blue'
+            text='Level Select'
+          />
+          &lt;PostLevelButton
+            url='/leaderboard'
+            color='purple'
+            text='Leaderboard'
+            selectedLevel={level}
+          />
+          &lt;PostLevelButton url='/' color='gray' text='Main Menu' />
+          &lt;div onClick={window.close}>
+            &lt;PostLevelButton url='/' color='orange' text='Exit Game' />
+          &lt;/div>
+        &lt;/div>
+      &lt;/div>
+    &lt;/>
+  );
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="App.html">App</a></li><li><a href="Character.html">Character</a></li><li><a href="Container.html">Container</a></li><li><a href="Item.html">Item</a></li><li><a href="Level.html">Level</a></li><li><a href="Opening.html">Opening</a></li><li><a href="Platform.html">Platform</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addLeaderboardEntry">addLeaderboardEntry</a></li><li><a href="global.html#generateButtons">generateButtons</a></li><li><a href="global.html#generateLevelPages">generateLevelPages</a></li><li><a href="global.html#getFiles">getFiles</a></li><li><a href="global.html#readLeaderboardEntries">readLeaderboardEntries</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Sat Dec 12 2020 14:07:26 GMT-0500 (Eastern Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

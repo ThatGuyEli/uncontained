@@ -5,12 +5,19 @@ import * as Utils from './Utils.js';
 import BackToMain from './BackToMain.js';
 import Subtitle from './Subtitle.js';
 
+/**
+ * Functional React Component. This generates the How To Play
+ * page of the game.
+ * 
+ * @returns The JSX of the How To Play page.
+ */
 export default function HowToPlay() {
   // By default, use character.json.
   const [help, setHelp] = useState(
     require(`../../data/howtoplay/character.json`)
   );
 
+  // A simple helper method to generate sections of the menu.
   function generateSections() {
     return help.sections.map((section) => {
       return (

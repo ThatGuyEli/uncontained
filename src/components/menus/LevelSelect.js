@@ -8,6 +8,15 @@ import Subtitle from './Subtitle.js';
 import DifficultyBar from './DifficultyBar.js';
 import ContentButton from './ContentButton.js';
 
+/**
+ * Functional React Component.
+ * The Level Select page. This page allows a user to preview the difficulty
+ * and description of a level, and choose to play it or view the leaderboard.
+ * 
+ * @param {object} props The properties to pass to the Level Select.
+ * 
+ * @returns JSX that represents the Level Select page.
+ */
 export default function LevelSelect({ preloadLevelId }) {
   // By default, use level1's data. This is passed from App.js.
   const [selectedLevel, setSelectedLevel] = useState(

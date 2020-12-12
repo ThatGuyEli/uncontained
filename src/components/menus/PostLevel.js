@@ -1,16 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
+
+// Component imports
 import Subtitle from './Subtitle.js';
 import PostLevelButton from './PostLevelButton.js';
 import * as Utils from './Utils.js';
 
+/**
+ * Functional React Component.
+ * The Post Level, which displays after the user has completed a level.
+ *
+ * @param {object} props The properties to pass to the Post Level.
+ *
+ * @returns JSX that represents the Post Level page.
+ */
 export default function PostLevel({ preloadLevelId }) {
   const history = useHistory();
+
+  // By default, the score is -1 to prevent saving a score multiple
+  // times.
   const [score, setScore] = useState(-1);
   const [level, setLevel] = useState(
     require(`../../data/levels/level${preloadLevelId}.json`)
   );
 
+  // Similar to Leaderboard, change the levelid based on the history.
   useEffect(() => {
     const loc = history.location;
     if (loc.hasOwnProperty('level') && loc.hasOwnProperty('score')) {
@@ -23,10 +37,10 @@ export default function PostLevel({ preloadLevelId }) {
   useEffect(() => {
     document.onkeydown = (e) => {
       if (e.key === 'Escape') window.close();
-    }
+    };
   }, []);
 
-  // For input form
+  // A central state for the initials textbox.
   const [initials, setInitials] = useState('');
 
   // Prevent a user from refreshing (the score would be -1) and making entries.
@@ -37,6 +51,7 @@ export default function PostLevel({ preloadLevelId }) {
     setHasSaved(score === -1);
   }, [score]);
 
+  // Simple helper method to save the leaderboard entry.
   function saveScore() {
     if (!hasSaved && initials.length === 3) {
       setHasSaved(true);
@@ -55,6 +70,8 @@ export default function PostLevel({ preloadLevelId }) {
           <div className='post-level-score blue standard-border center-children'>
             Score: {score}
           </div>
+
+          {/* A way for the user to enter their initials. */}
           <div className='post-level-entry gray standard-border'>
             <div className='post-level-entry-title purple standard-border center-children'>
               Initials
@@ -82,6 +99,8 @@ export default function PostLevel({ preloadLevelId }) {
             </div>
           </div>
         </div>
+
+        {/* Various Links */}
         <div className='post-level-col'>
           <PostLevelButton
             url={`/levels/level${level.id}`}

@@ -2567,7 +2567,7 @@ class Level extends Component {
   /**
    * Rendering method.
    *
-   * @returns a <div> that represents the playable level.
+   * @returns a div that represents the playable level.
    */
   render() {
     // Return the level object in index.html.

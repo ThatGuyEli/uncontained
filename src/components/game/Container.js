@@ -315,7 +315,7 @@ class Container extends Component {
   /**
    * Rendering method.
    *
-   * @returns a <div> that represents the container.
+   * @returns a div that represents the container.
    */
   render() {
     return (

@@ -1,6 +1,6 @@
 {
   "name": "uncontained",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "Elijah Lieu",
   "description": "Puzzle game",
   "main": "public/electron.js",
@@ -25,7 +25,8 @@
     "react-eject": "react-scripts eject",
     "electron-build": "electron-builder",
     "build": "npm run react-build && npm run electron-build",
-    "start": "concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\""
+    "start": "concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
+    "doc": "jsdoc -c jsdoc.json"
   },
   "build": {
     "extraResources": [

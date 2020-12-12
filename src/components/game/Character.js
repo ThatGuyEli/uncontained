@@ -28,7 +28,7 @@ class Character extends Component {
   /**
    * Rendering method.
    * 
-   * @returns a <div> that represents the playable character.
+   * @returns a div that represents the playable character.
    */
   render() {
     return <div className='Character' style={this.props.selfState.sty}></div>;

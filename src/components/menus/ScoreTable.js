@@ -1,6 +1,17 @@
 import React from 'react';
 
+/**
+ * Functional React Component.
+ * The score table of the Leaderboard page. This uses a table to represent
+ * the data.
+ * 
+ * @param {object} props The properties to pass to the score table.
+ * 
+ * @returns JSX that represents the score table.
+ */
 export default function ScoreTable({ leaderboard }) {
+
+  // Simply helper method to generate the rows based on the leaderboard.
   function generateRows() {
     leaderboard.sort((a, b) => {
       return b.score - a.score;
