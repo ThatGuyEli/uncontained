@@ -15,13 +15,28 @@
       "dimensions": [30, 10],
       "location": [0, 0],
       "movement": "x",
-      "platforms": [],
+      "platforms": [
+        { "id": 1, "location": [10, 6], "dimensions": [4, 1] },
+        { "id": 2, "location": [16, 6], "dimensions": [4, 1] },
+        { "id": 3, "location": [11, 3], "dimensions": [2, 1] },
+        { "id": 4, "location": [17, 3], "dimensions": [2, 1] },
+        { "id": 5, "location": [10, 7], "dimensions": [1, 2] },
+        { "id": 6, "location": [19, 7], "dimensions": [1, 2] }
+      ],
       "openings": [
         { "id": 1, "border": "bottom", "location": 1, "width": 5 },
         { "id": 2, "border": "left", "location": 1, "width": 5 },
         { "id": 3, "border": "bottom", "location": 24, "width": 5 }
       ],
-      "items": []
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [11, 2] },
+        { "id": 2, "itemType": "spike", "location": [12, 2] },
+        { "id": 3, "itemType": "spike", "location": [17, 2] },
+        { "id": 4, "itemType": "spike", "location": [18, 2] },
+
+        { "id": 6, "itemType": "spike", "location": [14, 8] },
+        { "id": 5, "itemType": "spike", "location": [15, 8] }
+      ]
     },
     {
       "id": 2,
@@ -29,14 +44,20 @@
       "dimensions": [10, 20],
       "location": [0, 10],
       "movement": "y",
-      "platforms": [],
+      "platforms": [
+        { "id": 1, "location": [6, 10], "dimensions": [1, 1] },
+        { "id": 2, "location": [3, 10], "dimensions": [1, 1] }
+      ],
       "openings": [
         { "id": 1, "border": "top", "location": 1, "width": 5 },
         { "id": 2, "border": "right", "location": 1, "width": 5 },
         { "id": 3, "border": "right", "location": 14, "width": 5 },
         { "id": 4, "border": "bottom", "location": 1, "width": 5 }
       ],
-      "items": []
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [6, 9] },
+        { "id": 2, "itemType": "spike", "location": [3, 9] }
+      ]
     },
     {
       "id": 3,
@@ -44,13 +65,28 @@
       "dimensions": [30, 10],
       "location": [10, 20],
       "movement": "x",
-      "platforms": [],
+      "platforms": [
+        { "id": 1, "location": [10, 6], "dimensions": [4, 1] },
+        { "id": 2, "location": [16, 6], "dimensions": [4, 1] },
+        { "id": 3, "location": [11, 3], "dimensions": [2, 1] },
+        { "id": 4, "location": [17, 3], "dimensions": [2, 1] },
+        { "id": 5, "location": [10, 7], "dimensions": [1, 2] },
+        { "id": 6, "location": [19, 7], "dimensions": [1, 2] }
+      ],
       "openings": [
         { "id": 1, "border": "top", "location": 1, "width": 5 },
         { "id": 2, "border": "left", "location": 4, "width": 5 },
         { "id": 3, "border": "top", "location": 24, "width": 5 }
       ],
-      "items": []
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [11, 2] },
+        { "id": 2, "itemType": "spike", "location": [12, 2] },
+        { "id": 3, "itemType": "spike", "location": [17, 2] },
+        { "id": 4, "itemType": "spike", "location": [18, 2] },
+
+        { "id": 6, "itemType": "spike", "location": [14, 8] },
+        { "id": 5, "itemType": "spike", "location": [15, 8] }
+      ]
     },
     {
       "id": 4,
@@ -72,9 +108,7 @@
       "location": [10, 10],
       "movement": "x",
       "platforms": [],
-      "openings": [
-        { "id": 1, "border": "bottom", "location": 4, "width": 5 }
-      ],
+      "openings": [{ "id": 1, "border": "bottom", "location": 4, "width": 5 }],
       "items": [
         { "id": 1, "itemType": "collectible", "location": [5, 5] },
         { "id": 2, "itemType": "lever", "color": "red", "location": [2, 8] }
@@ -87,12 +121,8 @@
       "location": [20, 10],
       "movement": "x",
       "platforms": [],
-      "openings": [
-        { "id": 1, "border": "bottom", "location": 4, "width": 5 }
-      ],
-      "items": [
-        { "id": 1, "itemType": "exit", "location": [1, 7] }
-      ]
+      "openings": [{ "id": 1, "border": "bottom", "location": 4, "width": 5 }],
+      "items": [{ "id": 1, "itemType": "exit", "location": [1, 7] }]
     }
   ]
 }

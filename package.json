@@ -2,7 +2,7 @@
   "name": "uncontained",
   "version": "1.0.0",
   "author": "Elijah Lieu",
-  "description": "Puzzle game",
+  "description": "A simple platformer puzzle game.",
   "main": "public/electron.js",
   "homepage": "./",
   "private": true,
@@ -29,6 +29,12 @@
     "doc": "jsdoc -c jsdoc.json"
   },
   "build": {
+    "mac": {
+      "category": "public.app-category.games"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
     "extraResources": [
       {
         "from": "./src/data/",

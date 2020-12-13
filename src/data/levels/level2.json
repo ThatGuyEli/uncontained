@@ -25,14 +25,18 @@
       "dimensions": [20, 10],
       "location": [20, 10],
       "movement": "x",
-      "platforms": [],
+      "platforms": [
+        { "id": 1, "location": [7, 6], "dimensions": [1, 3] }
+      ],
       "openings": [
         { "id": 1, "border": "top", "location": 1, "width": 5 },
         { "id": 2, "border": "top", "location": 11, "width": 5 },
         { "id": 3, "border": "bottom", "location": 11, "width": 5 },
         { "id": 4, "border": "left", "location": 4, "width": 5 }
       ],
-      "items": []
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [7, 5]}
+      ]
     },
     {
       "id": 3,
@@ -40,12 +44,16 @@
       "dimensions": [20, 10],
       "location": [10, 0],
       "movement": "x",
-      "platforms": [],
+      "platforms": [
+        { "id": 1, "location": [7, 6], "dimensions": [1, 3] }
+      ],
       "openings": [
         { "id": 1, "border": "bottom", "location": 1, "width": 5 },
         { "id": 2, "border": "bottom", "location": 11, "width": 5 }
       ],
-      "items": []
+      "items": [
+        { "id": 1, "itemType": "spike", "location": [7, 5]}
+      ]
     },
     {
       "id": 4,
@@ -55,7 +63,11 @@
       "movement": "x",
       "platforms": [],
       "openings": [{ "id": 1, "border": "right", "location": 4, "width": 5 }],
-      "items": [{ "id": 1, "itemType": "exit", "location": [5, 7] }]
+      "items": [
+        { "id": 1, "itemType": "exit", "location": [5, 7] },
+        { "id": 2, "itemType": "spike", "location": [10, 8] },
+        { "id": 3, "itemType": "spike", "location": [11, 8] }
+      ]
     },
     {
       "id": 5,
@@ -76,9 +88,12 @@
       "dimensions": [10, 10],
       "location": [0, 20],
       "movement": "y",
-      "platforms": [],
+      "platforms": [{ "id": 1, "location": [0, 6], "dimensions": [4, 1] }],
       "openings": [{ "id": 1, "border": "right", "location": 4, "width": 5 }],
-      "items": [{ "id": 1, "itemType": "collectible", "location": [5, 5] }]
+      "items": [
+        { "id": 1, "itemType": "collectible", "location": [1, 3] },
+        { "id": 2, "itemType": "spike", "location": [3, 5] }
+      ]
     }
   ]
 }
