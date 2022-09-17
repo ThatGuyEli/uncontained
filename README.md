@@ -54,11 +54,6 @@ The color scheme of this game is the Nord color scheme, with some
 modifications. The Nord color scheme is open source.
 
 ## Installation
-**DISCLAIMER**: This code is not publically available. I have a private
-repository on GitHub, but this is for backup storage only. If the user
-would like to view this repository, please email me at
-`elijahlieu@protonmail.com`.
-
 To install the application, the user can install one of the prebuilt
 versions. There are prebuilt versions for Mac, Linux, and Windows. After,
 simply open the application in the same manner that you would with any other
