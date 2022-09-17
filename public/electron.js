@@ -3,6 +3,7 @@
 
 // Modules to control application life and create native browser window
 const { app, BrowserWindow, ipcMain } = require('electron');
+app.commandLine.appendSwitch('in-process-gpu');
 const fs = require('fs');
 const path = require('path');
 const isDev = require('electron-is-dev');
